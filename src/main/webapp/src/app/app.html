@@ -1,0 +1,38 @@
+<nav class="navbar navbar-expand-lg bg-body-tertiary">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">Jira-Sync</a>
+    <button
+      class="navbar-toggler"
+      type="button"
+      (click)="isNavbarCollapsed = !isNavbarCollapsed"
+      [attr.aria-expanded]="!isNavbarCollapsed"
+      aria-controls="navbarSupportedContent"
+      aria-label="Toggle navigation"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent" [ngbCollapse]="isNavbarCollapsed">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item">
+          <a class="nav-link active" aria-current="page" href="#">Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/issues" ngbDropdownItem>Issues</a>
+        </li>
+        <li class="nav-item" ngbDropdown>
+          <a class="nav-link dropdown-toggle" href="#" role="button" ngbDropdownToggle>
+            Help
+          </a>
+          <ul class="dropdown-menu" ngbDropdownMenu>
+            <li><a class="dropdown-item" routerLink="/jira-sync" ngbDropdownItem>Sync</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" routerLink="/about" ngbDropdownItem>About</a></li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+
+<router-outlet />

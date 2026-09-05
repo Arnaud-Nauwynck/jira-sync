@@ -1,0 +1,1497 @@
+{
+  "expand" : "operations,versionedRepresentations,editmeta,changelog,renderedFields",
+  "id" : "12920204",
+  "self" : "https://issues.apache.org/jira/rest/api/2/issue/12920204",
+  "key" : "SPARK-12216",
+  "fields" : {
+    "fixVersions" : [ ],
+    "resolution" : {
+      "self" : "https://issues.apache.org/jira/rest/api/2/resolution/6",
+      "id" : "6",
+      "description" : "The problem isn't valid and it can't be fixed.",
+      "name" : "Invalid"
+    },
+    "customfield_12312322" : null,
+    "customfield_12312323" : null,
+    "customfield_12310420" : "9223372036854775807",
+    "customfield_12312320" : null,
+    "customfield_12312321" : null,
+    "customfield_12312328" : null,
+    "customfield_12312329" : null,
+    "customfield_12312326" : null,
+    "customfield_12312327" : null,
+    "customfield_12310300" : null,
+    "customfield_12312324" : null,
+    "customfield_12312720" : null,
+    "customfield_12312325" : null,
+    "lastViewed" : null,
+    "priority" : {
+      "self" : "https://issues.apache.org/jira/rest/api/2/priority/4",
+      "iconUrl" : "https://issues.apache.org/jira/images/icons/priorities/minor.svg",
+      "name" : "Minor",
+      "id" : "4"
+    },
+    "labels" : [ ],
+    "customfield_12312333" : null,
+    "customfield_12312334" : null,
+    "customfield_12313422" : "false",
+    "customfield_12312331" : null,
+    "customfield_12310310" : "0.0",
+    "customfield_12312332" : null,
+    "aggregatetimeoriginalestimate" : null,
+    "timeestimate" : null,
+    "customfield_12312330" : null,
+    "versions" : [ ],
+    "customfield_12311120" : null,
+    "customfield_12313826" : null,
+    "issuelinks" : [ {
+      "id" : "12694631",
+      "self" : "https://issues.apache.org/jira/rest/api/2/issueLink/12694631",
+      "type" : {
+        "id" : "10020",
+        "name" : "Cloners",
+        "inward" : "is cloned by",
+        "outward" : "is a clone of",
+        "self" : "https://issues.apache.org/jira/rest/api/2/issueLinkType/10020"
+      },
+      "inwardIssue" : {
+        "id" : "13602753",
+        "key" : "SPARK-50628",
+        "self" : "https://issues.apache.org/jira/rest/api/2/issue/13602753",
+        "fields" : {
+          "summary" : "spark stop failed to delete temp dir when running spark-submit on Windows with local[*] mode",
+          "status" : {
+            "self" : "https://issues.apache.org/jira/rest/api/2/status/1",
+            "description" : "The issue is open and ready for the assignee to start work on it.",
+            "iconUrl" : "https://issues.apache.org/jira/images/icons/statuses/open.png",
+            "name" : "Open",
+            "id" : "1",
+            "statusCategory" : {
+              "self" : "https://issues.apache.org/jira/rest/api/2/statuscategory/2",
+              "id" : 2,
+              "key" : "new",
+              "colorName" : "blue-gray",
+              "name" : "To Do"
+            }
+          },
+          "priority" : {
+            "self" : "https://issues.apache.org/jira/rest/api/2/priority/3",
+            "iconUrl" : "https://issues.apache.org/jira/images/icons/priorities/major.svg",
+            "name" : "Major",
+            "id" : "3"
+          },
+          "issuetype" : {
+            "self" : "https://issues.apache.org/jira/rest/api/2/issuetype/1",
+            "id" : "1",
+            "description" : "A problem which impairs or prevents the functions of the product.",
+            "iconUrl" : "https://issues.apache.org/jira/secure/viewavatar?size=xsmall&avatarId=21133&avatarType=issuetype",
+            "name" : "Bug",
+            "subtask" : false,
+            "avatarId" : 21133
+          }
+        }
+      }
+    }, {
+      "id" : "12489681",
+      "self" : "https://issues.apache.org/jira/rest/api/2/issueLink/12489681",
+      "type" : {
+        "id" : "12310000",
+        "name" : "Duplicate",
+        "inward" : "is duplicated by",
+        "outward" : "duplicates",
+        "self" : "https://issues.apache.org/jira/rest/api/2/issueLinkType/12310000"
+      },
+      "inwardIssue" : {
+        "id" : "13030078",
+        "key" : "SPARK-18979",
+        "self" : "https://issues.apache.org/jira/rest/api/2/issue/13030078",
+        "fields" : {
+          "summary" : "ShutdownHookManager：Exception while deleting Spark temp dir  ",
+          "status" : {
+            "self" : "https://issues.apache.org/jira/rest/api/2/status/5",
+            "description" : "A resolution has been taken, and it is awaiting verification by reporter. From here issues are either reopened, or are closed.",
+            "iconUrl" : "https://issues.apache.org/jira/images/icons/statuses/resolved.png",
+            "name" : "Resolved",
+            "id" : "5",
+            "statusCategory" : {
+              "self" : "https://issues.apache.org/jira/rest/api/2/statuscategory/3",
+              "id" : 3,
+              "key" : "done",
+              "colorName" : "green",
+              "name" : "Done"
+            }
+          },
+          "priority" : {
+            "self" : "https://issues.apache.org/jira/rest/api/2/priority/3",
+            "iconUrl" : "https://issues.apache.org/jira/images/icons/priorities/major.svg",
+            "name" : "Major",
+            "id" : "3"
+          },
+          "issuetype" : {
+            "self" : "https://issues.apache.org/jira/rest/api/2/issuetype/1",
+            "id" : "1",
+            "description" : "A problem which impairs or prevents the functions of the product.",
+            "iconUrl" : "https://issues.apache.org/jira/secure/viewavatar?size=xsmall&avatarId=21133&avatarType=issuetype",
+            "name" : "Bug",
+            "subtask" : false,
+            "avatarId" : 21133
+          }
+        }
+      }
+    } ],
+    "customfield_12312339" : null,
+    "customfield_12313825" : null,
+    "assignee" : null,
+    "customfield_12312337" : null,
+    "customfield_12313823" : null,
+    "customfield_12312338" : null,
+    "customfield_12311920" : null,
+    "customfield_12313822" : null,
+    "customfield_12312335" : null,
+    "customfield_12313821" : null,
+    "customfield_12312336" : null,
+    "customfield_12313820" : null,
+    "status" : {
+      "self" : "https://issues.apache.org/jira/rest/api/2/status/5",
+      "description" : "A resolution has been taken, and it is awaiting verification by reporter. From here issues are either reopened, or are closed.",
+      "iconUrl" : "https://issues.apache.org/jira/images/icons/statuses/resolved.png",
+      "name" : "Resolved",
+      "id" : "5",
+      "statusCategory" : {
+        "self" : "https://issues.apache.org/jira/rest/api/2/statuscategory/3",
+        "id" : 3,
+        "key" : "done",
+        "colorName" : "green",
+        "name" : "Done"
+      }
+    },
+    "components" : [ {
+      "self" : "https://issues.apache.org/jira/rest/api/2/component/12323802",
+      "id" : "12323802",
+      "name" : "Spark Shell",
+      "description" : "Spark interactive shell"
+    } ],
+    "archiveddate" : null,
+    "customfield_12312026" : null,
+    "customfield_12312023" : null,
+    "customfield_12312024" : null,
+    "aggregatetimeestimate" : null,
+    "customfield_12312022" : null,
+    "customfield_12310921" : null,
+    "customfield_12310920" : "9223372036854775807",
+    "customfield_12312823" : null,
+    "creator" : {
+      "self" : "https://issues.apache.org/jira/rest/api/2/user?username=skypickle",
+      "name" : "skypickle",
+      "key" : "skypickle",
+      "avatarUrls" : {
+        "48x48" : "https://issues.apache.org/jira/secure/useravatar?avatarId=10452",
+        "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&avatarId=10452",
+        "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&avatarId=10452",
+        "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&avatarId=10452"
+      },
+      "displayName" : "stefan",
+      "active" : false,
+      "timeZone" : "Etc/UTC"
+    },
+    "subtasks" : [ ],
+    "reporter" : {
+      "self" : "https://issues.apache.org/jira/rest/api/2/user?username=skypickle",
+      "name" : "skypickle",
+      "key" : "skypickle",
+      "avatarUrls" : {
+        "48x48" : "https://issues.apache.org/jira/secure/useravatar?avatarId=10452",
+        "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&avatarId=10452",
+        "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&avatarId=10452",
+        "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&avatarId=10452"
+      },
+      "displayName" : "stefan",
+      "active" : false,
+      "timeZone" : "Etc/UTC"
+    },
+    "aggregateprogress" : {
+      "progress" : 0,
+      "total" : 0
+    },
+    "customfield_12313520" : null,
+    "customfield_12310250" : null,
+    "progress" : {
+      "progress" : 0,
+      "total" : 0
+    },
+    "customfield_12313924" : null,
+    "votes" : {
+      "self" : "https://issues.apache.org/jira/rest/api/2/issue/SPARK-12216/votes",
+      "votes" : 1,
+      "hasVoted" : false
+    },
+    "worklog" : {
+      "startAt" : 0,
+      "maxResults" : 20,
+      "total" : 0,
+      "worklogs" : [ ]
+    },
+    "archivedby" : null,
+    "customfield_12311620" : null,
+    "customfield_12313920" : null,
+    "issuetype" : {
+      "self" : "https://issues.apache.org/jira/rest/api/2/issuetype/1",
+      "id" : "1",
+      "description" : "A problem which impairs or prevents the functions of the product.",
+      "iconUrl" : "https://issues.apache.org/jira/secure/viewavatar?size=xsmall&avatarId=21133&avatarType=issuetype",
+      "name" : "Bug",
+      "subtask" : false,
+      "avatarId" : 21133
+    },
+    "timespent" : null,
+    "customfield_12314020" : "{summaryBean=com.atlassian.jira.plugin.devstatus.rest.SummaryBean@f5bb2f0[summary={pullrequest=com.atlassian.jira.plugin.devstatus.rest.SummaryItemBean@622a19b7[overall=PullRequestOverallBean{stateCount=0, state='OPEN', details=PullRequestOverallDetails{openCount=0, mergedCount=0, declinedCount=0}},byInstanceType={}], build=com.atlassian.jira.plugin.devstatus.rest.SummaryItemBean@54584fb3[overall=com.atlassian.jira.plugin.devstatus.summary.beans.BuildOverallBean@660d032e[failedBuildCount=0,successfulBuildCount=0,unknownBuildCount=0,count=0,lastUpdated=<null>,lastUpdatedTimestamp=<null>],byInstanceType={}], review=com.atlassian.jira.plugin.devstatus.rest.SummaryItemBean@6117984f[overall=com.atlassian.jira.plugin.devstatus.summary.beans.ReviewsOverallBean@52efb6bd[stateCount=0,state=<null>,dueDate=<null>,overDue=false,count=0,lastUpdated=<null>,lastUpdatedTimestamp=<null>],byInstanceType={}], deployment-environment=com.atlassian.jira.plugin.devstatus.rest.SummaryItemBean@445c5e84[overall=com.atlassian.jira.plugin.devstatus.summary.beans.DeploymentOverallBean@4ac63152[topEnvironments=[],showProjects=false,successfulCount=0,count=0,lastUpdated=<null>,lastUpdatedTimestamp=<null>],byInstanceType={}], repository=com.atlassian.jira.plugin.devstatus.rest.SummaryItemBean@17ce1da5[overall=com.atlassian.jira.plugin.devstatus.summary.beans.CommitOverallBean@383b1bbf[count=0,lastUpdated=<null>,lastUpdatedTimestamp=<null>],byInstanceType={}], branch=com.atlassian.jira.plugin.devstatus.rest.SummaryItemBean@1e35da42[overall=com.atlassian.jira.plugin.devstatus.summary.beans.BranchOverallBean@65823477[count=0,lastUpdated=<null>,lastUpdatedTimestamp=<null>],byInstanceType={}]},errors=[],configErrors=[]], devSummaryJson={\"cachedValue\":{\"errors\":[],\"configErrors\":[],\"summary\":{\"pullrequest\":{\"overall\":{\"count\":0,\"lastUpdated\":null,\"stateCount\":0,\"state\":\"OPEN\",\"details\":{\"openCount\":0,\"mergedCount\":0,\"declinedCount\":0,\"total\":0},\"open\":true},\"byInstanceType\":{}},\"build\":{\"overall\":{\"count\":0,\"lastUpdated\":null,\"failedBuildCount\":0,\"successfulBuildCount\":0,\"unknownBuildCount\":0},\"byInstanceType\":{}},\"review\":{\"overall\":{\"count\":0,\"lastUpdated\":null,\"stateCount\":0,\"state\":null,\"dueDate\":null,\"overDue\":false,\"completed\":false},\"byInstanceType\":{}},\"deployment-environment\":{\"overall\":{\"count\":0,\"lastUpdated\":null,\"topEnvironments\":[],\"showProjects\":false,\"successfulCount\":0},\"byInstanceType\":{}},\"repository\":{\"overall\":{\"count\":0,\"lastUpdated\":null},\"byInstanceType\":{}},\"branch\":{\"overall\":{\"count\":0,\"lastUpdated\":null},\"byInstanceType\":{}}}},\"isStale\":false}}",
+    "customfield_12314141" : null,
+    "customfield_12314140" : null,
+    "project" : {
+      "self" : "https://issues.apache.org/jira/rest/api/2/project/12315420",
+      "id" : "12315420",
+      "key" : "SPARK",
+      "name" : "Spark",
+      "projectTypeKey" : "software",
+      "avatarUrls" : {
+        "48x48" : "https://issues.apache.org/jira/secure/projectavatar?pid=12315420&avatarId=27346",
+        "24x24" : "https://issues.apache.org/jira/secure/projectavatar?size=small&pid=12315420&avatarId=27346",
+        "16x16" : "https://issues.apache.org/jira/secure/projectavatar?size=xsmall&pid=12315420&avatarId=27346",
+        "32x32" : "https://issues.apache.org/jira/secure/projectavatar?size=medium&pid=12315420&avatarId=27346"
+      }
+    },
+    "aggregatetimespent" : null,
+    "customfield_12312520" : null,
+    "customfield_12312521" : "Mon Sep 26 13:39:21 UTC 2022",
+    "customfield_12314422" : null,
+    "customfield_12314421" : null,
+    "customfield_12314146" : null,
+    "customfield_12314420" : null,
+    "customfield_12314145" : null,
+    "customfield_12314144" : null,
+    "customfield_12314143" : null,
+    "resolutiondate" : "2016-03-13T12:38:49.000+0000",
+    "workratio" : -1,
+    "customfield_12312923" : null,
+    "customfield_12312920" : null,
+    "customfield_12312921" : null,
+    "watches" : {
+      "self" : "https://issues.apache.org/jira/rest/api/2/issue/SPARK-12216/watchers",
+      "watchCount" : 19,
+      "isWatching" : false
+    },
+    "created" : "2015-12-08T21:56:20.000+0000",
+    "updated" : "2024-12-19T22:25:12.000+0000",
+    "timeoriginalestimate" : null,
+    "description" : "The mailing list archives have no obvious solution to this:\n\nscala> :q\nStopping spark context.\n15/12/08 16:24:22 ERROR ShutdownHookManager: Exception while deleting Spark temp dir: C:\\Users\\Stefan\\AppData\\Local\\Temp\\spark-18f2a418-e02f-458b-8325-60642868fdff\njava.io.IOException: Failed to delete: C:\\Users\\Stefan\\AppData\\Local\\Temp\\spark-18f2a418-e02f-458b-8325-60642868fdff\n        at org.apache.spark.util.Utils$.deleteRecursively(Utils.scala:884)\n        at org.apache.spark.util.ShutdownHookManager$$anonfun$1$$anonfun$apply$mcV$sp$3.apply(ShutdownHookManager.scala:63)\n        at org.apache.spark.util.ShutdownHookManager$$anonfun$1$$anonfun$apply$mcV$sp$3.apply(ShutdownHookManager.scala:60)\n        at scala.collection.mutable.HashSet.foreach(HashSet.scala:79)\n        at org.apache.spark.util.ShutdownHookManager$$anonfun$1.apply$mcV$sp(ShutdownHookManager.scala:60)\n        at org.apache.spark.util.SparkShutdownHook.run(ShutdownHookManager.scala:264)\n        at org.apache.spark.util.SparkShutdownHookManager$$anonfun$runAll$1$$anonfun$apply$mcV$sp$1.apply$mcV$sp(ShutdownHookManager.scala:234)\n        at org.apache.spark.util.SparkShutdownHookManager$$anonfun$runAll$1$$anonfun$apply$mcV$sp$1.apply(ShutdownHookManager.scala:234)\n        at org.apache.spark.util.SparkShutdownHookManager$$anonfun$runAll$1$$anonfun$apply$mcV$sp$1.apply(ShutdownHookManager.scala:234)\n        at org.apache.spark.util.Utils$.logUncaughtExceptions(Utils.scala:1699)\n        at org.apache.spark.util.SparkShutdownHookManager$$anonfun$runAll$1.apply$mcV$sp(ShutdownHookManager.scala:234)\n        at org.apache.spark.util.SparkShutdownHookManager$$anonfun$runAll$1.apply(ShutdownHookManager.scala:234)\n        at org.apache.spark.util.SparkShutdownHookManager$$anonfun$runAll$1.apply(ShutdownHookManager.scala:234)\n        at scala.util.Try$.apply(Try.scala:161)\n        at org.apache.spark.util.SparkShutdownHookManager.runAll(ShutdownHookManager.scala:234)\n        at org.apache.spark.util.SparkShutdownHookManager$$anon$2.run(ShutdownHookManager.scala:216)\n        at org.apache.hadoop.util.ShutdownHookManager$1.run(ShutdownHookManager.java:54)",
+    "customfield_10010" : null,
+    "timetracking" : { },
+    "customfield_12314523" : null,
+    "customfield_12314127" : null,
+    "customfield_12314522" : null,
+    "customfield_12314126" : null,
+    "customfield_12314521" : null,
+    "customfield_12314125" : null,
+    "customfield_12310320" : null,
+    "customfield_12314520" : null,
+    "customfield_12314124" : null,
+    "customfield_12312340" : null,
+    "customfield_12314123" : null,
+    "customfield_12312341" : null,
+    "customfield_12312220" : null,
+    "customfield_12314122" : null,
+    "customfield_12314121" : null,
+    "customfield_12314120" : null,
+    "customfield_12314129" : null,
+    "customfield_12314524" : null,
+    "customfield_12314128" : null,
+    "summary" : "Spark failed to delete temp directory ",
+    "customfield_12314130" : null,
+    "customfield_12310291" : null,
+    "customfield_12310290" : null,
+    "customfield_12311024" : null,
+    "customfield_12314138" : null,
+    "customfield_12314137" : null,
+    "environment" : "windows 7 64 bit\nSpark 1.52\nJava 1.8.0.65\nPATH includes:\nC:\\Users\\Stefan\\spark-1.5.2-bin-hadoop2.6\\bin\nC:\\ProgramData\\Oracle\\Java\\javapath\nC:\\Users\\Stefan\\scala\\bin\n\nSYSTEM variables set are:\nJAVA_HOME=C:\\Program Files\\Java\\jre1.8.0_65\nHADOOP_HOME=C:\\Users\\Stefan\\hadoop-2.6.0\\bin\n(where the bin\\winutils resides)\nboth \\tmp and \\tmp\\hive have permissions\ndrwxrwxrwx as detected by winutils ls",
+    "customfield_12314136" : null,
+    "customfield_12314135" : null,
+    "customfield_12311020" : null,
+    "customfield_12314134" : null,
+    "duedate" : null,
+    "customfield_12314132" : null,
+    "customfield_12314131" : null,
+    "comment" : {
+      "comments" : [ {
+        "self" : "https://issues.apache.org/jira/rest/api/2/issue/12920204/comment/15048754",
+        "id" : "15048754",
+        "author" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=srowen",
+          "name" : "srowen",
+          "key" : "srowen",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?ownerId=srowen&avatarId=26037",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&ownerId=srowen&avatarId=26037",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&ownerId=srowen&avatarId=26037",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&ownerId=srowen&avatarId=26037"
+          },
+          "displayName" : "Sean R. Owen",
+          "active" : true,
+          "timeZone" : "America/Chicago"
+        },
+        "body" : "[~skypickle] have a look at https://cwiki.apache.org/confluence/display/SPARK/Contributing+to+Spark before opening a JIRA. This can't be Major and needs a component.\n\nIt's not clear why: permissions problem? something else has that dir open? Is it reproducible? I suspect it's a problem specific to Windows. Do you have a suggestion about how to work around it?",
+        "updateAuthor" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=srowen",
+          "name" : "srowen",
+          "key" : "srowen",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?ownerId=srowen&avatarId=26037",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&ownerId=srowen&avatarId=26037",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&ownerId=srowen&avatarId=26037",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&ownerId=srowen&avatarId=26037"
+          },
+          "displayName" : "Sean R. Owen",
+          "active" : true,
+          "timeZone" : "America/Chicago"
+        },
+        "created" : "2015-12-09T14:44:28.004+0000",
+        "updated" : "2015-12-09T14:44:28.004+0000"
+      }, {
+        "self" : "https://issues.apache.org/jira/rest/api/2/issue/12920204/comment/15192281",
+        "id" : "15192281",
+        "author" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=gsavinov",
+          "name" : "gsavinov",
+          "key" : "gsavinov",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?ownerId=gsavinov&avatarId=49559",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&ownerId=gsavinov&avatarId=49559",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&ownerId=gsavinov&avatarId=49559",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&ownerId=gsavinov&avatarId=49559"
+          },
+          "displayName" : "Guram Savinov",
+          "active" : true,
+          "timeZone" : "Europe/Moscow"
+        },
+        "body" : "I have the same problem when exit from spark-shell on windows 7.\nSeems that it's not the permission problems because I start console as admin and have no problems with removng this directories manually.\nMaybe this directory is locked by some thread when shutdown hook executes.\n\nTake a look at this post, it has details about possible directory lock:\nhttp://jakzaprogramowac.pl/pytanie/12478,how-to-find-which-java-scala-thread-has-locked-a-file",
+        "updateAuthor" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=gsavinov",
+          "name" : "gsavinov",
+          "key" : "gsavinov",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?ownerId=gsavinov&avatarId=49559",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&ownerId=gsavinov&avatarId=49559",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&ownerId=gsavinov&avatarId=49559",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&ownerId=gsavinov&avatarId=49559"
+          },
+          "displayName" : "Guram Savinov",
+          "active" : true,
+          "timeZone" : "Europe/Moscow"
+        },
+        "created" : "2016-03-13T10:30:38.949+0000",
+        "updated" : "2016-03-13T10:49:25.226+0000"
+      }, {
+        "self" : "https://issues.apache.org/jira/rest/api/2/issue/12920204/comment/15192877",
+        "id" : "15192877",
+        "author" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=gsavinov",
+          "name" : "gsavinov",
+          "key" : "gsavinov",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?ownerId=gsavinov&avatarId=49559",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&ownerId=gsavinov&avatarId=49559",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&ownerId=gsavinov&avatarId=49559",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&ownerId=gsavinov&avatarId=49559"
+          },
+          "displayName" : "Guram Savinov",
+          "active" : true,
+          "timeZone" : "Europe/Moscow"
+        },
+        "body" : "Why you closed this issue?\nYou don't care about Spark on Windows?",
+        "updateAuthor" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=gsavinov",
+          "name" : "gsavinov",
+          "key" : "gsavinov",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?ownerId=gsavinov&avatarId=49559",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&ownerId=gsavinov&avatarId=49559",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&ownerId=gsavinov&avatarId=49559",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&ownerId=gsavinov&avatarId=49559"
+          },
+          "displayName" : "Guram Savinov",
+          "active" : true,
+          "timeZone" : "Europe/Moscow"
+        },
+        "created" : "2016-03-14T08:08:53.056+0000",
+        "updated" : "2016-03-14T08:08:53.056+0000"
+      }, {
+        "self" : "https://issues.apache.org/jira/rest/api/2/issue/12920204/comment/15192895",
+        "id" : "15192895",
+        "author" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=oren432",
+          "name" : "oren432",
+          "key" : "oren432",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?avatarId=10452",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&avatarId=10452",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&avatarId=10452",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&avatarId=10452"
+          },
+          "displayName" : "yaniv oren",
+          "active" : false,
+          "timeZone" : "Etc/UTC"
+        },
+        "body" : "He gave a workaround, move to linux :)\nSolution perhaps should be in SparkShutdownHookManager.",
+        "updateAuthor" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=oren432",
+          "name" : "oren432",
+          "key" : "oren432",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?avatarId=10452",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&avatarId=10452",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&avatarId=10452",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&avatarId=10452"
+          },
+          "displayName" : "yaniv oren",
+          "active" : false,
+          "timeZone" : "Etc/UTC"
+        },
+        "created" : "2016-03-14T08:18:03.504+0000",
+        "updated" : "2016-03-14T08:18:03.504+0000"
+      }, {
+        "self" : "https://issues.apache.org/jira/rest/api/2/issue/12920204/comment/15192905",
+        "id" : "15192905",
+        "author" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=gsavinov",
+          "name" : "gsavinov",
+          "key" : "gsavinov",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?ownerId=gsavinov&avatarId=49559",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&ownerId=gsavinov&avatarId=49559",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&ownerId=gsavinov&avatarId=49559",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&ownerId=gsavinov&avatarId=49559"
+          },
+          "displayName" : "Guram Savinov",
+          "active" : true,
+          "timeZone" : "Europe/Moscow"
+        },
+        "body" : "http://spark.apache.org/docs/latest/#launching-on-a-cluster\n\n>> Spark runs on both Windows and UNIX-like systems (e.g. Linux, Mac OS). It’s easy to run locally on one machine — all you need is to have java installed on your system PATH, or the JAVA_HOME environment variable pointing to a Java installation.\n\nSad that it isn't true.",
+        "updateAuthor" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=gsavinov",
+          "name" : "gsavinov",
+          "key" : "gsavinov",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?ownerId=gsavinov&avatarId=49559",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&ownerId=gsavinov&avatarId=49559",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&ownerId=gsavinov&avatarId=49559",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&ownerId=gsavinov&avatarId=49559"
+          },
+          "displayName" : "Guram Savinov",
+          "active" : true,
+          "timeZone" : "Europe/Moscow"
+        },
+        "created" : "2016-03-14T08:26:46.602+0000",
+        "updated" : "2016-03-14T08:26:46.602+0000"
+      }, {
+        "self" : "https://issues.apache.org/jira/rest/api/2/issue/12920204/comment/15192947",
+        "id" : "15192947",
+        "author" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=srowen",
+          "name" : "srowen",
+          "key" : "srowen",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?ownerId=srowen&avatarId=26037",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&ownerId=srowen&avatarId=26037",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&ownerId=srowen&avatarId=26037",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&ownerId=srowen&avatarId=26037"
+          },
+          "displayName" : "Sean R. Owen",
+          "active" : true,
+          "timeZone" : "America/Chicago"
+        },
+        "body" : "Although I don't think Spark 100% works on Windows, it's not something explicitly _not_ supported. Here, this still looks like a permission problem or other env issue. The JVM reports the OS simply didn't let it delete. I agree however it could be that another process has the dir locked during shutdown. This only seems to have been observed on Windows since its FS semantics are different (right?). If someone has a good fix to propose, that's great, but there was no follow-up. If the symptom is just that a dir gets left in a temp dir once in a while in Windows, that may just be how it is. This could be reopened if there is a specific theory about what to fix.",
+        "updateAuthor" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=srowen",
+          "name" : "srowen",
+          "key" : "srowen",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?ownerId=srowen&avatarId=26037",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&ownerId=srowen&avatarId=26037",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&ownerId=srowen&avatarId=26037",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&ownerId=srowen&avatarId=26037"
+          },
+          "displayName" : "Sean R. Owen",
+          "active" : true,
+          "timeZone" : "America/Chicago"
+        },
+        "created" : "2016-03-14T09:11:18.588+0000",
+        "updated" : "2016-03-14T09:11:18.588+0000"
+      }, {
+        "self" : "https://issues.apache.org/jira/rest/api/2/issue/12920204/comment/15566349",
+        "id" : "15566349",
+        "author" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=jerome.scheuring",
+          "name" : "jerome.scheuring",
+          "key" : "jerome.scheuring",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?avatarId=10452",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&avatarId=10452",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&avatarId=10452",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&avatarId=10452"
+          },
+          "displayName" : "Jerome Scheuring",
+          "active" : false,
+          "timeZone" : "America/Chicago"
+        },
+        "body" : "_Note that I am entirely new to the process of submitting issues on this system: if this needs to be a new issue, I would appreciate someone letting me know._\n\nA bug very similar to this one is 100% reproducible across multiple machines, running both Windows 8.1 and Windows 10, compiled with Scala 2.11 and running under Spark 2.0.1.\n\nIt occurs\n\n* in Scala, but not Python (have not tried R)\n* only when reading CSV files (and not, for example, when reading Parquet files)\n* only when running local, not submitted to a cluster\n\n_Update:_  The bug also does not occur when run on the installation of Spark 2.0.1 on the Windows 10 machine running inside \"Bash on Ubuntu on Windows\", i.e. the Linux subsystem running on the Windows 10 machine where the bug _does_ occur when the program is executed from Windows.\n\nThis program will produce the bug (if {{poemData}} is defined per the commented-out section, rather than being read from a CSV file, the bug does not occur):\n\n{code}\nimport org.apache.spark.sql.SparkSession\nimport org.apache.spark.sql.types._\n\nobject SparkBugDemo {\n  def main(args: Array[String]): Unit = {\n\n    val poemSchema = StructType(\n      Seq(\n        StructField(\"label\",IntegerType), \n        StructField(\"line\",StringType)\n      )\n    )\n\n    val sparkSession = SparkSession.builder()\n      .appName(\"Spark Bug Demonstration\")\n      .master(\"local[*]\")\n      .getOrCreate()\n\n//    val poemData = sparkSession.createDataFrame(Seq(\n//      (0, \"There's many a strong farmer\"),\n//      (0, \"Who's heart would break in two\"),\n//      (1, \"If he could see the townland\"),\n//      (1, \"That we are riding to;\")\n//    )).toDF(\"label\", \"line\")\n\n    val poemData = sparkSession.read\n      .option(\"quote\", value=\"\")\n      .schema(poemSchema)\n      .csv(args(0))\n\n    println(s\"Record count: ${poemData.count()}\")\n\n  }\n}\n{code}\n\nAssuming that {{args(0)}} contains the path to a file with comma-separated integer/string pairs, as in:\n\n{noformat}\n0,There's many a strong farmer\n0,Who's heart would break in two\n1,If he could see the townland\n1,That we are riding to;\n{noformat}",
+        "updateAuthor" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=jerome.scheuring",
+          "name" : "jerome.scheuring",
+          "key" : "jerome.scheuring",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?avatarId=10452",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&avatarId=10452",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&avatarId=10452",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&avatarId=10452"
+          },
+          "displayName" : "Jerome Scheuring",
+          "active" : false,
+          "timeZone" : "America/Chicago"
+        },
+        "created" : "2016-10-11T19:33:22.795+0000",
+        "updated" : "2016-10-11T19:59:21.562+0000"
+      }, {
+        "self" : "https://issues.apache.org/jira/rest/api/2/issue/12920204/comment/15713974",
+        "id" : "15713974",
+        "author" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=brian44",
+          "name" : "brian44",
+          "key" : "brian44",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?avatarId=10452",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&avatarId=10452",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&avatarId=10452",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&avatarId=10452"
+          },
+          "displayName" : "Brian",
+          "active" : true,
+          "timeZone" : "America/Havana"
+        },
+        "body" : "Why is this closed / marked as resolved?  It is not resolved at all - this is a valid issue.  This happens to me every time when I run a job locally (local mode) or use spark-shell on my machine.  I use this a lot since its part of my development process before scaling up to cluster runs is to test and develop thoroughly locally.  Saying \"it won't happen if you use linux\" is not a solution - as spark is intended to work on windows as well.\n\nAs others have said it's not a permission issue, as it happens when running in administrator mode.\n\nThis is not ideal as temporary files generated do not get deleted and sit there taking up disk space.  Additionally it clogs up my logs showing exceptions all the time - which is annoying it I am checking for exceptions and have to ignore these.\n\nHow can we re-open it?  If not I will submit new issues.\n\n",
+        "updateAuthor" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=brian44",
+          "name" : "brian44",
+          "key" : "brian44",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?avatarId=10452",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&avatarId=10452",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&avatarId=10452",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&avatarId=10452"
+          },
+          "displayName" : "Brian",
+          "active" : true,
+          "timeZone" : "America/Havana"
+        },
+        "created" : "2016-12-02T04:21:02.365+0000",
+        "updated" : "2016-12-02T04:21:02.365+0000"
+      }, {
+        "self" : "https://issues.apache.org/jira/rest/api/2/issue/12920204/comment/15713978",
+        "id" : "15713978",
+        "author" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=brian44",
+          "name" : "brian44",
+          "key" : "brian44",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?avatarId=10452",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&avatarId=10452",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&avatarId=10452",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&avatarId=10452"
+          },
+          "displayName" : "Brian",
+          "active" : true,
+          "timeZone" : "America/Havana"
+        },
+        "body" : "Theory or no for what caused it, it's a bug in spark.  Other programs and libraries I run on windows do not have this problem... Just because you don't know how to fix a bug doesn't mean it doesn't exist, I really don't understand that logic.",
+        "updateAuthor" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=brian44",
+          "name" : "brian44",
+          "key" : "brian44",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?avatarId=10452",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&avatarId=10452",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&avatarId=10452",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&avatarId=10452"
+          },
+          "displayName" : "Brian",
+          "active" : true,
+          "timeZone" : "America/Havana"
+        },
+        "created" : "2016-12-02T04:24:37.813+0000",
+        "updated" : "2016-12-02T04:24:58.971+0000"
+      }, {
+        "self" : "https://issues.apache.org/jira/rest/api/2/issue/12920204/comment/15714505",
+        "id" : "15714505",
+        "author" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=srowen",
+          "name" : "srowen",
+          "key" : "srowen",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?ownerId=srowen&avatarId=26037",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&ownerId=srowen&avatarId=26037",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&ownerId=srowen&avatarId=26037",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&ownerId=srowen&avatarId=26037"
+          },
+          "displayName" : "Sean R. Owen",
+          "active" : true,
+          "timeZone" : "America/Chicago"
+        },
+        "body" : "That's fine, but I don't think anyone has proposed why Windows can't delete the file or what could be changed.",
+        "updateAuthor" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=srowen",
+          "name" : "srowen",
+          "key" : "srowen",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?ownerId=srowen&avatarId=26037",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&ownerId=srowen&avatarId=26037",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&ownerId=srowen&avatarId=26037",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&ownerId=srowen&avatarId=26037"
+          },
+          "displayName" : "Sean R. Owen",
+          "active" : true,
+          "timeZone" : "America/Chicago"
+        },
+        "created" : "2016-12-02T08:51:00.440+0000",
+        "updated" : "2016-12-02T08:51:00.440+0000"
+      }, {
+        "self" : "https://issues.apache.org/jira/rest/api/2/issue/12920204/comment/15758646",
+        "id" : "15758646",
+        "author" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=certman",
+          "name" : "certman",
+          "key" : "certman",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?avatarId=10452",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&avatarId=10452",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&avatarId=10452",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&avatarId=10452"
+          },
+          "displayName" : "certman",
+          "active" : false,
+          "timeZone" : "Etc/UTC"
+        },
+        "body" : "I can confirm this issue exists in Windows 7 running Spark 2.x\nAlthough this is a minor issue, it is still a bug and should be fixed. Something doesn't work on windows doesn't mean this is a windows bug. It's not due to permission. Proposing workaround of not using windows is just stupid..",
+        "updateAuthor" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=certman",
+          "name" : "certman",
+          "key" : "certman",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?avatarId=10452",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&avatarId=10452",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&avatarId=10452",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&avatarId=10452"
+          },
+          "displayName" : "certman",
+          "active" : false,
+          "timeZone" : "Etc/UTC"
+        },
+        "created" : "2016-12-18T10:53:43.555+0000",
+        "updated" : "2016-12-18T10:53:43.555+0000"
+      }, {
+        "self" : "https://issues.apache.org/jira/rest/api/2/issue/12920204/comment/15884892",
+        "id" : "15884892",
+        "author" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=vlovsky",
+          "name" : "vlovsky",
+          "key" : "vlovsky",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?avatarId=10452",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&avatarId=10452",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&avatarId=10452",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&avatarId=10452"
+          },
+          "displayName" : "Vlad Sadilovski",
+          "active" : false,
+          "timeZone" : "Etc/UTC"
+        },
+        "body" : "I found following bug while installing spark on Windows 10 prof. When exiting spark-shell it complains as the following:\n\nscala> :quit\n17/02/26 14:44:01 ERROR util.ShutdownHookManager: Exception while deleting Spark temp dir: C:\\temp\\spark-6cb6ceac-06a8-44d7-9f3a-907c2dc7067f\njava.io.IOException: Failed to delete: C:\\temp\\spark-6cb6ceac-06a8-44d7-9f3a-907c2dc7067f\n        at org.apache.spark.util.Utils$.deleteRecursively(Utils.scala:1010)\n        at org.apache.spark.util.ShutdownHookManager$$anonfun$1$$anonfun$apply$mcV$sp$3.apply(ShutdownHookManager.scala:65)\n        at org.apache.spark.util.ShutdownHookManager$$anonfun$1$$anonfun$apply$mcV$sp$3.apply(ShutdownHookManager.scala:62)\n        at scala.collection.IndexedSeqOptimized$class.foreach(IndexedSeqOptimized.scala:33)\n        at scala.collection.mutable.ArrayOps$ofRef.foreach(ArrayOps.scala:186)\n        at org.apache.spark.util.ShutdownHookManager$$anonfun$1.apply$mcV$sp(ShutdownHookManager.scala:62)\n        at org.apache.spark.util.SparkShutdownHook.run(ShutdownHookManager.scala:216)\n        at org.apache.spark.util.SparkShutdownHookManager$$anonfun$runAll$1$$anonfun$apply$mcV$sp$1.apply$mcV$sp(ShutdownHookManager.scala:188)\n        at org.apache.spark.util.SparkShutdownHookManager$$anonfun$runAll$1$$anonfun$apply$mcV$sp$1.apply(ShutdownHookManager.scala:188)\n        at org.apache.spark.util.SparkShutdownHookManager$$anonfun$runAll$1$$anonfun$apply$mcV$sp$1.apply(ShutdownHookManager.scala:188)\n        at org.apache.spark.util.Utils$.logUncaughtExceptions(Utils.scala:1951)\n        at org.apache.spark.util.SparkShutdownHookManager$$anonfun$runAll$1.apply$mcV$sp(ShutdownHookManager.scala:188)\n        at org.apache.spark.util.SparkShutdownHookManager$$anonfun$runAll$1.apply(ShutdownHookManager.scala:188)\n        at org.apache.spark.util.SparkShutdownHookManager$$anonfun$runAll$1.apply(ShutdownHookManager.scala:188)\n        at scala.util.Try$.apply(Try.scala:192)\n        at org.apache.spark.util.SparkShutdownHookManager.runAll(ShutdownHookManager.scala:188)\n        at org.apache.spark.util.SparkShutdownHookManager$$anon$2.run(ShutdownHookManager.scala:178)\n        at org.apache.hadoop.util.ShutdownHookManager$1.run(ShutdownHookManager.java:54)\n\nI immediately switched to the windows file explorer and was able to delete this folder. So, it doesn't look like a permission issue.\n\nIs this the same issue reported by the OP? If so, why this issue is closed as it is still reproducible/exists in the latest spark distribution? Are there any workarounds (beside moving to linux)?\n\nThanks",
+        "updateAuthor" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=vlovsky",
+          "name" : "vlovsky",
+          "key" : "vlovsky",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?avatarId=10452",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&avatarId=10452",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&avatarId=10452",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&avatarId=10452"
+          },
+          "displayName" : "Vlad Sadilovski",
+          "active" : false,
+          "timeZone" : "Etc/UTC"
+        },
+        "created" : "2017-02-26T19:56:29.835+0000",
+        "updated" : "2017-02-26T19:58:50.526+0000"
+      }, {
+        "self" : "https://issues.apache.org/jira/rest/api/2/issue/12920204/comment/15940987",
+        "id" : "15940987",
+        "author" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=jouni",
+          "name" : "jouni",
+          "key" : "jouni",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?avatarId=10452",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&avatarId=10452",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&avatarId=10452",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&avatarId=10452"
+          },
+          "displayName" : "Jouni H",
+          "active" : false,
+          "timeZone" : "Europe/Helsinki"
+        },
+        "body" : "I was able to reproduce this bug on Windows with the latest spark version: spark-2.1.0-bin-hadoop2.7\n\nThis bug happens for me when I include --jars for spark-submit AND use saveAsTextOut on the script.\n\nExample scenarios:\n\n* ERROR when include --jars AND use saveAsTextFile \n* Works when use saveAsTextFile, but don't use any --jars on command line \n* Works when you include --jars on command line but don't use saveAsTextOut (comment out)\n\nExample command line: {{spark-submit --jars aws-java-sdk-1.7.4.jar sparkbugtest.py bugtest.txt ./output/test1/}}\n\nThe script here doesn't need the --jars file, but if you include it on the command line, it causes the shutdown bug.\n\naws-java-sdk-1.7.4.jar can be downloaded from here: https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk/1.7.4/aws-java-sdk-1.7.4.jar\n\n\nbugtest.txt:\n{noformat}\none\ntwo\nthree\n{noformat}\n\nsparkbugtest.py:\n\n{noformat}\nimport sys\nimport time\n\nfrom pyspark.sql import SparkSession\n\ndef main():\n\n    # Initialize the spark context.\n    spark = SparkSession\\\n        .builder\\\n        .appName(\"SparkParseLogTest\")\\\n        .getOrCreate()\n\t\t\n\n    lines = spark.read.text(sys.argv[1]).rdd.map(lambda r: r[0])\n\t\n    time.sleep(10) # just for debug to see how files change in temporary folder\n\t\n    # at this point there is only this script (sparkbugtest.py) in the temporary folder\n\t\n    lines.saveAsTextFile(sys.argv[2])\n\t\n    # at this point there is both sparkbugtest.py and aws-java-sdk-1.7.4.jar in the temporary folder\n\t\n    time.sleep(10) # for debug\n\nif __name__ == \"__main__\":\n    main()\n\n{noformat}\n\nI also use winutils.exe as mentioned here: https://jaceklaskowski.gitbooks.io/mastering-apache-spark/content/spark-tips-and-tricks-running-spark-windows.html\n\nWhat happens in the userFiles tmp folder is interesting:\n\n* At first there is the {{sparkbugtest.py}}\n* At the end (I think during saveAsTextFile, or after it), the {{aws-java-sdk-1.7.4.jar}} file is copied there and the {{sparkbugtest.py}} get's deleted\n* After the spark-submit has ended the {{aws-java-sdk-1.7.4.jar}} is still in the temporary folder that couldn't be deleted \n\nThe temp folder in this example was like: C:\\Users\\Jouni\\AppData\\Local\\Temp\\spark-9b68fc91-7ee7-481a-970d-38a6db6f6160\\userFiles-948dc876-bced-4778-98a7-90944a7fb155\\\n\n",
+        "updateAuthor" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=jouni",
+          "name" : "jouni",
+          "key" : "jouni",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?avatarId=10452",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&avatarId=10452",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&avatarId=10452",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&avatarId=10452"
+          },
+          "displayName" : "Jouni H",
+          "active" : false,
+          "timeZone" : "Europe/Helsinki"
+        },
+        "created" : "2017-03-24T19:24:37.669+0000",
+        "updated" : "2017-03-24T22:25:40.513+0000"
+      }, {
+        "self" : "https://issues.apache.org/jira/rest/api/2/issue/12920204/comment/15992363",
+        "id" : "15992363",
+        "author" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=arpitbh",
+          "name" : "arpitbh",
+          "key" : "arpitbh",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?avatarId=10452",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&avatarId=10452",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&avatarId=10452",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&avatarId=10452"
+          },
+          "displayName" : "arpit  bhatnagar",
+          "active" : false,
+          "timeZone" : "Etc/UTC"
+        },
+        "body" : "is there any work around for this issue or it is solved, because i am getting the same issue and i am stuck.\n\n17/05/02 11:07:13 ERROR ShutdownHookManager: Exception while deleting Spark temp dir: C:\\Users\\arpitbh\\AppData\\Local\\Temp\\spark-07d9637a-2eb8-4a32-8490-01e106a80d6b\njava.io.IOException: Failed to delete: C:\\Users\\arpitbh\\AppData\\Local\\Temp\\spark-07d9637a-2eb8-4a32-8490-01e106a80d6b\n        at org.apache.spark.util.Utils$.deleteRecursively(Utils.scala:1010)\n        at org.apache.spark.util.ShutdownHookManager$$anonfun$1$$anonfun$apply$mcV$sp$3.apply(ShutdownHookManager.scala:65)\n        at org.apache.spark.util.ShutdownHookManager$$anonfun$1$$anonfun$apply$mcV$sp$3.apply(ShutdownHookManager.scala:62)\n        at scala.collection.IndexedSeqOptimized$class.foreach(IndexedSeqOptimized.scala:33)\n        at scala.collection.mutable.ArrayOps$ofRef.foreach(ArrayOps.scala:186)\n        at org.apache.spark.util.ShutdownHookManager$$anonfun$1.apply$mcV$sp(ShutdownHookManager.scala:62)\n        at org.apache.spark.util.SparkShutdownHook.run(ShutdownHookManager.scala:216)\n        at org.apache.spark.util.SparkShutdownHookManager$$anonfun$runAll$1$$anonfun$apply$mcV$sp$1.apply$mcV$sp(ShutdownHookManager.scala:188)\n        at org.apache.spark.util.SparkShutdownHookManager$$anonfun$runAll$1$$anonfun$apply$mcV$sp$1.apply(ShutdownHookManager.scala:188)\n        at org.apache.spark.util.SparkShutdownHookManager$$anonfun$runAll$1$$anonfun$apply$mcV$sp$1.apply(ShutdownHookManager.scala:188)\n        at org.apache.spark.util.Utils$.logUncaughtExceptions(Utils.scala:1951)\n        at org.apache.spark.util.SparkShutdownHookManager$$anonfun$runAll$1.apply$mcV$sp(ShutdownHookManager.scala:188)\n        at org.apache.spark.util.SparkShutdownHookManager$$anonfun$runAll$1.apply(ShutdownHookManager.scala:188)\n        at org.apache.spark.util.SparkShutdownHookManager$$anonfun$runAll$1.apply(ShutdownHookManager.scala:188)\n        at scala.util.Try$.apply(Try.scala:192)\n        at org.apache.spark.util.SparkShutdownHookManager.runAll(ShutdownHookManager.scala:188)\n        at org.apache.spark.util.SparkShutdownHookManager$$anon$2.run(ShutdownHookManager.scala:178)\n        at org.apache.hadoop.util.ShutdownHookManager$1.run(ShutdownHookManager.java:54)\n\n\n\nPlease help",
+        "updateAuthor" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=arpitbh",
+          "name" : "arpitbh",
+          "key" : "arpitbh",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?avatarId=10452",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&avatarId=10452",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&avatarId=10452",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&avatarId=10452"
+          },
+          "displayName" : "arpit  bhatnagar",
+          "active" : false,
+          "timeZone" : "Etc/UTC"
+        },
+        "created" : "2017-05-02T05:44:31.961+0000",
+        "updated" : "2017-05-02T05:44:31.961+0000"
+      }, {
+        "self" : "https://issues.apache.org/jira/rest/api/2/issue/12920204/comment/15994192",
+        "id" : "15994192",
+        "author" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=Supriya",
+          "name" : "Supriya",
+          "key" : "supriya",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?avatarId=10452",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&avatarId=10452",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&avatarId=10452",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&avatarId=10452"
+          },
+          "displayName" : "Supriya Pasham",
+          "active" : false,
+          "timeZone" : "Etc/UTC"
+        },
+        "body" : "Hi Team,\n\nI am executing 'spark-submit' with a jar and properties file in the below manner \n\n  -> spark-submit --class package.classname --master local[*] <project-path>\\Spark.jar data.properties\n\nWhen i run the above command, immediately 2-3 exceptions are displayed in the command prompt with below exception details.\n\nI have seen that this is issue is marked as resolved, but i dint fin correct resolution.\nPlease let me know if there is a solution to this issue -\n\nERROR ShutdownHookManager: Exception while deleting Spark temp dir: C:\\Users\\user1\\AppData\\Local\\Temp\\spark-5e37d680-2e9f-4aed-ac59-2f24d8387\n855\njava.io.IOException: Failed to delete: C:\\Users\\user1\\AppData\\Local\\Temp\\spark-5e37d680-2e9f-4aed-ac59-2f24d8387855\n\n\n\nEnvironment details : I am running the commands in Windows 7 machine\nRequest you to provide a solution asap.",
+        "updateAuthor" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=Supriya",
+          "name" : "Supriya",
+          "key" : "supriya",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?avatarId=10452",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&avatarId=10452",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&avatarId=10452",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&avatarId=10452"
+          },
+          "displayName" : "Supriya Pasham",
+          "active" : false,
+          "timeZone" : "Etc/UTC"
+        },
+        "created" : "2017-05-03T02:44:45.555+0000",
+        "updated" : "2017-05-03T02:46:31.938+0000"
+      }, {
+        "self" : "https://issues.apache.org/jira/rest/api/2/issue/12920204/comment/16134527",
+        "id" : "16134527",
+        "author" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=marks1900",
+          "name" : "marks1900",
+          "key" : "marks1900",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?avatarId=10452",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&avatarId=10452",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&avatarId=10452",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&avatarId=10452"
+          },
+          "displayName" : "Mark S",
+          "active" : true,
+          "timeZone" : "America/Toronto"
+        },
+        "body" : "I seem to have same issue on my Windows 10 environment, when I am running in local mode.\n{code:java}\nSparkSession spark = SparkSession\n\t.builder()\n\t.master(\"local\")\n\t.appName(\"Java Spark SQL App\")\n\t.config(\"spark.some.config.option\", \"some-value\")\n\t.getOrCreate();\n\nDataset<Row> df = spark.read().json(\"*.gz\").toDF();\n//  Dataset<Row> df = spark.read().json(\"C:\\\\dev\\\\source\\\\_misc\\\\Company\\\\sample-data\\\\data01.gz\").toDF();\n//  Dataset<Row> df = spark.read().json(\"/mnt/c/dev/source/_misc/Company/sample-data/data01.gz\").toDF();\n\ndf.createOrReplaceTempView(\"MyDataTable\");\nDataset<Row> result01 = spark.sql(\"Select postcode, count(*) from MyDataTable Group by postcode\");\n\n// result01.write().format(\"parquet\").save(\"output.parquet\");\nresult01.write().parquet(\"output.parquet\");\n{code}\n\n*Question - Am I to assumed this Spark 2.x + Windows issue will not be fixed?*\n\nBTW.  I can confirm that running Spark using  \"Bash on Ubuntu for Windows\" as suggested by [~jerome.scheuring] does work.\n\n{noformat}\n17/08/20 18:29:36 INFO FileOutputCommitter: Saved output of task 'attempt_20170820182935_0017_m_000000_0' to file:/mnt/c/dev/source/_misc/Company/Project/target/output.parquet/_temporary/0/task_201708201829\n35_0017_m_000000\n17/08/20 18:29:36 INFO SparkHadoopMapRedUtil: attempt_20170820182935_0017_m_000000_0: Committed\n17/08/20 18:29:36 INFO Executor: Finished task 0.0 in stage 17.0 (TID 606). 2294 bytes result sent to driver\n17/08/20 18:29:36 INFO TaskSetManager: Finished task 0.0 in stage 17.0 (TID 606) in 899 ms on localhost (executor driver) (1/1)\n17/08/20 18:29:36 INFO DAGScheduler: ResultStage 17 (parquet at SparkApp.java:61) finished in 0.900 s\n17/08/20 18:29:36 INFO TaskSchedulerImpl: Removed TaskSet 17.0, whose tasks have all completed, from pool\n17/08/20 18:29:36 INFO DAGScheduler: Job 8 finished: parquet at SparkApp.java:61, took 6.870277 s\n{noformat}\n\n\nh3. Environment 1\n* Windows 10 \n* Java 8\n* Spark 2.2.0\n* Parquet 1.8.2\n* Stacktrace\n{noformat}\nDriver stacktrace:\n\tat org.apache.spark.scheduler.DAGScheduler.org$apache$spark$scheduler$DAGScheduler$$failJobAndIndependentStages(DAGScheduler.scala:1499)\n\tat org.apache.spark.scheduler.DAGScheduler$$anonfun$abortStage$1.apply(DAGScheduler.scala:1487)\n\tat org.apache.spark.scheduler.DAGScheduler$$anonfun$abortStage$1.apply(DAGScheduler.scala:1486)\n\tat scala.collection.mutable.ResizableArray$class.foreach(ResizableArray.scala:59)\n\tat scala.collection.mutable.ArrayBuffer.foreach(ArrayBuffer.scala:48)\n\tat org.apache.spark.scheduler.DAGScheduler.abortStage(DAGScheduler.scala:1486)\n\tat org.apache.spark.scheduler.DAGScheduler$$anonfun$handleTaskSetFailed$1.apply(DAGScheduler.scala:814)\n\tat org.apache.spark.scheduler.DAGScheduler$$anonfun$handleTaskSetFailed$1.apply(DAGScheduler.scala:814)\n\tat scala.Option.foreach(Option.scala:257)\n\tat org.apache.spark.scheduler.DAGScheduler.handleTaskSetFailed(DAGScheduler.scala:814)\n\tat org.apache.spark.scheduler.DAGSchedulerEventProcessLoop.doOnReceive(DAGScheduler.scala:1714)\n\tat org.apache.spark.scheduler.DAGSchedulerEventProcessLoop.onReceive(DAGScheduler.scala:1669)\n\tat org.apache.spark.scheduler.DAGSchedulerEventProcessLoop.onReceive(DAGScheduler.scala:1658)\n\tat org.apache.spark.util.EventLoop$$anon$1.run(EventLoop.scala:48)\n\tat org.apache.spark.scheduler.DAGScheduler.runJob(DAGScheduler.scala:630)\n\tat org.apache.spark.SparkContext.runJob(SparkContext.scala:2022)\n\tat org.apache.spark.sql.execution.datasources.FileFormatWriter$$anonfun$write$1.apply$mcV$sp(FileFormatWriter.scala:188)\n\t... 35 more\nCaused by: org.apache.spark.SparkException: Task failed while writing rows\n\tat org.apache.spark.sql.execution.datasources.FileFormatWriter$.org$apache$spark$sql$execution$datasources$FileFormatWriter$$executeTask(FileFormatWriter.scala:272)\n\tat org.apache.spark.sql.execution.datasources.FileFormatWriter$$anonfun$write$1$$anonfun$apply$mcV$sp$1.apply(FileFormatWriter.scala:191)\n\tat org.apache.spark.sql.execution.datasources.FileFormatWriter$$anonfun$write$1$$anonfun$apply$mcV$sp$1.apply(FileFormatWriter.scala:190)\n\tat org.apache.spark.scheduler.ResultTask.runTask(ResultTask.scala:87)\n\tat org.apache.spark.scheduler.Task.run(Task.scala:108)\n\tat org.apache.spark.executor.Executor$TaskRunner.run(Executor.scala:335)\n\tat java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)\n\tat java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)\n\tat java.lang.Thread.run(Thread.java:748)\nCaused by: java.io.IOException: (null) entry in command string: null chmod 0644 C:\\dev\\source\\_misc\\Company\\Project\\output.parquet\\_temporary\\0\\_temporary\\attempt_20170820142635_0017_m_000000_0\\part-00000-9fb61a3e-1441-4ed3-90c1-6242195817e0-c000.snappy.parquet\n\tat org.apache.hadoop.util.Shell$ShellCommandExecutor.execute(Shell.java:762)\n\tat org.apache.hadoop.util.Shell.execCommand(Shell.java:859)\n\tat org.apache.hadoop.util.Shell.execCommand(Shell.java:842)\n\tat org.apache.hadoop.fs.RawLocalFileSystem.setPermission(RawLocalFileSystem.java:661)\n\tat org.apache.hadoop.fs.ChecksumFileSystem$1.apply(ChecksumFileSystem.java:501)\n\tat org.apache.hadoop.fs.ChecksumFileSystem$FsOperation.run(ChecksumFileSystem.java:482)\n\tat org.apache.hadoop.fs.ChecksumFileSystem.setPermission(ChecksumFileSystem.java:498)\n\tat org.apache.hadoop.fs.ChecksumFileSystem.create(ChecksumFileSystem.java:467)\n\tat org.apache.hadoop.fs.ChecksumFileSystem.create(ChecksumFileSystem.java:433)\n\tat org.apache.hadoop.fs.FileSystem.create(FileSystem.java:908)\n\tat org.apache.hadoop.fs.FileSystem.create(FileSystem.java:889)\n\tat org.apache.hadoop.fs.FileSystem.create(FileSystem.java:786)\n\tat org.apache.parquet.hadoop.ParquetFileWriter.<init>(ParquetFileWriter.java:241)\n\tat org.apache.parquet.hadoop.ParquetOutputFormat.getRecordWriter(ParquetOutputFormat.java:342)\n\tat org.apache.parquet.hadoop.ParquetOutputFormat.getRecordWriter(ParquetOutputFormat.java:302)\n\tat org.apache.spark.sql.execution.datasources.parquet.ParquetOutputWriter.<init>(ParquetOutputWriter.scala:37)\n\tat org.apache.spark.sql.execution.datasources.parquet.ParquetFileFormat$$anon$1.newInstance(ParquetFileFormat.scala:151)\n\tat org.apache.spark.sql.execution.datasources.FileFormatWriter$SingleDirectoryWriteTask.newOutputWriter(FileFormatWriter.scala:305)\n\tat org.apache.spark.sql.execution.datasources.FileFormatWriter$SingleDirectoryWriteTask.execute(FileFormatWriter.scala:314)\n\tat org.apache.spark.sql.execution.datasources.FileFormatWriter$$anonfun$org$apache$spark$sql$execution$datasources$FileFormatWriter$$executeTask$3.apply(FileFormatWriter.scala:258)\n\tat org.apache.spark.sql.execution.datasources.FileFormatWriter$$anonfun$org$apache$spark$sql$execution$datasources$FileFormatWriter$$executeTask$3.apply(FileFormatWriter.scala:256)\n\tat org.apache.spark.util.Utils$.tryWithSafeFinallyAndFailureCallbacks(Utils.scala:1375)\n\tat org.apache.spark.sql.execution.datasources.FileFormatWriter$.org$apache$spark$sql$execution$datasources$FileFormatWriter$$executeTask(FileFormatWriter.scala:261)\n\t... 8 more\n{noformat}\n\n\nh3. Environment 2\n* Windows 10 \n* Java 8\n* Spark 2.2.0\n* Parquet 1.9.0\n* Stacktrace\n{noformat}\nDriver stacktrace:\n\tat org.apache.spark.scheduler.DAGScheduler.org$apache$spark$scheduler$DAGScheduler$$failJobAndIndependentStages(DAGScheduler.scala:1499)\n\tat org.apache.spark.scheduler.DAGScheduler$$anonfun$abortStage$1.apply(DAGScheduler.scala:1487)\n\tat org.apache.spark.scheduler.DAGScheduler$$anonfun$abortStage$1.apply(DAGScheduler.scala:1486)\n\tat scala.collection.mutable.ResizableArray$class.foreach(ResizableArray.scala:59)\n\tat scala.collection.mutable.ArrayBuffer.foreach(ArrayBuffer.scala:48)\n\tat org.apache.spark.scheduler.DAGScheduler.abortStage(DAGScheduler.scala:1486)\n\tat org.apache.spark.scheduler.DAGScheduler$$anonfun$handleTaskSetFailed$1.apply(DAGScheduler.scala:814)\n\tat org.apache.spark.scheduler.DAGScheduler$$anonfun$handleTaskSetFailed$1.apply(DAGScheduler.scala:814)\n\tat scala.Option.foreach(Option.scala:257)\n\tat org.apache.spark.scheduler.DAGScheduler.handleTaskSetFailed(DAGScheduler.scala:814)\n\tat org.apache.spark.scheduler.DAGSchedulerEventProcessLoop.doOnReceive(DAGScheduler.scala:1714)\n\tat org.apache.spark.scheduler.DAGSchedulerEventProcessLoop.onReceive(DAGScheduler.scala:1669)\n\tat org.apache.spark.scheduler.DAGSchedulerEventProcessLoop.onReceive(DAGScheduler.scala:1658)\n\tat org.apache.spark.util.EventLoop$$anon$1.run(EventLoop.scala:48)\n\tat org.apache.spark.scheduler.DAGScheduler.runJob(DAGScheduler.scala:630)\n\tat org.apache.spark.SparkContext.runJob(SparkContext.scala:2022)\n\tat org.apache.spark.sql.execution.datasources.FileFormatWriter$$anonfun$write$1.apply$mcV$sp(FileFormatWriter.scala:188)\n\t... 35 more\nCaused by: org.apache.spark.SparkException: Task failed while writing rows\n\tat org.apache.spark.sql.execution.datasources.FileFormatWriter$.org$apache$spark$sql$execution$datasources$FileFormatWriter$$executeTask(FileFormatWriter.scala:272)\n\tat org.apache.spark.sql.execution.datasources.FileFormatWriter$$anonfun$write$1$$anonfun$apply$mcV$sp$1.apply(FileFormatWriter.scala:191)\n\tat org.apache.spark.sql.execution.datasources.FileFormatWriter$$anonfun$write$1$$anonfun$apply$mcV$sp$1.apply(FileFormatWriter.scala:190)\n\tat org.apache.spark.scheduler.ResultTask.runTask(ResultTask.scala:87)\n\tat org.apache.spark.scheduler.Task.run(Task.scala:108)\n\tat org.apache.spark.executor.Executor$TaskRunner.run(Executor.scala:335)\n\tat java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)\n\tat java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)\n\tat java.lang.Thread.run(Thread.java:748)\nCaused by: java.io.IOException: (null) entry in command string: null chmod 0644 C:\\dev\\source\\_misc\\Company\\Project\\output.parquet\\_temporary\\0\\_temporary\\attempt_20170820142154_0017_m_000000_0\\part-00000-9278db11-d10b-4a41-ab9b-5c0d12a587ac-c000.snappy.parquet\n\tat org.apache.hadoop.util.Shell$ShellCommandExecutor.execute(Shell.java:762)\n\tat org.apache.hadoop.util.Shell.execCommand(Shell.java:859)\n\tat org.apache.hadoop.util.Shell.execCommand(Shell.java:842)\n\tat org.apache.hadoop.fs.RawLocalFileSystem.setPermission(RawLocalFileSystem.java:661)\n\tat org.apache.hadoop.fs.ChecksumFileSystem$1.apply(ChecksumFileSystem.java:501)\n\tat org.apache.hadoop.fs.ChecksumFileSystem$FsOperation.run(ChecksumFileSystem.java:482)\n\tat org.apache.hadoop.fs.ChecksumFileSystem.setPermission(ChecksumFileSystem.java:498)\n\tat org.apache.hadoop.fs.ChecksumFileSystem.create(ChecksumFileSystem.java:467)\n\tat org.apache.hadoop.fs.ChecksumFileSystem.create(ChecksumFileSystem.java:433)\n\tat org.apache.hadoop.fs.FileSystem.create(FileSystem.java:908)\n\tat org.apache.hadoop.fs.FileSystem.create(FileSystem.java:889)\n\tat org.apache.hadoop.fs.FileSystem.create(FileSystem.java:786)\n\tat org.apache.parquet.hadoop.ParquetFileWriter.<init>(ParquetFileWriter.java:241)\n\tat org.apache.parquet.hadoop.ParquetOutputFormat.getRecordWriter(ParquetOutputFormat.java:342)\n\tat org.apache.parquet.hadoop.ParquetOutputFormat.getRecordWriter(ParquetOutputFormat.java:302)\n\tat org.apache.spark.sql.execution.datasources.parquet.ParquetOutputWriter.<init>(ParquetOutputWriter.scala:37)\n\tat org.apache.spark.sql.execution.datasources.parquet.ParquetFileFormat$$anon$1.newInstance(ParquetFileFormat.scala:151)\n\tat org.apache.spark.sql.execution.datasources.FileFormatWriter$SingleDirectoryWriteTask.newOutputWriter(FileFormatWriter.scala:305)\n\tat org.apache.spark.sql.execution.datasources.FileFormatWriter$SingleDirectoryWriteTask.execute(FileFormatWriter.scala:314)\n\tat org.apache.spark.sql.execution.datasources.FileFormatWriter$$anonfun$org$apache$spark$sql$execution$datasources$FileFormatWriter$$executeTask$3.apply(FileFormatWriter.scala:258)\n\tat org.apache.spark.sql.execution.datasources.FileFormatWriter$$anonfun$org$apache$spark$sql$execution$datasources$FileFormatWriter$$executeTask$3.apply(FileFormatWriter.scala:256)\n\tat org.apache.spark.util.Utils$.tryWithSafeFinallyAndFailureCallbacks(Utils.scala:1375)\n\tat org.apache.spark.sql.execution.datasources.FileFormatWriter$.org$apache$spark$sql$execution$datasources$FileFormatWriter$$executeTask(FileFormatWriter.scala:261)\n\t... 8 more\n{noformat}\n\n\nh3. Environment 3\n* Windows 10 \n* Java 8\n* Spark 2.1.1\n* Parquet 1.9.0\n* Stacktrace\n{noformat}\nDriver stacktrace:\n\tat org.apache.spark.scheduler.DAGScheduler.org$apache$spark$scheduler$DAGScheduler$$failJobAndIndependentStages(DAGScheduler.scala:1435)\n\tat org.apache.spark.scheduler.DAGScheduler$$anonfun$abortStage$1.apply(DAGScheduler.scala:1423)\n\tat org.apache.spark.scheduler.DAGScheduler$$anonfun$abortStage$1.apply(DAGScheduler.scala:1422)\n\tat scala.collection.mutable.ResizableArray$class.foreach(ResizableArray.scala:59)\n\tat scala.collection.mutable.ArrayBuffer.foreach(ArrayBuffer.scala:48)\n\tat org.apache.spark.scheduler.DAGScheduler.abortStage(DAGScheduler.scala:1422)\n\tat org.apache.spark.scheduler.DAGScheduler$$anonfun$handleTaskSetFailed$1.apply(DAGScheduler.scala:802)\n\tat org.apache.spark.scheduler.DAGScheduler$$anonfun$handleTaskSetFailed$1.apply(DAGScheduler.scala:802)\n\tat scala.Option.foreach(Option.scala:257)\n\tat org.apache.spark.scheduler.DAGScheduler.handleTaskSetFailed(DAGScheduler.scala:802)\n\tat org.apache.spark.scheduler.DAGSchedulerEventProcessLoop.doOnReceive(DAGScheduler.scala:1650)\n\tat org.apache.spark.scheduler.DAGSchedulerEventProcessLoop.onReceive(DAGScheduler.scala:1605)\n\tat org.apache.spark.scheduler.DAGSchedulerEventProcessLoop.onReceive(DAGScheduler.scala:1594)\n\tat org.apache.spark.util.EventLoop$$anon$1.run(EventLoop.scala:48)\n\tat org.apache.spark.scheduler.DAGScheduler.runJob(DAGScheduler.scala:628)\n\tat org.apache.spark.SparkContext.runJob(SparkContext.scala:1925)\n\tat org.apache.spark.SparkContext.runJob(SparkContext.scala:1938)\n\tat org.apache.spark.SparkContext.runJob(SparkContext.scala:1958)\n\tat org.apache.spark.sql.execution.datasources.FileFormatWriter$$anonfun$write$1.apply$mcV$sp(FileFormatWriter.scala:127)\n\tat org.apache.spark.sql.execution.datasources.FileFormatWriter$$anonfun$write$1.apply(FileFormatWriter.scala:121)\n\tat org.apache.spark.sql.execution.datasources.FileFormatWriter$$anonfun$write$1.apply(FileFormatWriter.scala:121)\n\tat org.apache.spark.sql.execution.SQLExecution$.withNewExecutionId(SQLExecution.scala:57)\n\tat org.apache.spark.sql.execution.datasources.FileFormatWriter$.write(FileFormatWriter.scala:121)\n\tat org.apache.spark.sql.execution.datasources.InsertIntoHadoopFsRelationCommand.run(InsertIntoHadoopFsRelationCommand.scala:101)\n\tat org.apache.spark.sql.execution.command.ExecutedCommandExec.sideEffectResult$lzycompute(commands.scala:58)\n\tat org.apache.spark.sql.execution.command.ExecutedCommandExec.sideEffectResult(commands.scala:56)\n\tat org.apache.spark.sql.execution.command.ExecutedCommandExec.doExecute(commands.scala:74)\n\tat org.apache.spark.sql.execution.SparkPlan$$anonfun$execute$1.apply(SparkPlan.scala:114)\n\tat org.apache.spark.sql.execution.SparkPlan$$anonfun$execute$1.apply(SparkPlan.scala:114)\n\tat org.apache.spark.sql.execution.SparkPlan$$anonfun$executeQuery$1.apply(SparkPlan.scala:135)\n\tat org.apache.spark.rdd.RDDOperationScope$.withScope(RDDOperationScope.scala:151)\n\tat org.apache.spark.sql.execution.SparkPlan.executeQuery(SparkPlan.scala:132)\n\tat org.apache.spark.sql.execution.SparkPlan.execute(SparkPlan.scala:113)\n\tat org.apache.spark.sql.execution.QueryExecution.toRdd$lzycompute(QueryExecution.scala:92)\n\tat org.apache.spark.sql.execution.QueryExecution.toRdd(QueryExecution.scala:92)\n\tat org.apache.spark.sql.execution.datasources.DataSource.writeInFileFormat(DataSource.scala:484)\n\tat org.apache.spark.sql.execution.datasources.DataSource.write(DataSource.scala:520)\n\tat org.apache.spark.sql.DataFrameWriter.save(DataFrameWriter.scala:215)\n\tat org.apache.spark.sql.DataFrameWriter.save(DataFrameWriter.scala:198)\n\tat org.apache.spark.sql.DataFrameWriter.parquet(DataFrameWriter.scala:494)\n\tat test.SparkApp.main(SparkApp.java:59)\nCaused by: java.lang.NullPointerException\n\tat java.lang.ProcessBuilder.start(ProcessBuilder.java:1012)\n\tat org.apache.hadoop.util.Shell.runCommand(Shell.java:404)\n\tat org.apache.hadoop.util.Shell.run(Shell.java:379)\n\tat org.apache.hadoop.util.Shell$ShellCommandExecutor.execute(Shell.java:589)\n\tat org.apache.hadoop.util.Shell.execCommand(Shell.java:678)\n\tat org.apache.hadoop.util.Shell.execCommand(Shell.java:661)\n\tat org.apache.hadoop.fs.RawLocalFileSystem.setPermission(RawLocalFileSystem.java:639)\n\tat org.apache.hadoop.fs.FilterFileSystem.setPermission(FilterFileSystem.java:468)\n\tat org.apache.hadoop.fs.ChecksumFileSystem.create(ChecksumFileSystem.java:456)\n\tat org.apache.hadoop.fs.ChecksumFileSystem.create(ChecksumFileSystem.java:424)\n\tat org.apache.hadoop.fs.FileSystem.create(FileSystem.java:905)\n\tat org.apache.hadoop.fs.FileSystem.create(FileSystem.java:886)\n\tat org.apache.hadoop.fs.FileSystem.create(FileSystem.java:783)\n\tat org.apache.parquet.hadoop.ParquetFileWriter.<init>(ParquetFileWriter.java:223)\n\tat org.apache.parquet.hadoop.ParquetOutputFormat.getRecordWriter(ParquetOutputFormat.java:312)\n\tat org.apache.parquet.hadoop.ParquetOutputFormat.getRecordWriter(ParquetOutputFormat.java:283)\n\tat org.apache.spark.sql.execution.datasources.parquet.ParquetOutputWriter.<init>(ParquetOutputWriter.scala:37)\n\tat org.apache.spark.sql.execution.datasources.parquet.ParquetFileFormat$$anon$1.newInstance(ParquetFileFormat.scala:149)\n\tat org.apache.spark.sql.execution.datasources.FileFormatWriter$SingleDirectoryWriteTask.<init>(FileFormatWriter.scala:234)\n\tat org.apache.spark.sql.execution.datasources.FileFormatWriter$.org$apache$spark$sql$execution$datasources$FileFormatWriter$$executeTask(FileFormatWriter.scala:182)\n\tat org.apache.spark.sql.execution.datasources.FileFormatWriter$$anonfun$write$1$$anonfun$3.apply(FileFormatWriter.scala:129)\n\tat org.apache.spark.sql.execution.datasources.FileFormatWriter$$anonfun$write$1$$anonfun$3.apply(FileFormatWriter.scala:128)\n\tat org.apache.spark.scheduler.ResultTask.runTask(ResultTask.scala:87)\n\tat org.apache.spark.scheduler.Task.run(Task.scala:99)\n\tat org.apache.spark.executor.Executor$TaskRunner.run(Executor.scala:322)\n\tat java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)\n\tat java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)\n\tat java.lang.Thread.run(Thread.java:748)\n17/08/20 14:05:37 WARN FileUtil: Failed to delete file or dir [C:\\dev\\source\\_misc\\Company\\Project\\output.parquet\\_temporary\\0\\_temporary\\attempt_20170820140537_0017_m_000000_0\\.part-00000-89dd2cb6-f16e-4f62-8451-abdfa714ab2a.snappy.parquet.crc]: it still exists.\n17/08/20 14:05:37 WARN FileUtil: Failed to delete file or dir [C:\\dev\\source\\_misc\\Company\\Project\\output.parquet\\_temporary\\0\\_temporary\\attempt_20170820140537_0017_m_000000_0\\part-00000-89dd2cb6-f16e-4f62-8451-abdfa714ab2a.snappy.parquet]: it still exists.\n{noformat}\n",
+        "updateAuthor" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=marks1900",
+          "name" : "marks1900",
+          "key" : "marks1900",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?avatarId=10452",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&avatarId=10452",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&avatarId=10452",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&avatarId=10452"
+          },
+          "displayName" : "Mark S",
+          "active" : true,
+          "timeZone" : "America/Toronto"
+        },
+        "created" : "2017-08-20T18:46:57.292+0000",
+        "updated" : "2017-08-20T20:12:44.069+0000"
+      }, {
+        "self" : "https://issues.apache.org/jira/rest/api/2/issue/12920204/comment/16166117",
+        "id" : "16166117",
+        "author" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=FlamingMike",
+          "name" : "FlamingMike",
+          "key" : "flamingmike",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?ownerId=flamingmike&avatarId=26121",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&ownerId=flamingmike&avatarId=26121",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&ownerId=flamingmike&avatarId=26121",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&ownerId=flamingmike&avatarId=26121"
+          },
+          "displayName" : "Michel Lemay",
+          "active" : true,
+          "timeZone" : "America/New_York"
+        },
+        "body" : "In my case, what prevent the temp folder to be deleted is a lock on the jar I used in spark-submit.  That jar is copied in `spark-guid\\userFiles-guid\\` folder and loaded in the process.  I'm not sure if it is caused by the JVM itself or some handle left open (MutableURLClassLoader does not seems to be closed.)",
+        "updateAuthor" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=FlamingMike",
+          "name" : "FlamingMike",
+          "key" : "flamingmike",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?ownerId=flamingmike&avatarId=26121",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&ownerId=flamingmike&avatarId=26121",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&ownerId=flamingmike&avatarId=26121",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&ownerId=flamingmike&avatarId=26121"
+          },
+          "displayName" : "Michel Lemay",
+          "active" : true,
+          "timeZone" : "America/New_York"
+        },
+        "created" : "2017-09-14T11:41:14.344+0000",
+        "updated" : "2017-09-14T11:41:14.344+0000"
+      }, {
+        "self" : "https://issues.apache.org/jira/rest/api/2/issue/12920204/comment/16334061",
+        "id" : "16334061",
+        "author" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=IgorBabalich",
+          "name" : "IgorBabalich",
+          "key" : "igorbabalich",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?avatarId=10452",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&avatarId=10452",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&avatarId=10452",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&avatarId=10452"
+          },
+          "displayName" : "Igor Babalich",
+          "active" : false,
+          "timeZone" : "America/Toronto"
+        },
+        "body" : "Same issue under Windows10, Java 1.8  Spark 2.1.1 Hadoop 2.7   \r\n\r\nThe problem is that JVM/Classloader under Windows is not closing Jar files and keeps them open, so it is not possible to delete these Jar files.\r\n\r\nThe workaround is to write/fix a custom classloader for these jars and accurately close them before deletion in ShutdownHookManager\r\n\r\nSee more description at: \r\n[http://management-platform.blogspot.ca/2009/01/classloaders-keeping-jar-files-open.html]\r\n\r\nhttp://loracular.blogspot.ca/2009/12/dynamic-class-loader-with.html",
+        "updateAuthor" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=IgorBabalich",
+          "name" : "IgorBabalich",
+          "key" : "igorbabalich",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?avatarId=10452",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&avatarId=10452",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&avatarId=10452",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&avatarId=10452"
+          },
+          "displayName" : "Igor Babalich",
+          "active" : false,
+          "timeZone" : "America/Toronto"
+        },
+        "created" : "2018-01-22T09:06:08.980+0000",
+        "updated" : "2018-01-22T09:06:08.980+0000"
+      }, {
+        "self" : "https://issues.apache.org/jira/rest/api/2/issue/12920204/comment/16421530",
+        "id" : "16421530",
+        "author" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=kingsley",
+          "name" : "kingsley",
+          "key" : "kingsley",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?ownerId=kingsley&avatarId=35131",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&ownerId=kingsley&avatarId=35131",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&ownerId=kingsley&avatarId=35131",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&ownerId=kingsley&avatarId=35131"
+          },
+          "displayName" : "Kingsley Jones",
+          "active" : true,
+          "timeZone" : "Africa/Lagos"
+        },
+        "body" : "Same issue under Windows 10 and Windows Server 2016 using Java 1.8, Spark 2.2.1, Hadoop 2.7\r\n\r\nMy tests support the contention of [~IgorBabalich] ... it seems that classloaders instantiated by the code are not ever being closed. On *nix this is not a problem since the files are not locked. However, on windows the files are locked.\r\n\r\nIn addition to the resources mentioned by Igor this Oracle bug fix from Java 7 seems relevant:\r\n\r\n[https://docs.oracle.com/javase/7/docs/technotes/guides/net/ClassLoader.html]\r\n\r\nA new method \"close()\" was introduced to address the problem, which shows up on Windows due to the differing treatment of file locks between the Windows file system and *nix file system.\r\n\r\nI would point out that this is a generic java issue which breaks the cross-platform intention of that platform as a whole.\r\n\r\nThe Oracle blog also contains a post:\r\n\r\n[https://blogs.oracle.com/corejavatechtips/closing-a-urlclassloader]\r\n\r\nI have been searching the Apache Spark code-base for classloader instances, in search of any \".close()\" action. I could not find any, so I believe [~IgorBabalich] is correct - the issue has to do with classloaders not being closed.\r\n\r\nI would fix it myself, but thusfar it is not clear to me *when* the classloader needs to be closed. That is just ignorance on my part. The question is whether the classloader should be closed when still available as variable at the point where it has been instantiated, or later during the ShutdownHookManger cleanup. If the latter, then it was not clear to me how to actually get a list of open class loaders.\r\n\r\nThat is where I am at so far. I am prepared to put some work into this, but I need some help from those who know the codebase to help answer the above question - maybe with a well-isolated test.\r\n\r\nMY TESTS...\r\n\r\nThis issue has been around in one form or another for at least four years and shows up on many threads.\r\n\r\nThe standard answer is that it is a \"permissions issue\" to do with Windows.\r\n\r\nThat assertion is objectively false.\r\n\r\nThere is simple test to prove it.\r\n\r\nAt a windows prompt, start spark-shell\r\n\r\nC:\\spark\\spark-shell   \r\n\r\nthen get the temp file directory:\r\n\r\nscala> sc.getConf.get(\"spark.repl.class.outputDir\")\r\n\r\nit will be in %AppData%\\Local\\Temp tree e.g.\r\n\r\nC:\\Users\\kings\\AppData\\Local\\Temp\\spark-d67b262e-f6c8-43d7-8790-731308497f02\\repl-4cc87dce-8608-4643-b869-b0287ac4571f\r\n\r\nwhere the last file name has GUID that changes in each iteration.\r\n\r\nWith the spark session still open, go to the Temp directory and try to delete the given directory.\r\n\r\nYou won't be able to... there is a lock on it.\r\n\r\nNow issue\r\n\r\nscala> :quit\r\n\r\nto quit the session.\r\n\r\nThe stack trace will show that ShutdownHookManager tried to delete the directory above but could not.\r\n\r\nIf you now try and delete it through the file system you can.\r\n\r\nThis is because the JVM actually cleans up the locks on exit.\r\n\r\nSo, it is not a permission issue, but a feature of the Windows treatment of file locks.\r\n\r\nThis is the *known issue* that was addressed in the Java bug fix through introduction of a Closeable interface close method for URLClassLoader. It was fixed there since many enterprise systems run on Windows.\r\n\r\nNow... to further test the cause, I used the Windows Linux Subsytem.\r\n\r\nTo acces this (post install) you run\r\n\r\nC:> bash\r\n\r\nfrom a command prompt.\r\n\r\nIn order to get this to work, I used the same spark install, but had to install a fresh copy of jdk on ubuntu within the Windows bash subsystem. This is standard ubuntu stuff, but the path to your windows c drive is /mnt/c\r\n\r\nIf I rerun the same test, the new output of \r\n\r\nscala> sc.getConf.get(\"spark.repl.class.outputDir\")\r\n\r\nwill be a different folder location under Linux /tmp but with the same setup.\r\n\r\nWith the spark session still active it is possible to delete the spark folders in the /tmp folder *while the session is still active*. This is the difference between Windows and Linux. While bash is running Ubuntu on Windows, it has the different file locking behaviour which means you can delete the spark temp folders while a session is running.\r\n\r\nIf you run through a new session with spark-shell at the linux prompt and issue :quit it will shutdown without any stacktrace error from ShutdownHookManger.\r\n\r\nSo, my conclusions are as follows:\r\n\r\n1) this is not a permissions issue as per the common assertion\r\n\r\n2) it is a Windows specific problem for *known* reasons - namely the difference on file-locking as compared with Linux\r\n\r\n3) it was considered a *bug* in the Java ecosystem and was fixed as such from Java 1.7 with the .close() method\r\n\r\nFurther...\r\n\r\nPeople who need to run Spark on windows infrastructure (like me) can either run a docker container or use the windows linux subsystem to launch processes. So we do have a workaround.\r\n\r\nHowever, it does concern me that this bug has been hanging around for four years or more when it seems to come from a lax coding practise in the use of classloaders. That kind of breaks the cross-platform promise of Java and Scala, which is why they were popular in the first place :)\r\n\r\nLinux is good.\r\n\r\nWindows is good.\r\n\r\nThe addressable pool of Apache Spark developers *will* expand very significantly if Windows developers are not shut out of the ecosystem by (apparently) fixable issues.",
+        "updateAuthor" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=kingsley",
+          "name" : "kingsley",
+          "key" : "kingsley",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?ownerId=kingsley&avatarId=35131",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&ownerId=kingsley&avatarId=35131",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&ownerId=kingsley&avatarId=35131",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&ownerId=kingsley&avatarId=35131"
+          },
+          "displayName" : "Kingsley Jones",
+          "active" : true,
+          "timeZone" : "Africa/Lagos"
+        },
+        "created" : "2018-04-01T00:20:40.640+0000",
+        "updated" : "2019-01-17T04:56:40.453+0000"
+      }, {
+        "self" : "https://issues.apache.org/jira/rest/api/2/issue/12920204/comment/16427019",
+        "id" : "16427019",
+        "author" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=tiddman",
+          "name" : "tiddman",
+          "key" : "tiddman",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?avatarId=10452",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&avatarId=10452",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&avatarId=10452",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&avatarId=10452"
+          },
+          "displayName" : "Randy Tidd",
+          "active" : true,
+          "timeZone" : "America/New_York"
+        },
+        "body" : "This issue is not resolved please fix it.  I am having this issue running Spark on Windows, with spark-core 2.3.0 and Scala 2.11.  We run Spark jobs on Windows laptops via scalatest to perform unit and integration tests and this is an important aspect of our development.  I see the error when org.apache.spark.util.ShutdownHookManager is trying to delete a temp directory.  As Brian noted above, this is a problem because it leaves behind temp files that pile up and use up disk space, and clutters the logs making developers believe there has been a fatal error.\r\n\r\n{{2018-04-05 10:11:16 [pool-7-thread-1] ERROR o.a.spark.util.ShutdownHookManager - Exception while deleting Spark temp dir: C:\\Users\\<user>\\AppData\\Local\\Temp\\spark-8a2f4434-6533-4dbb-98e4-58565f0044bc}}\r\n{{java.io.IOException: Failed to delete: C:\\Users\\<user>\\AppData\\Local\\Temp\\spark-8a2f4434-6533-4dbb-98e4-58565f0044bc}}\r\n{{    at org.apache.spark.util.Utils$.deleteRecursively(Utils.scala:1070)}}\r\n{{    at org.apache.spark.util.ShutdownHookManager$$anonfun$1$$anonfun$apply$mcV$sp$3.apply(ShutdownHookManager.scala:65)}}\r\n{{    at org.apache.spark.util.ShutdownHookManager$$anonfun$1$$anonfun$apply$mcV$sp$3.apply(ShutdownHookManager.scala:62)}}\r\n{{    at scala.collection.IndexedSeqOptimized$class.foreach(IndexedSeqOptimized.scala:33)}}\r\n{{    at scala.collection.mutable.ArrayOps$ofRef.foreach(ArrayOps.scala:186)}}\r\n{{    at org.apache.spark.util.ShutdownHookManager$$anonfun$1.apply$mcV$sp(ShutdownHookManager.scala:62)}}\r\n{{    at org.apache.spark.util.SparkShutdownHook.run(ShutdownHookManager.scala:216)}}\r\n{{    at org.apache.spark.util.SparkShutdownHookManager$$anonfun$runAll$1$$anonfun$apply$mcV$sp$1.apply$mcV$sp(ShutdownHookManager.scala:188)}}\r\n{{    at org.apache.spark.util.SparkShutdownHookManager$$anonfun$runAll$1$$anonfun$apply$mcV$sp$1.apply(ShutdownHookManager.scala:188)}}\r\n{{    at org.apache.spark.util.SparkShutdownHookManager$$anonfun$runAll$1$$anonfun$apply$mcV$sp$1.apply(ShutdownHookManager.scala:188)}}\r\n{{    at org.apache.spark.util.Utils$.logUncaughtExceptions(Utils.scala:1988)}}\r\n{{    at org.apache.spark.util.SparkShutdownHookManager$$anonfun$runAll$1.apply$mcV$sp(ShutdownHookManager.scala:188)}}\r\n{{    at org.apache.spark.util.SparkShutdownHookManager$$anonfun$runAll$1.apply(ShutdownHookManager.scala:188)}}\r\n{{    at org.apache.spark.util.SparkShutdownHookManager$$anonfun$runAll$1.apply(ShutdownHookManager.scala:188)}}\r\n{{    at scala.util.Try$.apply(Try.scala:192)}}\r\n{{    at org.apache.spark.util.SparkShutdownHookManager.runAll(ShutdownHookManager.scala:188)}}\r\n{{    at org.apache.spark.util.SparkShutdownHookManager$$anon$2.run(ShutdownHookManager.scala:178)}}\r\n{{    at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)}}\r\n{{    at java.util.concurrent.FutureTask.run(FutureTask.java:266)}}\r\n{{    at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)}}\r\n{{    at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)}}\r\n{{    at java.lang.Thread.run(Thread.java:745)}}",
+        "updateAuthor" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=tiddman",
+          "name" : "tiddman",
+          "key" : "tiddman",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?avatarId=10452",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&avatarId=10452",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&avatarId=10452",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&avatarId=10452"
+          },
+          "displayName" : "Randy Tidd",
+          "active" : true,
+          "timeZone" : "America/New_York"
+        },
+        "created" : "2018-04-05T14:28:21.015+0000",
+        "updated" : "2018-04-05T14:28:21.015+0000"
+      }, {
+        "self" : "https://issues.apache.org/jira/rest/api/2/issue/12920204/comment/16432207",
+        "id" : "16432207",
+        "author" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=kingsley",
+          "name" : "kingsley",
+          "key" : "kingsley",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?ownerId=kingsley&avatarId=35131",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&ownerId=kingsley&avatarId=35131",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&ownerId=kingsley&avatarId=35131",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&ownerId=kingsley&avatarId=35131"
+          },
+          "displayName" : "Kingsley Jones",
+          "active" : true,
+          "timeZone" : "Africa/Lagos"
+        },
+        "body" : " \r\n{code:java}\r\nscala> val loader = Thread.currentThread.getContextClassLoader()\r\n loader: ClassLoader = scala.tools.nsc.interpreter.IMain$TranslatingClassLoader@3a1a20f\r\nscala> val parent1 = loader.getParent()\r\n parent1: ClassLoader = scala.reflect.internal.util.ScalaClassLoader$URLClassLoader@66e6af49\r\nscala> val parent2 = parent1.getParent()\r\n parent2: ClassLoader = sun.misc.Launcher$AppClassLoader@5fcfe4b2\r\nscala> val parent3 = parent2.getParent()\r\n parent3: ClassLoader = sun.misc.Launcher$ExtClassLoader@5257226b\r\nscala> val parent4 = parent3.getParent()\r\n parent4: ClassLoader = null\r\n{code}\r\n \r\n\r\nI did experiment with trying to find the open ClassLoaders in the scala session (shown above).\r\n\r\n<period><TAB> shows exposed methods on the loaders, but there is no close method:\r\n\r\n \r\n{code:java}\r\nscala> loader.\r\n clearAssertionStatus getResource getResources setClassAssertionStatus setPackageAssertionStatus\r\n getParent getResourceAsStream loadClass setDefaultAssertionStatus\r\nscala> parent1.\r\n clearAssertionStatus getResource getResources setClassAssertionStatus setPackageAssertionStatus\r\n getParent getResourceAsStream loadClass setDefaultAssertionStatus\r\n{code}\r\n \r\n\r\nThere is no close method on any of these, so I could not try closing them prior to quitting the session.\r\n\r\nThis was just a simple hack to see if there was any way to use reflection to find the open ClassLoaders.\r\n\r\nI thought perhaps it might be possible to walk this tree and then close them within ShutDownHookManager ???",
+        "updateAuthor" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=kingsley",
+          "name" : "kingsley",
+          "key" : "kingsley",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?ownerId=kingsley&avatarId=35131",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&ownerId=kingsley&avatarId=35131",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&ownerId=kingsley&avatarId=35131",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&ownerId=kingsley&avatarId=35131"
+          },
+          "displayName" : "Kingsley Jones",
+          "active" : true,
+          "timeZone" : "Africa/Lagos"
+        },
+        "created" : "2018-04-10T12:54:23.244+0000",
+        "updated" : "2019-01-17T04:56:10.700+0000"
+      }, {
+        "self" : "https://issues.apache.org/jira/rest/api/2/issue/12920204/comment/16681103",
+        "id" : "16681103",
+        "author" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=Laal",
+          "name" : "Laal",
+          "key" : "laal",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?avatarId=10452",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&avatarId=10452",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&avatarId=10452",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&avatarId=10452"
+          },
+          "displayName" : "Deej",
+          "active" : false,
+          "timeZone" : "America/Los_Angeles"
+        },
+        "body" : "This issue has *NOT* been fixed, so marking it as Resolved is plain silly. Moreover, suggesting users to switch to other OSes is not only reckless but also regressive when there is a large community of users attempting to adopt Spark as one of their large scale data processing tools. So please stop with the condescension and work on fixing this bug as the community has been expecting for a long while now.\r\n\r\n \r\n\r\nAs others have reported, I am able to successfully launch spark-shell and perform basic tasks (including sc.stop()) successfully. However, the moment I try to quit the repl session, it craps out immediately. Also, I am able to manually delete the said temp files/folders Spark creates in the temp directory so there are no permissions issues. Even executing these commands from a command prompt running as Administrator results in the same error, reinforcing the assumption that this is not related to permissions on the temp folder at all.\r\n\r\nHere is my set-up to reproduce this issue:-\r\n\r\nOS: Windows 10\r\n\r\nSpark: version 2.3.2\r\n\r\n /_/\r\n Using Scala version 2.11.8 (Java HotSpot(TM) 64-Bit Server VM, Java 1.8.0_171)\r\n  \r\n Stack trace:\r\n ===========================\r\n scala> sc\r\n res0: org.apache.spark.SparkContext = org.apache.spark.SparkContext@41167ded\r\n scala> sc.stop()\r\n scala> :quit\r\n 2018-11-09 00:10:42 ERROR ShutdownHookManager:91 - Exception while deleting Spark temp dir: C:\\Users\\user1\\AppData\\Local\\Temp\\spark-b155db59-b7c5-4f64-8cfb-00d8f95ea348\\repl-fed61a6e-3a1e-46cf-90e9-3fbfcb8a1d87\r\n java.io.IOException: Failed to delete: C:\\Users\\{color:#333333}user1\\AppData\\Local\\Temp\\spark-b155db59-b7c5-4f64-8cfb-00d8f95ea348\\repl-fed61a6e-3a1e-46cf-90e9-3fbfcb8a1d87\r\n         at org.apache.spark.util.Utils$.deleteRecursively(Utils.scala:1074)\r\n         at org.apache.spark.util.ShutdownHookManager$$anonfun$1$$anonfun$apply$mcV$sp$3.apply(ShutdownHookManager.scala:65)\r\n         at org.apache.spark.util.ShutdownHookManager$$anonfun$1$$anonfun$apply$mcV$sp$3.apply(ShutdownHookManager.scala:62)\r\n         at scala.collection.IndexedSeqOptimized$class.foreach(IndexedSeqOptimized.scala:33)\r\n         at scala.collection.mutable.ArrayOps$ofRef.foreach(ArrayOps.scala:186)\r\n         at org.apache.spark.util.ShutdownHookManager$$anonfun$1.apply$mcV$sp(ShutdownHookManager.scala:62)\r\n         at org.apache.spark.util.SparkShutdownHook.run(ShutdownHookManager.scala:216)\r\n         at org.apache.spark.util.SparkShutdownHookManager$$anonfun$runAll$1$$anonfun$apply$mcV$sp$1.apply$mcV$sp(ShutdownHookManager.scala:188)\r\n ================================================",
+        "updateAuthor" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=Laal",
+          "name" : "Laal",
+          "key" : "laal",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?avatarId=10452",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&avatarId=10452",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&avatarId=10452",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&avatarId=10452"
+          },
+          "displayName" : "Deej",
+          "active" : false,
+          "timeZone" : "America/Los_Angeles"
+        },
+        "created" : "2018-11-09T09:04:25.235+0000",
+        "updated" : "2018-11-09T09:08:27.783+0000"
+      }, {
+        "self" : "https://issues.apache.org/jira/rest/api/2/issue/12920204/comment/16743838",
+        "id" : "16743838",
+        "author" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=kingsley",
+          "name" : "kingsley",
+          "key" : "kingsley",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?ownerId=kingsley&avatarId=35131",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&ownerId=kingsley&avatarId=35131",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&ownerId=kingsley&avatarId=35131",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&ownerId=kingsley&avatarId=35131"
+          },
+          "displayName" : "Kingsley Jones",
+          "active" : true,
+          "timeZone" : "Africa/Lagos"
+        },
+        "body" : "I had another go at investigating this as it continues to greatly frustrate my deployments.\r\n\r\nFirstly, I had no difficulty following the build instructions for Spark from source on Windows. The only \"trick\" needed was to use git bash shell on windows to manage the launch of the build process. There is nothing complicated about that, and so I would encourage others to try.\r\n\r\nSecondly, the build on Windows 10 worked first time which was also my first time using maven. So there are no real reasons why development work cannot be done on the Windows platform to investigate this issue (that is what I am doing now).\r\n\r\nThirdly, I re-investigated my comment from April 2018 above... \r\n\r\nThe classLoader which is at the child level is:\r\n\r\nscala.tools.nsc.interpreter.IMain$TranslatingClassLoader@3a1a20f\r\n\r\nOn searching the Spark source code, and online, I found that this class loader is actually from the Scala REPL.\r\n\r\nIt is not actually part of the Spark source tree.\r\n\r\nWhen looking at the cruft showing up in the Windows temp directory the classes that pop up seem associated with the REPL.\r\n\r\nThis makes sense, since the REPL will barf with the errors indicated above if you do nothing more than launch a spark-shell and then close it straight away.\r\n\r\nThe conclusions I reached:\r\n1) certainly it is possible to hack this on a Windows 10 machine (I am trying the incremental builds via SBT toolchain)\r\n\r\n2) the bug does seem to be related to classloader clean-up but the fault (at least for the REPL) may NOT be Spark source code but the Scala REPL (or maybe an interaction between how Spark loads the relevant REPL code ???)\r\n\r\n3) watching files go in and out of the Windows temp area seems reproducible with high reliability (as commenters above maintain)\r\n\r\n\r\nRemaining questions on my mind...\r\n\r\n\r\nSince this issue pops up for pretty much anybody who simply tries Spark on Windows, but the build from source showed NO problems with building, I think the runtime issue is probably to do with how classes are loaded and the file system difference between Windows and Linux on file locks.\r\n\r\n\r\nThe question is how to isolate which part of the codebase is actually producing the classes that are not cleanable. Is it the main Spark source code, or is it the Scala REPL. Since I got immediately discouraged on using Spark in any real evaluation (100% reliable barf-outs on the very first example are discouraging) I never actually did cluster test jobs to see if the thing worked outside the REPL. It is quite possible the problem is just the REPL.\r\n\r\n\r\nI would suggest it would help to get at least some dialogue on this.\r\n\r\n\r\nIt does not seem very desirable to shut out 50% of global developers on a project which is manifestly *easy* to build on Windows 10 (using maven + git) but where the first encounter of any experienced Windows developer is an immediate sensation that this is an ultra-flakey codebase.\r\n\r\n\r\nQuite possibly, it is just the REPL and it is actually a Scala code-base issue.\r\n\r\n\r\nFolks like me will invest time and energy investigating such bugs but only if we think there is a will to fix issues that are persistent and discouraging of adoption among folks who very often have few enterprise choices before them other than Windows. This is not out of religious attachment, but due to dependencies in the data workflow chain that are not easy to fix. In particular, many financial industry developers have to use Windows stacks in some part of the data acquisition process. These are not inexperienced developers in cross-platform, Linux or java.\r\n\r\n\r\nThe reason why such folks are liable to get discouraged is there prior bad experiences with Java in distributed systems that had Windows components due to the well known difference in file locking behaviour between Linux and Windows. When such folks see barf-outs of this kind, they get discouraged that we are back in the EJB hell of previous times when systems broke all over the place and there were elaborate hacks to patch the problem.\r\n\r\n\r\nPlease consider how we can better test and isolate what is really causing this problem.\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n",
+        "updateAuthor" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=kingsley",
+          "name" : "kingsley",
+          "key" : "kingsley",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?ownerId=kingsley&avatarId=35131",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&ownerId=kingsley&avatarId=35131",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&ownerId=kingsley&avatarId=35131",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&ownerId=kingsley&avatarId=35131"
+          },
+          "displayName" : "Kingsley Jones",
+          "active" : true,
+          "timeZone" : "Africa/Lagos"
+        },
+        "created" : "2019-01-16T10:35:10.314+0000",
+        "updated" : "2019-01-16T10:35:10.314+0000"
+      }, {
+        "self" : "https://issues.apache.org/jira/rest/api/2/issue/12920204/comment/16744524",
+        "id" : "16744524",
+        "author" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=kingsley",
+          "name" : "kingsley",
+          "key" : "kingsley",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?ownerId=kingsley&avatarId=35131",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&ownerId=kingsley&avatarId=35131",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&ownerId=kingsley&avatarId=35131",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&ownerId=kingsley&avatarId=35131"
+          },
+          "displayName" : "Kingsley Jones",
+          "active" : true,
+          "timeZone" : "Africa/Lagos"
+        },
+        "body" : "I am going down the Rabbit Hole of the Scala REPL.\r\n I think this is the right code branch\r\n [https://github.com/scala/scala/blob/0c335456f295459efa22d91a7b7d49bb9b5f3c15/src/repl/scala/tools/nsc/interpreter/IMain.scala]\r\n\r\nlines 357 to 352 define TranslatingClassLoader\r\n\r\nIt appears to be the central mechanism of the scala REPL to parse, compile and load any class that is defined in the REPL. There is an open bug on the scala issues section marking this class as having been identified as not thread-safe.\r\n\r\nhttps://github.com/scala/bug/issues/10045\r\n\r\nThe scala stuff has a different idiom to Java so maybe the closing of classloaders is less refined in experience (meaning it is just less clear what is the right way to catch 'em all)",
+        "updateAuthor" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=kingsley",
+          "name" : "kingsley",
+          "key" : "kingsley",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?ownerId=kingsley&avatarId=35131",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&ownerId=kingsley&avatarId=35131",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&ownerId=kingsley&avatarId=35131",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&ownerId=kingsley&avatarId=35131"
+          },
+          "displayName" : "Kingsley Jones",
+          "active" : true,
+          "timeZone" : "Africa/Lagos"
+        },
+        "created" : "2019-01-16T23:07:57.600+0000",
+        "updated" : "2019-01-17T04:47:01.560+0000"
+      }, {
+        "self" : "https://issues.apache.org/jira/rest/api/2/issue/12920204/comment/16744675",
+        "id" : "16744675",
+        "author" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=kingsley",
+          "name" : "kingsley",
+          "key" : "kingsley",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?ownerId=kingsley&avatarId=35131",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&ownerId=kingsley&avatarId=35131",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&ownerId=kingsley&avatarId=35131",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&ownerId=kingsley&avatarId=35131"
+          },
+          "displayName" : "Kingsley Jones",
+          "active" : true,
+          "timeZone" : "Africa/Lagos"
+        },
+        "body" : "Okay, so I think we have a candidate for what is actually causing the problem.\r\n\r\nThere is an open bug on the scala language site for a class within the scala REPL IMain.scala\r\n\r\n[https://github.com/scala/bug/issues/10045]\r\n\r\nThere the poster writes:\r\n\r\n \r\n{code:java}\r\nscala.tools.nsc.interpreter.IMain.TranslatingClassLoader{code}\r\ncalls a non-thread-safe method\r\n{code:java}\r\ntranslateSimpleResource{code}\r\n(this method calls {{SymbolTable.enteringPhase}}), which makes it become non-thread-safe. However, a ClassLoader must be thread-safe since the class can be loaded in arbitrary thread.\r\n\r\n \r\n\r\nIn my REPL reflection experiment above the relevant class is:\r\n\r\n \r\n{code:java}\r\nscala> val loader = Thread.currentThread.getContextClassLoader()\r\nloader: ClassLoader = scala.tools.nsc.interpreter.IMain$TranslatingClassLoader@3a1a20f{code}\r\n \r\n\r\n{color:#333333}That is the same class in the above bug being marked as non thread-safe.{color}\r\n\r\n{color:#333333}See this stack overflow for a discussion of thread safety issues in scala:{color}\r\n\r\n[https://stackoverflow.com/questions/46258558/scala-objects-and-thread-safety]\r\n\r\nThe scala REPL code has some internal classloaders which are used to compile and execute any code entered into the REPL.\r\n\r\nOn Windows 10, if you simply start a spark-shell from the command line, do nothing, and then :quit the REPL will barf with a stacktrace to this particular class reference (namely TranslatingClassLoader) which is identified as an open bug in the scala language issues marked \"non threadsafe\".\r\n\r\n{color:#24292e}I am gonna try and contact the person who raised the bug on the scala issues thread and get some input.{color} It seemed like he could only produce it with a complicated SQL script.\r\n\r\nHere we have with Apache Spark a simple, and on my tests 100% reproducible, instance of the bug on Windows 10 and in my tests Windows Server 2016.\r\n\r\nUPDATE: I cross-posted on \r\n\r\n[https://github.com/scala/bug/issues/10045]\r\n\r\nwith an explanation of the observations made here and a link back to this issue.",
+        "updateAuthor" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=kingsley",
+          "name" : "kingsley",
+          "key" : "kingsley",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?ownerId=kingsley&avatarId=35131",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&ownerId=kingsley&avatarId=35131",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&ownerId=kingsley&avatarId=35131",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&ownerId=kingsley&avatarId=35131"
+          },
+          "displayName" : "Kingsley Jones",
+          "active" : true,
+          "timeZone" : "Africa/Lagos"
+        },
+        "created" : "2019-01-17T04:15:39.963+0000",
+        "updated" : "2019-01-17T04:54:31.606+0000"
+      }, {
+        "self" : "https://issues.apache.org/jira/rest/api/2/issue/12920204/comment/16745850",
+        "id" : "16745850",
+        "author" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=kingsley",
+          "name" : "kingsley",
+          "key" : "kingsley",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?ownerId=kingsley&avatarId=35131",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&ownerId=kingsley&avatarId=35131",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&ownerId=kingsley&avatarId=35131",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&ownerId=kingsley&avatarId=35131"
+          },
+          "displayName" : "Kingsley Jones",
+          "active" : true,
+          "timeZone" : "Africa/Lagos"
+        },
+        "body" : "I don't know why I persist with posting anything on this issues thread when nobody cares.\r\n\r\nHowever, I did notice this. When testing  the\r\n{code:java}\r\npyspark {code}\r\nshell the temp directory file cleanup seems to go smoothly.\r\n\r\nThe problem with this stuff is that nobody in Windows land can trust how deep they have to go to determine if the whole spark engine is hopelessly broken or it is just the reputation of the platform because of a weird REPL bug.\r\n\r\nI suggest you look into the possibility that scala REPL is busted.\r\n\r\nIf your advice to  Windows developers is use pyspark where possible that would be great.\r\n\r\nIn my company, I am moving as much data workflow as possible to python dask because I just don't trust spark with all this weird reported behavior and no active follow up.\r\n\r\n ",
+        "updateAuthor" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=kingsley",
+          "name" : "kingsley",
+          "key" : "kingsley",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?ownerId=kingsley&avatarId=35131",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&ownerId=kingsley&avatarId=35131",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&ownerId=kingsley&avatarId=35131",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&ownerId=kingsley&avatarId=35131"
+          },
+          "displayName" : "Kingsley Jones",
+          "active" : true,
+          "timeZone" : "Africa/Lagos"
+        },
+        "created" : "2019-01-18T07:18:50.912+0000",
+        "updated" : "2019-01-18T07:21:47.143+0000"
+      }, {
+        "self" : "https://issues.apache.org/jira/rest/api/2/issue/12920204/comment/16747325",
+        "id" : "16747325",
+        "author" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=kingsley",
+          "name" : "kingsley",
+          "key" : "kingsley",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?ownerId=kingsley&avatarId=35131",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&ownerId=kingsley&avatarId=35131",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&ownerId=kingsley&avatarId=35131",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&ownerId=kingsley&avatarId=35131"
+          },
+          "displayName" : "Kingsley Jones",
+          "active" : true,
+          "timeZone" : "Africa/Lagos"
+        },
+        "body" : "Here is where bug has popped up over on the scala sbt thread \r\n\r\n[https://github.com/sbt/sbt/issues/2496]\r\n\r\nThe source is old JDK bug issues which seem to have hit Web Application Servers before.\r\n\r\nFrom a management perspective, it is Java itself that seems broken on Windows.\r\n\r\nSince the problem occurring here seems to come from the scala implementation a monkey-patch might work.\r\n\r\nThere is this one over here:\r\n\r\n[https://github.com/jeantil/class-monkey]\r\n\r\nAt some point, I will give it a go but have decided to run Python Dask on my on-premises cluster and then burst to a Linux cluster if I need a Spark job. This is frustrating but all 100% part of the let's not fix anything culture today.\r\n\r\n ",
+        "updateAuthor" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=kingsley",
+          "name" : "kingsley",
+          "key" : "kingsley",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?ownerId=kingsley&avatarId=35131",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&ownerId=kingsley&avatarId=35131",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&ownerId=kingsley&avatarId=35131",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&ownerId=kingsley&avatarId=35131"
+          },
+          "displayName" : "Kingsley Jones",
+          "active" : true,
+          "timeZone" : "Africa/Lagos"
+        },
+        "created" : "2019-01-20T03:22:54.082+0000",
+        "updated" : "2019-01-20T03:22:54.082+0000"
+      }, {
+        "self" : "https://issues.apache.org/jira/rest/api/2/issue/12920204/comment/16756825",
+        "id" : "16756825",
+        "author" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=kingsley",
+          "name" : "kingsley",
+          "key" : "kingsley",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?ownerId=kingsley&avatarId=35131",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&ownerId=kingsley&avatarId=35131",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&ownerId=kingsley&avatarId=35131",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&ownerId=kingsley&avatarId=35131"
+          },
+          "displayName" : "Kingsley Jones",
+          "active" : true,
+          "timeZone" : "Africa/Lagos"
+        },
+        "body" : "{code:powershell}\r\n# # Shell to launch local Apache Spark REPL and do cleanup on close\r\n\r\n$sparkid = (Start-Process spark-shell -PassThru).Id # launch spark-shell and save process Id\r\n$currdir = Get-Location\r\n\r\nWait-Process -Id $sparkid # wait until process exits to\r\n\r\nrun garbage collection process\r\n\r\n# once the execution flow reaches here the spark-shell has been exited and we can clean up\r\n\r\nSet-Location $env:TEMP\r\n\r\nRemove-Item spark* -Recurse -Force\r\nRemove-Item jansi* -Recurse -Force\r\nRemove-Item hsperfdata* -Recurse -Force\r\n\r\nSet-Location $currdir\r\n// code placeholder\r\n{code}",
+        "updateAuthor" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=kingsley",
+          "name" : "kingsley",
+          "key" : "kingsley",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?ownerId=kingsley&avatarId=35131",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&ownerId=kingsley&avatarId=35131",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&ownerId=kingsley&avatarId=35131",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&ownerId=kingsley&avatarId=35131"
+          },
+          "displayName" : "Kingsley Jones",
+          "active" : true,
+          "timeZone" : "Africa/Lagos"
+        },
+        "created" : "2019-01-31T03:28:30.625+0000",
+        "updated" : "2019-01-31T03:28:30.625+0000"
+      }, {
+        "self" : "https://issues.apache.org/jira/rest/api/2/issue/12920204/comment/16756826",
+        "id" : "16756826",
+        "author" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=kingsley",
+          "name" : "kingsley",
+          "key" : "kingsley",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?ownerId=kingsley&avatarId=35131",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&ownerId=kingsley&avatarId=35131",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&ownerId=kingsley&avatarId=35131",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&ownerId=kingsley&avatarId=35131"
+          },
+          "displayName" : "Kingsley Jones",
+          "active" : true,
+          "timeZone" : "Africa/Lagos"
+        },
+        "body" : "Well, that fits. No source-code formatter for PowerShell!",
+        "updateAuthor" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=kingsley",
+          "name" : "kingsley",
+          "key" : "kingsley",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?ownerId=kingsley&avatarId=35131",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&ownerId=kingsley&avatarId=35131",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&ownerId=kingsley&avatarId=35131",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&ownerId=kingsley&avatarId=35131"
+          },
+          "displayName" : "Kingsley Jones",
+          "active" : true,
+          "timeZone" : "Africa/Lagos"
+        },
+        "created" : "2019-01-31T03:29:09.567+0000",
+        "updated" : "2019-01-31T03:29:09.567+0000"
+      }, {
+        "self" : "https://issues.apache.org/jira/rest/api/2/issue/12920204/comment/17609507",
+        "id" : "17609507",
+        "author" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=jpellman",
+          "name" : "jpellman",
+          "key" : "jpellman",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?ownerId=jpellman&avatarId=43235",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&ownerId=jpellman&avatarId=43235",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&ownerId=jpellman&avatarId=43235",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&ownerId=jpellman&avatarId=43235"
+          },
+          "displayName" : "John Pellman",
+          "active" : false,
+          "timeZone" : "America/New_York"
+        },
+        "body" : "Just as another data point, it appears that a variant of this issue also rears its head on GNU/Linux (Debian 10, 3.1.2, Scala 2.12.14) if you set your temp directory to be on an NFS mount:\r\n\r\n{code}\r\n22/09/26 13:19:09 ERROR org.apache.spark.util.ShutdownHookManager: Exception while deleting Spark temp dir: /hadoop/spark/tmp/spark-af087c3d-6abf-40cb-b3c8-b86e38f2f827/repl-60fe6d34-7dfd-4530-bbb6-f1ace7e953b3\r\njava.io.IOException: Failed to delete: /hadoop/spark/tmp/spark-af087c3d-6abf-40cb-b3c8-b86e38f2f827/repl-60fe6d34-7dfd-4530-bbb6-f1ace7e953b3/$line10/.nfs00000000026e00cd00001377\r\n        at org.apache.spark.network.util.JavaUtils.deleteRecursivelyUsingJavaIO(JavaUtils.java:144)\r\n        at org.apache.spark.network.util.JavaUtils.deleteRecursively(JavaUtils.java:118)\r\n        at org.apache.spark.network.util.JavaUtils.deleteRecursivelyUsingJavaIO(JavaUtils.java:128)\r\n        at org.apache.spark.network.util.JavaUtils.deleteRecursively(JavaUtils.java:118)\r\n        at org.apache.spark.network.util.JavaUtils.deleteRecursivelyUsingJavaIO(JavaUtils.java:128)\r\n        at org.apache.spark.network.util.JavaUtils.deleteRecursively(JavaUtils.java:118)\r\n        at org.apache.spark.network.util.JavaUtils.deleteRecursively(JavaUtils.java:91)\r\n        at org.apache.spark.util.Utils$.deleteRecursively(Utils.scala:1141)\r\n        at org.apache.spark.util.ShutdownHookManager$.$anonfun$new$4(ShutdownHookManager.scala:65)\r\n        at org.apache.spark.util.ShutdownHookManager$.$anonfun$new$4$adapted(ShutdownHookManager.scala:62)\r\n        at scala.collection.IndexedSeqOptimized.foreach(IndexedSeqOptimized.scala:36)\r\n        at scala.collection.IndexedSeqOptimized.foreach$(IndexedSeqOptimized.scala:33)\r\n        at scala.collection.mutable.ArrayOps$ofRef.foreach(ArrayOps.scala:198)\r\n        at org.apache.spark.util.ShutdownHookManager$.$anonfun$new$2(ShutdownHookManager.scala:62)\r\n        at org.apache.spark.util.SparkShutdownHook.run(ShutdownHookManager.scala:214)\r\n        at org.apache.spark.util.SparkShutdownHookManager.$anonfun$runAll$2(ShutdownHookManager.scala:188)\r\n        at scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.java:23)\r\n        at org.apache.spark.util.Utils$.logUncaughtExceptions(Utils.scala:1996)\r\n        at org.apache.spark.util.SparkShutdownHookManager.$anonfun$runAll$1(ShutdownHookManager.scala:188)\r\n        at scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.java:23)\r\n        at scala.util.Try$.apply(Try.scala:213)\r\n        at org.apache.spark.util.SparkShutdownHookManager.runAll(ShutdownHookManager.scala:188)\r\n        at org.apache.spark.util.SparkShutdownHookManager$$anon$2.run(ShutdownHookManager.scala:178)\r\n        at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)\r\n        at java.util.concurrent.FutureTask.run(FutureTask.java:266)\r\n        at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)\r\n        at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)\r\n        at java.lang.Thread.run(Thread.java:750)\r\n{code}\r\n\r\nThe problem in this case seems to be that {{spark-shell}} is attempting to do a recursive unlink while files are still open (NFS client-side [silly renames|http://nfs.sourceforge.net/#faq_d2]).  It looks like this overall issue might be less of a \"weird Windows thing\" and more of an issue with spark-shell not waiting until all file handles are closed before attempting to remove the temp dir.  This behavior cannot be reproduced consistently and appears to be non-deterministic.\r\n\r\nThe obvious workaround here is to not put temp directories on NFS, but it does seem like you're relying upon file handling behavior that is specific to how Linux behaves using non-NFS volumes rather than doing a sanity check within spark-shell/scala(which might not be a bad idea).",
+        "updateAuthor" : {
+          "self" : "https://issues.apache.org/jira/rest/api/2/user?username=jpellman",
+          "name" : "jpellman",
+          "key" : "jpellman",
+          "avatarUrls" : {
+            "48x48" : "https://issues.apache.org/jira/secure/useravatar?ownerId=jpellman&avatarId=43235",
+            "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&ownerId=jpellman&avatarId=43235",
+            "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&ownerId=jpellman&avatarId=43235",
+            "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&ownerId=jpellman&avatarId=43235"
+          },
+          "displayName" : "John Pellman",
+          "active" : false,
+          "timeZone" : "America/New_York"
+        },
+        "created" : "2022-09-26T13:39:21.925+0000",
+        "updated" : "2022-09-26T13:42:33.722+0000"
+      } ],
+      "maxResults" : 30,
+      "total" : 30,
+      "startAt" : 0
+    },
+    "customfield_12311820" : "0|i2pmef:",
+    "customfield_12314139" : null
+  },
+  "changelog" : {
+    "startAt" : 0,
+    "maxResults" : 5,
+    "total" : 5,
+    "histories" : [ {
+      "id" : "15148032",
+      "author" : {
+        "self" : "https://issues.apache.org/jira/rest/api/2/user?username=srowen",
+        "name" : "srowen",
+        "key" : "srowen",
+        "avatarUrls" : {
+          "48x48" : "https://issues.apache.org/jira/secure/useravatar?ownerId=srowen&avatarId=26037",
+          "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&ownerId=srowen&avatarId=26037",
+          "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&ownerId=srowen&avatarId=26037",
+          "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&ownerId=srowen&avatarId=26037"
+        },
+        "displayName" : "Sean R. Owen",
+        "active" : true,
+        "timeZone" : "America/Chicago"
+      },
+      "created" : "2015-12-09T14:44:28.014+0000",
+      "items" : [ {
+        "field" : "Component",
+        "fieldtype" : "jira",
+        "from" : null,
+        "fromString" : null,
+        "to" : "12323802",
+        "toString" : "Spark Shell"
+      }, {
+        "field" : "priority",
+        "fieldtype" : "jira",
+        "from" : "3",
+        "fromString" : "Major",
+        "to" : "4",
+        "toString" : "Minor"
+      } ]
+    }, {
+      "id" : "15301523",
+      "author" : {
+        "self" : "https://issues.apache.org/jira/rest/api/2/user?username=srowen",
+        "name" : "srowen",
+        "key" : "srowen",
+        "avatarUrls" : {
+          "48x48" : "https://issues.apache.org/jira/secure/useravatar?ownerId=srowen&avatarId=26037",
+          "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&ownerId=srowen&avatarId=26037",
+          "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&ownerId=srowen&avatarId=26037",
+          "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&ownerId=srowen&avatarId=26037"
+        },
+        "displayName" : "Sean R. Owen",
+        "active" : true,
+        "timeZone" : "America/Chicago"
+      },
+      "created" : "2016-03-13T12:38:49.834+0000",
+      "items" : [ {
+        "field" : "resolution",
+        "fieldtype" : "jira",
+        "from" : null,
+        "fromString" : null,
+        "to" : "6",
+        "toString" : "Invalid"
+      }, {
+        "field" : "status",
+        "fieldtype" : "jira",
+        "from" : "1",
+        "fromString" : "Open",
+        "to" : "5",
+        "toString" : "Resolved"
+      } ]
+    }, {
+      "id" : "15787176",
+      "author" : {
+        "self" : "https://issues.apache.org/jira/rest/api/2/user?username=srowen",
+        "name" : "srowen",
+        "key" : "srowen",
+        "avatarUrls" : {
+          "48x48" : "https://issues.apache.org/jira/secure/useravatar?ownerId=srowen&avatarId=26037",
+          "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&ownerId=srowen&avatarId=26037",
+          "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&ownerId=srowen&avatarId=26037",
+          "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&ownerId=srowen&avatarId=26037"
+        },
+        "displayName" : "Sean R. Owen",
+        "active" : true,
+        "timeZone" : "America/Chicago"
+      },
+      "created" : "2016-12-22T11:20:44.344+0000",
+      "items" : [ {
+        "field" : "Link",
+        "fieldtype" : "jira",
+        "from" : null,
+        "fromString" : null,
+        "to" : "SPARK-18979",
+        "toString" : "This issue is duplicated by SPARK-18979"
+      } ]
+    }, {
+      "id" : "16369200",
+      "author" : {
+        "self" : "https://issues.apache.org/jira/rest/api/2/user?username=cml",
+        "name" : "cml",
+        "key" : "cml",
+        "avatarUrls" : {
+          "48x48" : "https://issues.apache.org/jira/secure/useravatar?avatarId=10452",
+          "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&avatarId=10452",
+          "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&avatarId=10452",
+          "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&avatarId=10452"
+        },
+        "displayName" : "Chris Lambertus",
+        "active" : true,
+        "timeZone" : "America/Los_Angeles"
+      },
+      "created" : "2017-10-08T23:22:55.503+0000",
+      "items" : [ {
+        "field" : "Workflow",
+        "fieldtype" : "jira",
+        "from" : "13119065",
+        "fromString" : "Default workflow, editable Closed status",
+        "to" : "13388751",
+        "toString" : "no-reopen-closed"
+      } ]
+    }, {
+      "id" : "22327624",
+      "author" : {
+        "self" : "https://issues.apache.org/jira/rest/api/2/user?username=arnaud.nauwynck",
+        "name" : "arnaud.nauwynck",
+        "key" : "arnaud.nauwynck",
+        "avatarUrls" : {
+          "48x48" : "https://issues.apache.org/jira/secure/useravatar?avatarId=10452",
+          "24x24" : "https://issues.apache.org/jira/secure/useravatar?size=small&avatarId=10452",
+          "16x16" : "https://issues.apache.org/jira/secure/useravatar?size=xsmall&avatarId=10452",
+          "32x32" : "https://issues.apache.org/jira/secure/useravatar?size=medium&avatarId=10452"
+        },
+        "displayName" : "Arnaud Nauwynck",
+        "active" : true,
+        "timeZone" : "Etc/UTC"
+      },
+      "created" : "2024-12-19T22:25:12.119+0000",
+      "items" : [ {
+        "field" : "Link",
+        "fieldtype" : "jira",
+        "from" : null,
+        "fromString" : null,
+        "to" : "SPARK-50628",
+        "toString" : "This issue is cloned by SPARK-50628"
+      } ]
+    } ]
+  }
+}

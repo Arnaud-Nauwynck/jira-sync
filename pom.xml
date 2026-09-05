@@ -12,6 +12,9 @@
 
     <properties>
         <java.version>25</java.version>
+        <webapp.directory>${project.basedir}/src/main/webapp</webapp.directory>
+        <node.version>v22.23.2</node.version>
+        <npm.version>10.9.8</npm.version>
     </properties>
 
     <dependencyManagement>
@@ -85,24 +88,82 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>4.1.1</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
 
         </plugins>
     </build>
 
-
     <profiles>
 
         <profile>
-            <id>swagger-gen-patch</id>
+            <id>frontend</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
             <build>
                 <plugins>
                     <plugin>
-                        <groupId>io.swagger</groupId>
-                        <artifactId>swagger-codegen-maven-plugin</artifactId>
-                        <version>2.4.52</version>
+                        <groupId>com.github.eirslett</groupId>
+                        <artifactId>frontend-maven-plugin</artifactId>
+                        <version>1.15.1</version>
                         <configuration>
-                            <inputSpec>http://localhost:8080/v2/api-docs</inputSpec>
+                            <workingDirectory>${webapp.directory}</workingDirectory>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>install-node-and-npm</id>
+                                <goals>
+                                    <goal>install-node-and-npm</goal>
+                                </goals>
+                                <phase>generate-resources</phase>
+                                <configuration>
+                                    <nodeVersion>${node.version}</nodeVersion>
+                                    <npmVersion>${npm.version}</npmVersion>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>npm-install</id>
+                                <goals>
+                                    <goal>npm</goal>
+                                </goals>
+                                <phase>generate-resources</phase>
+                                <configuration>
+                                    <arguments>install --legacy-peer-deps</arguments>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>npm-build</id>
+                                <goals>
+                                    <goal>npm</goal>
+                                </goals>
+                                <phase>generate-resources</phase>
+                                <configuration>
+                                    <arguments>run build</arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>openapi-gen</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.openapitools</groupId>
+                        <artifactId>openapi-generator-maven-plugin</artifactId>
+                        <version>7.25.0</version>
+                        <configuration>
+                            <inputSpec>http://localhost:8080/v3/api-docs</inputSpec>
                             <!-- <verbose>true</verbose> -->
                         </configuration>
                         <executions>
@@ -113,7 +174,8 @@
                                     <goal>generate</goal>
                                 </goals>
                                 <configuration>
-                                    <language>typescript-angular</language>
+                                    <generatorName>typescript-angular</generatorName>
+                                    <verbose>true</verbose>
                                     <output>${basedir}/target/generated-typescript-angular</output>
                                     <configOptions>
                                         <!--

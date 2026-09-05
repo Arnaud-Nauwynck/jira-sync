@@ -24,10 +24,16 @@ public class JiraSyncRestController {
     @PostMapping("/run-sync-all")
     public void runSyncAll() {
         log.info("http POST /run-sync-all");
+        long startTime = System.currentTimeMillis();
         try {
             jiraSyncRunner.syncAll();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+
+            int millis = (int) (System.currentTimeMillis() - startTime);
+            log.info("... done http POST /run-sync-all, took {} ms", millis);
+        } catch (Exception ex) {
+            int millis = (int) (System.currentTimeMillis() - startTime);
+            log.error("... Failed http POST /run-sync-all, took {} ms, rethrowing {}", millis, ex.getMessage());
+            throw new RuntimeException(ex);
         }
     }
 }
