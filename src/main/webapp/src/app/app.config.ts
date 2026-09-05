@@ -7,6 +7,7 @@ import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { routes } from './app.routes';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+import { provideApi } from './rest/provide-api';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -14,5 +15,6 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideHttpClient(),
     importProvidersFrom(NgbModule),
+    provideApi('api'),
   ],
 };
