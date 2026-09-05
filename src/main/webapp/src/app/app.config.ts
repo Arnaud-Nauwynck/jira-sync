@@ -15,6 +15,6 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideHttpClient(),
     importProvidersFrom(NgbModule),
-    provideApi('api'),
+    provideApi(''),
   ],
 };
