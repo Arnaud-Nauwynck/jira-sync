@@ -1,6 +1,8 @@
 package fr.an.jira.service;
 
 import fr.an.jira.configuration.JiraSyncProperties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.JsonNode;
@@ -17,6 +19,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 
 /**
  * Sync Jira Server/DC issues to local JSON files.
@@ -24,33 +29,61 @@ import java.time.Duration;
  * - re-fetches full comment list when truncated in search response
  * - re-fetches full changelog when truncated in search response
  * - 429 backoff + politeness delay
+ * - incremental mode: skips issues not modified since the last successful run,
+ *   tracked in a local "sync-state.json" file
  */
 @Component
 public class JiraSyncRunner {
 
+    private static final Logger log = LoggerFactory.getLogger(JiraSyncRunner.class);
+
     private final JiraSyncProperties props;
+
     private final ObjectMapper mapper;
+
     private final HttpClient http = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(30))
             .followRedirects(HttpClient.Redirect.NORMAL)
             .build();
 
-    public JiraSyncRunner(JiraSyncProperties props, ObjectMapper mapper) {
+    private static final DateTimeFormatter JQL_DATE_FMT =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm").withZone(ZoneId.systemDefault());
+
+    private final Path jiraBaseDir;
+    private final Path jiraIssuesDir;
+    private final Path jiraStateFile;
+
+    public JiraSyncRunner(JiraSyncProperties props, ObjectMapper mapper) throws Exception {
         this.props = props;
         this.mapper = mapper;
+
+        this.jiraBaseDir = Path.of(props.getOut());
+        this.jiraIssuesDir = jiraBaseDir.resolve("issues");
+        this.jiraStateFile = jiraBaseDir.resolve("sync-state.json");
+
+        Files.createDirectories(jiraIssuesDir);
     }
 
+    /** Full sync */
     public void syncAll() throws Exception {
-        Path out = props.out();
-        Files.createDirectories(out);
-        String jql = "project=" + props.project() + " ORDER BY key ASC";
+        Instant syncStartTime = Instant.now();
+        Instant since = loadLastSyncTime();
+
+        String jql = "project=" + props.getProject();
+        if (since != null) {
+            jql += " AND updated >= \"" + JQL_DATE_FMT.format(since) + "\"";
+            log.info("incremental sync: fetching issues updated since {}", since);
+        } else {
+            log.info("full sync: fetching all issues");
+        }
+        jql += " ORDER BY key ASC";
 
         int start = 0;
         while (true) {
             JsonNode page = get("/rest/api/2/search"
                     + "?jql=" + enc(jql)
                     + "&startAt=" + start
-                    + "&maxResults=" + props.step()
+                    + "&maxResults=" + props.getStep()
                     + "&fields=*all"
                     + "&expand=changelog");
 
@@ -62,15 +95,40 @@ public class JiraSyncRunner {
                 String key = issue.path("key").asText();
                 completeComments(issue, key);
                 completeChangelog(issue, key);
-                Files.writeString(out.resolve(key + ".json"),
+                Files.writeString(jiraIssuesDir.resolve(key + ".json"),
                         mapper.writerWithDefaultPrettyPrinter().writeValueAsString(issue));
             }
 
             start += issues.size();
-            System.out.printf("synced %d / %d%n", start, page.path("total").asInt());
-            sleep(props.delayMs());
+            log.info("synced {} / {}", start, page.path("total").asInt());
+            sleep(props.getDelayMs());
         }
-        System.out.println("done -> " + out.toAbsolutePath());
+        log.info("done -> {}", jiraIssuesDir.toAbsolutePath());
+
+        saveLastSyncTime(syncStartTime);
+    }
+
+    /** Reads the start time of the last successful run, or null if none / unreadable. */
+    private Instant loadLastSyncTime() {
+        if (!Files.exists(jiraStateFile)) {
+            return null;
+        }
+        try {
+            JsonNode state = mapper.readTree(jiraStateFile.toFile());
+            String s = state.path("lastSyncTime").asText(null);
+            return s != null ? Instant.parse(s) : null;
+        } catch (Exception e) {
+            log.warn("failed to read sync state file {}, falling back to full sync: {}",
+                    jiraStateFile, e.toString());
+            return null;
+        }
+    }
+
+    /** Records the start time of this run, used as the "updated since" bound for the next incremental run. */
+    private void saveLastSyncTime(Instant syncStartTime) throws Exception {
+        ObjectNode state = mapper.createObjectNode();
+        state.put("lastSyncTime", syncStartTime.toString());
+        Files.writeString(jiraStateFile, mapper.writerWithDefaultPrettyPrinter().writeValueAsString(state));
     }
 
     /** fields.comment is capped in /search responses; re-fetch all when truncated. */
@@ -91,7 +149,7 @@ public class JiraSyncRunner {
             comments.forEach(all::add);
             start += comments.size();
             total = page.path("total").asInt(); // may move under our feet
-            sleep(props.delayMs());
+            sleep(props.getDelayMs());
         }
         ObjectNode full = mapper.createObjectNode();
         full.set("comments", all);
@@ -99,7 +157,7 @@ public class JiraSyncRunner {
         full.put("startAt", 0);
         full.put("maxResults", all.size());
         ((ObjectNode) issue.path("fields")).set("comment", full);
-        System.out.printf("  %s: fetched %d comments%n", key, all.size());
+        log.info("  {} : fetched {} comments", key, all.size());
     }
 
     /** changelog via expand on /search is capped; re-fetch the issue alone when truncated. */
@@ -114,19 +172,20 @@ public class JiraSyncRunner {
         // a direct issue GET returns the full changelog.
         JsonNode fullIssue = get("/rest/api/2/issue/" + key + "?fields=key&expand=changelog");
         issue.set("changelog", fullIssue.path("changelog"));
-        System.out.printf("  %s: fetched %d changelog entries%n",
-                key, fullIssue.path("changelog").path("histories").size());
-        sleep(props.delayMs());
+        log.info("  {} : fetched {} changelog entries", key,
+                fullIssue.path("changelog").path("histories").size());
+        sleep(props.getDelayMs());
     }
 
     private JsonNode get(String pathAndQuery) throws Exception {
         for (int attempt = 1; ; attempt++) {
-            HttpRequest.Builder rb = HttpRequest.newBuilder(URI.create(props.base() + pathAndQuery))
+            HttpRequest.Builder rb = HttpRequest.newBuilder(URI.create(props.getBase() + pathAndQuery))
                     .timeout(Duration.ofMinutes(2))
                     .header("Accept", "application/json")
                     .GET();
-            if (props.pat() != null && !props.pat().isBlank()) {
-                rb.header("Authorization", "Bearer " + props.pat());
+            String httpHeaderAuth = props.getHttpHeaderAuth();
+            if (httpHeaderAuth != null && !httpHeaderAuth.isBlank()) {
+                rb.header("Authorization", httpHeaderAuth);
             }
 
             HttpResponse<String> resp = http.send(rb.build(), HttpResponse.BodyHandlers.ofString());
