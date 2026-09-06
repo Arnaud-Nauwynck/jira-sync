@@ -1,0 +1,7 @@
+@if (issue(); as data) {
+  <app-issue-view [issue]="data" />
+} @else if (notFound()) {
+  <p>Issue not found.</p>
+} @else {
+  <p>Loading...</p>
+}

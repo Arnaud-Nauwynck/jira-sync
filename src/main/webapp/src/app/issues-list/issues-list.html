@@ -1,9 +1,163 @@
+<H4>Issues</H4>
 
+<div class="d-flex gap-2 align-items-end mb-3">
+  <div>
+    <label class="form-label">From year</label>
+    <input class="form-control" type="number" [(ngModel)]="fromYear" />
+  </div>
+  <div>
+    <label class="form-label">To year</label>
+    <input class="form-control" type="number" [(ngModel)]="toYear" />
+  </div>
+  <div>
+    <label class="form-label">Username pattern</label>
+    <input class="form-control" type="text" [(ngModel)]="usernamePattern" placeholder="regex, optional" />
+  </div>
+  <button class="btn btn-primary" type="button" (click)="search()">Search</button>
+</div>
 
-<br/>
+<div class="d-flex gap-2 align-items-end mb-3 flex-wrap">
+  <div>
+    <label class="form-label">Summary contains</label>
+    <input class="form-control" type="text" [(ngModel)]="summaryContains" (ngModelChange)="onFilterInputsChanged()" placeholder="comma separated" />
+  </div>
+  <div>
+    <label class="form-label">Description contains</label>
+    <input class="form-control" type="text" [(ngModel)]="descriptionContains" (ngModelChange)="onFilterInputsChanged()" placeholder="comma separated" />
+  </div>
+  <div>
+    <label class="form-label">Author contains</label>
+    <input class="form-control" type="text" [(ngModel)]="authorContains" (ngModelChange)="onFilterInputsChanged()" placeholder="creator or reporter" />
+  </div>
+  <div>
+    <label class="form-label">Comments contains</label>
+    <input class="form-control" type="text" [(ngModel)]="commentsContains" (ngModelChange)="onFilterInputsChanged()" placeholder="comma separated" />
+  </div>
+  <div>
+    <label class="form-label">Comment author contains</label>
+    <input class="form-control" type="text" [(ngModel)]="commentAuthorContains" (ngModelChange)="onFilterInputsChanged()" placeholder="comma separated" />
+  </div>
+
+  <div ngbDropdown autoClose="outside">
+    <label class="form-label d-block">Type</label>
+    <button class="btn btn-outline-secondary dropdown-toggle" type="button" ngbDropdownToggle>
+      Type
+      @if (excludedTypes.size > 0) {
+        <span class="badge text-bg-secondary">{{ excludedTypes.size }} excluded</span>
+      }
+    </button>
+    <div ngbDropdownMenu>
+      <button
+        ngbDropdownItem
+        type="button"
+        (click)="toggleAllTypes()">
+        {{ areAllTypesSelected() ? 'Unselect all' : 'Select all' }}
+      </button>
+      <div class="dropdown-divider"></div>
+      @for (type of typeOptions; track type) {
+        <button
+          ngbDropdownItem
+          class="d-flex align-items-center gap-2"
+          [class.text-decoration-line-through]="isTypeExcluded(type)"
+          [class.text-muted]="isTypeExcluded(type)"
+          type="button"
+          (click)="toggleTypeFilter(type)">
+          <input type="checkbox" [checked]="!isTypeExcluded(type)" (click)="$event.preventDefault()" />
+          {{ type }}
+        </button>
+      }
+    </div>
+  </div>
+  <div ngbDropdown autoClose="outside">
+    <label class="form-label d-block">Resolution</label>
+    <button class="btn btn-outline-secondary dropdown-toggle" type="button" ngbDropdownToggle>
+      Resolution
+      @if (excludedResolutions.size > 0) {
+        <span class="badge text-bg-secondary">{{ excludedResolutions.size }} excluded</span>
+      }
+    </button>
+    <div ngbDropdownMenu>
+      <button
+        ngbDropdownItem
+        type="button"
+        (click)="toggleAllResolutions()">
+        {{ areAllResolutionsSelected() ? 'Unselect all' : 'Select all' }}
+      </button>
+      <div class="dropdown-divider"></div>
+      @for (resolution of resolutionOptions; track resolution.value) {
+        <button
+          ngbDropdownItem
+          class="d-flex align-items-center gap-2"
+          [class.text-decoration-line-through]="isResolutionExcluded(resolution.value)"
+          [class.text-muted]="isResolutionExcluded(resolution.value)"
+          type="button"
+          (click)="toggleResolutionFilter(resolution.value)">
+          <input type="checkbox" [checked]="!isResolutionExcluded(resolution.value)" (click)="$event.preventDefault()" />
+          {{ resolution.label }}
+        </button>
+      }
+    </div>
+  </div>
+  <div>
+    <label class="form-label d-block">Status</label>
+    <div class="btn-group" role="group">
+      @for (status of statusOptions; track status) {
+        <button
+          class="btn"
+          [class.btn-outline-secondary]="!isStatusExcluded(status)"
+          [class.btn-secondary]="isStatusExcluded(status)"
+          [class.text-decoration-line-through]="isStatusExcluded(status)"
+          type="button"
+          (click)="toggleStatusFilter(status)">{{ status }}</button>
+      }
+    </div>
+  </div>
+  <div ngbDropdown autoClose="outside">
+    <label class="form-label d-block">Priority</label>
+    <button class="btn btn-outline-secondary dropdown-toggle" type="button" ngbDropdownToggle>
+      Priority
+      @if (excludedPriorities.size > 0) {
+        <span class="badge text-bg-secondary">{{ excludedPriorities.size }} excluded</span>
+      }
+    </button>
+    <div ngbDropdownMenu>
+      <button
+        ngbDropdownItem
+        type="button"
+        (click)="toggleAllPriorities()">
+        {{ areAllPrioritiesSelected() ? 'Unselect all' : 'Select all' }}
+      </button>
+      <div class="dropdown-divider"></div>
+      @for (priority of priorityOptions; track priority) {
+        <button
+          ngbDropdownItem
+          class="d-flex align-items-center gap-2"
+          [class.text-decoration-line-through]="isPriorityExcluded(priority)"
+          [class.text-muted]="isPriorityExcluded(priority)"
+          type="button"
+          (click)="togglePriorityFilter(priority)">
+          <input type="checkbox" [checked]="!isPriorityExcluded(priority)" (click)="$event.preventDefault()" />
+          {{ priority }}
+        </button>
+      }
+    </div>
+  </div>
+</div>
 
 <ag-grid-angular
   style="width: 100%; height: 500px;"
-  [rowData]="rowData"
-  [columnDefs]="colDefs" />
+  [rowData]="issuesDataService.issues()"
+  [columnDefs]="colDefs"
+  [isExternalFilterPresent]="isExternalFilterPresent"
+  [doesExternalFilterPass]="doesExternalFilterPass"
+  (gridReady)="onGridReady($event)" />
 
+@if (selectedIssue(); as data) {
+  <div class="border rounded mt-3 p-3">
+    <div class="d-flex justify-content-end gap-2 mb-2">
+      <button class="btn btn-sm btn-outline-secondary" type="button" (click)="openDetailAsRoute()">Show as page</button>
+      <button class="btn btn-sm btn-outline-secondary" type="button" (click)="closeDetail()">Close</button>
+    </div>
+    <app-issue-view [issue]="data" />
+  </div>
+}

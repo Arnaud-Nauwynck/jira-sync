@@ -12,8 +12,8 @@ import { UserIssueCreateStatsDTO } from '../rest/model/userIssueCreateStatsDTO';
 })
 export class UserIssueStatList implements OnInit {
 
-  fromYear = 2020;
-  toYear = 2050;
+  fromYear = 2012;
+  toYear = 2030;
   usernamePattern = '';
 
   // Row filter criteria (client-side, applied via ag-grid external filter).
@@ -112,13 +112,14 @@ export class UserIssueStatList implements OnInit {
     const perYearColDefs: ColDef<UserIssueCreateStatsDTO>[] = [];
     for (let year = fromYear; year <= toYear; year++) {
       perYearColDefs.push({
-        headerName: `Created-${year}`,
+        headerName: `${year}-Issues`,
+        width: 120,
         valueGetter: (params) => params.data?.perYear?.[year]?.issueCreateCount ?? 0,
       });
     }
     return [
-      { field: 'user' },
-      { field: 'issueCreateCount', headerName: 'Issues Created' },
+      { field: 'user', width: 150 },
+      { headerName: 'Issues Created', width: 100, field: 'issueCreateCount', },
       ...perYearColDefs,
     ];
   }

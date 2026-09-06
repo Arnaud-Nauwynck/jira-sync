@@ -1,6 +1,10 @@
 package fr.an.jira.repository;
 
+import fr.an.jira.client.dtos.JiraIssueDTO;
 import fr.an.jira.configuration.JiraSyncProperties;
+import fr.an.jira.mapper.JiraToAnnotatedIssueMapper;
+import fr.an.jira.rest.dtos.AnnotatedJiraIssueDTO;
+import fr.an.jira.rest.dtos.AnnotatedJiraIssueDTO.JiraAnnotatedDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -78,14 +82,36 @@ public class JiraIssueRepository {
         }
     }
 
-    /** Creates or updates the issue, recording an "insert" or "update" change in its partition. */
+    /**
+     * Maps the issue to its {@link AnnotatedJiraIssueDTO} form and creates or updates it, recording
+     * an "insert" or "update" change in its partition. On update, the previously persisted
+     * {@code annotated} data (not coming from the source Jira server) is carried over onto the
+     * newly mapped issue; on insert, {@code annotated} is left null.
+     */
     public void save(JsonNode issue) {
         String key = requireKey(issue);
         int year = partitionYearOf(issue);
         Map<String, JsonNode> current = loadPartition(year);
-        String change = current.containsKey(key) ? "update" : "insert";
-        appendChange(year, change, key, issue);
-        current.put(key, issue);
+
+        AnnotatedJiraIssueDTO annotatedIssue = JiraToAnnotatedIssueMapper.from(mapper.treeToValue(issue, JiraIssueDTO.class));
+        JsonNode previous = current.get(key);
+        String change;
+        if (previous == null) {
+            change = "insert";
+        } else {
+            change = "update";
+            annotatedIssue.annotated = previousAnnotated(previous);
+        }
+        JsonNode annotatedNode = mapper.valueToTree(annotatedIssue);
+        appendChange(year, change, key, annotatedNode);
+        current.put(key, annotatedNode);
+    }
+
+    /** Extracts the "annotated" section of a previously persisted {@link AnnotatedJiraIssueDTO}, or null. */
+    private JiraAnnotatedDTO previousAnnotated(JsonNode previousIssue) {
+        JsonNode annotatedNode = previousIssue.path("annotated");
+        return (annotatedNode.isMissingNode() || annotatedNode.isNull()) ? null
+                : mapper.treeToValue(annotatedNode, JiraAnnotatedDTO.class);
     }
 
     /** Deletes the issue by key, recording a "delete" change, if it is currently known. */
