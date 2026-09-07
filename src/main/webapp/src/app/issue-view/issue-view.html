@@ -278,15 +278,15 @@
           </div>
         </div>
 
-        @if (data.fields?.votes || data.fields?.watches) {
+        @if (data.fields?.votes || data.fields?.['watch#']) {
           <div class="module">
             <div class="module-header">Votes &amp; Watches</div>
             <div class="module-content">
               <dl class="side-dl">
                 <dt>Votes</dt>
-                <dd>{{ data.fields?.votes?.votes || 0 }}</dd>
+                <dd>{{ data.fields?.votes || 0 }}</dd>
                 <dt>Watchers</dt>
-                <dd>{{ data.fields?.watches?.watchCount || 0 }}</dd>
+                <dd>{{ data.fields?.['watch#'] || 0 }}</dd>
               </dl>
             </div>
           </div>

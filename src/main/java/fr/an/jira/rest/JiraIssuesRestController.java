@@ -1,6 +1,6 @@
 package fr.an.jira.rest;
 
-import fr.an.jira.rest.dtos.AnnotatedJiraIssueDTO;
+import fr.an.jira.rest.dtos.JiraIssueDTO;
 import fr.an.jira.rest.dtos.UserIssueCreateStatsDTO;
 import fr.an.jira.service.JiraIssueService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -41,15 +41,15 @@ public class JiraIssuesRestController {
 
     @Operation(summary = "Find a single issue by its key")
     @GetMapping("/annotated-issues/{key}")
-    public ResponseEntity<AnnotatedJiraIssueDTO> findAnnotatedIssueByKey(@PathVariable("key") String key) {
+    public ResponseEntity<JiraIssueDTO> findAnnotatedIssueByKey(@PathVariable("key") String key) {
         log.info("http GET /annotated-issues/{}", key);
-        AnnotatedJiraIssueDTO found = delegate.findAnnotatedIssueByKey(key);
+        JiraIssueDTO found = delegate.findAnnotatedIssueByKey(key);
         return found != null ? ResponseEntity.ok(found) : ResponseEntity.notFound().build();
     }
 
     @Operation(summary = "List issues created between fromYear and toYear (inclusive), optionally filtered by creator username")
     @GetMapping("/annotated-issues")
-    public Collection<AnnotatedJiraIssueDTO> queryAnnotatedIssues(
+    public Collection<JiraIssueDTO> queryAnnotatedIssues(
             @RequestParam(name="fromYear", defaultValue = "2020") int fromYear,
             @RequestParam(name="toYear", defaultValue = "2050") int toYear,
             @RequestParam(name="usernamePattern", required = false) String usernamePattern

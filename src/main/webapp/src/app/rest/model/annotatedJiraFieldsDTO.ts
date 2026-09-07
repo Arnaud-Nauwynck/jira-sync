@@ -10,9 +10,7 @@
 import { AnnotatedJiraWorklogDTO } from './annotatedJiraWorklogDTO';
 import { AnnotatedJiraIssueLinkDTO } from './annotatedJiraIssueLinkDTO';
 import { AnnotatedJiraCommentsDTO } from './annotatedJiraCommentsDTO';
-import { AnnotatedJiraVotesDTO } from './annotatedJiraVotesDTO';
 import { AnnotatedJiraProgressDTO } from './annotatedJiraProgressDTO';
-import { AnnotatedJiraWatchesDTO } from './annotatedJiraWatchesDTO';
 
 
 export interface AnnotatedJiraFieldsDTO { 
@@ -35,7 +33,8 @@ export interface AnnotatedJiraFieldsDTO {
     reporter?: string;
     aggregateprogress?: AnnotatedJiraProgressDTO;
     progress?: AnnotatedJiraProgressDTO;
-    votes?: AnnotatedJiraVotesDTO;
+    votes?: number;
+    hasVoted?: boolean;
     worklog?: AnnotatedJiraWorklogDTO;
     archivedby?: any | null;
     issuetype?: string;
@@ -44,7 +43,8 @@ export interface AnnotatedJiraFieldsDTO {
     aggregatetimespent?: number;
     resolutiondate?: string;
     workratio?: number;
-    watches?: AnnotatedJiraWatchesDTO;
+    'watch#'?: number;
+    watching?: boolean;
     created?: string;
     updated?: string;
     timeoriginalestimate?: number;

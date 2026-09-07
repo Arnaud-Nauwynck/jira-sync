@@ -1,14 +1,11 @@
 package fr.an.jira.service;
 
 import fr.an.jira.repository.JiraIssueRepository;
-import fr.an.jira.rest.dtos.AnnotatedJiraIssueDTO;
+import fr.an.jira.rest.dtos.JiraIssueDTO;
 import fr.an.jira.rest.dtos.UserIssueCreateStatsDTO;
 import fr.an.jira.rest.dtos.UserIssueCreateStatsDTO.UserIssueCreatePerYearStatsDTO;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 import org.springframework.stereotype.Component;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -25,11 +22,8 @@ public class JiraIssueService {
 
     private final JiraIssueRepository repository;
 
-    private final ObjectMapper mapper;
-
-    public JiraIssueService(JiraIssueRepository repository, ObjectMapper mapper) {
+    public JiraIssueService(JiraIssueRepository repository) {
         this.repository = repository;
-        this.mapper = mapper;
     }
 
     public Collection<UserIssueCreateStatsDTO> queryUserIssueCreateStats(int fromYear, int toYear, String usernamePatternText) {
@@ -48,29 +42,27 @@ public class JiraIssueService {
     }
 
     /** Finds a single issue by its key, or returns null if not found. */
-    public AnnotatedJiraIssueDTO findAnnotatedIssueByKey(String key) {
-        JsonNode issue = repository.findByKey(key);
-        return issue != null ? mapper.treeToValue(issue, AnnotatedJiraIssueDTO.class) : null;
+    public JiraIssueDTO findAnnotatedIssueByKey(String key) {
+        return repository.findByKey(key);
     }
 
     /** Lists the issues created between fromYear and toYear (inclusive), optionally filtered by creator username. */
-    public List<AnnotatedJiraIssueDTO> queryAnnotatedIssues(int fromYear, int toYear, String usernamePatternText) {
-        List<AnnotatedJiraIssueDTO> result = new ArrayList<>();
+    public List<JiraIssueDTO> queryAnnotatedIssues(int fromYear, int toYear, String usernamePatternText) {
+        List<JiraIssueDTO> result = new ArrayList<>();
         Pattern usernamePattern = (usernamePatternText != null && !usernamePatternText.isBlank())? Pattern.compile(usernamePatternText) : null;
         repository.scanIssues(fromYear, toYear, (year, issue) -> {
             if (usernamePattern == null || usernamePattern.matcher(creatorOf(issue)).matches()) {
-                result.add(mapper.treeToValue(issue, AnnotatedJiraIssueDTO.class));
+                result.add(issue);
             }
         });
         return result;
     }
 
     /** The issue creator's username, falling back to the reporter, when missing. */
-    private static String creatorOf(JsonNode issue) {
-        JsonNode fields = issue.path("fields");
-        String name = fields.path("creator").asText(null);
+    private static String creatorOf(JiraIssueDTO issue) {
+        String name = issue.fields != null ? issue.fields.creator : null;
         if (name == null || name.isBlank()) {
-            name = fields.path("reporter").asText(null);
+            name = issue.fields != null ? issue.fields.reporter : null;
         }
         return name != null && !name.isBlank() ? name : UNKNOWN_USER;
     }

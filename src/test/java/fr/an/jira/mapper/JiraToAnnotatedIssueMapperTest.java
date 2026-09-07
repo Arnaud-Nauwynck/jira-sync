@@ -1,7 +1,7 @@
 package fr.an.jira.mapper;
 
-import fr.an.jira.client.dtos.JiraIssueDTO;
-import fr.an.jira.rest.dtos.AnnotatedJiraIssueDTO;
+import fr.an.jira.client.dtos.SourceJiraIssueDTO;
+import fr.an.jira.rest.dtos.JiraIssueDTO;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -11,7 +11,7 @@ import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** Ensures a real Jira REST API issue payload is correctly flattened by {@link JiraToAnnotatedIssueMapper}. */
+/** Ensures a real Jira REST API issue payload is correctly flattened by {@link SourceJiraToAnnotatedIssueMapper}. */
 class JiraToAnnotatedIssueMapperTest {
 
     private static final Path SAMPLE_FILE = Path.of("src/test/data/issues/SPARK-12216.json");
@@ -22,9 +22,9 @@ class JiraToAnnotatedIssueMapperTest {
     @Test
     void shouldMapSampleIssueJsonToAnnotatedDTO() throws IOException {
         String json = Files.readString(SAMPLE_FILE);
-        JiraIssueDTO issue = mapper.readValue(json, JiraIssueDTO.class);
+        SourceJiraIssueDTO issue = mapper.readValue(json, SourceJiraIssueDTO.class);
 
-        AnnotatedJiraIssueDTO annotated = JiraToAnnotatedIssueMapper.from(issue);
+        JiraIssueDTO annotated = SourceJiraToAnnotatedIssueMapper.from(issue);
 
         Files.createDirectories(OUTPUT_FILE.getParent());
         Files.writeString(OUTPUT_FILE, mapper.writerWithDefaultPrettyPrinter().writeValueAsString(annotated));
@@ -47,10 +47,9 @@ class JiraToAnnotatedIssueMapperTest {
         assertThat(annotated.fields.issuelinks).hasSize(2);
         assertThat(annotated.fields.issuelinks.get(0).inwardIssue.key).isEqualTo("SPARK-50628");
 
-        assertThat(annotated.fields.comment.comments).hasSize(30);
+        assertThat(annotated.fields.comments).hasSize(30);
 
-        assertThat(annotated.changelog).isNotNull();
-        assertThat(annotated.changelog.histories).hasSize(5);
+        assertThat(annotated.histories).hasSize(5);
 
         // customfield_XXXXX entries are carried over unchanged
         assertThat(annotated.fields.customFields).containsEntry("customfield_12310420", "9223372036854775807");

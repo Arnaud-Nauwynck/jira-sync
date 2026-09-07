@@ -12,50 +12,50 @@ import java.util.Map;
  * Mirrors the JSON returned by the Jira REST API "issue" endpoint, e.g.
  * see src/test/data/issues/SPARK-12216.json.
  * Fields not explicitly declared (mostly the per-project "customfield_XXXXX" fields) are
- * collected in {@link JiraFieldsDTO#customFields}.
+ * collected in {@link SourceJiraFieldsDTO#customFields}.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
-public class JiraIssueDTO {
+public class SourceJiraIssueDTO {
     public String expand;
     public String id;
     public String self;
     public String key;
-    public JiraFieldsDTO fields;
-    public JiraChangelogDTO changelog;
+    public SourceJiraFieldsDTO fields;
+    public SourceJiraChangelogDTO changelog;
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     @Data
-    public static class JiraFieldsDTO {
+    public static class SourceJiraFieldsDTO {
         public List<Object> fixVersions;
-        public JiraResolutionDTO resolution;
+        public SourceJiraResolutionDTO resolution;
         public String lastViewed;
-        public JiraPriorityDTO priority;
+        public SourceJiraPriorityDTO priority;
         public List<String> labels;
         public Long aggregatetimeoriginalestimate;
         public Long timeestimate;
         public List<Object> versions;
-        public List<JiraIssueLinkDTO> issuelinks;
-        public JiraUserDTO assignee;
+        public List<SourceJiraIssueLinkDTO> issuelinks;
+        public SourceJiraUserDTO assignee;
         public List<Object> subtasks;
-        public JiraStatusDTO status;
-        public List<JiraComponentDTO> components;
+        public SourceJiraStatusDTO status;
+        public List<SourceJiraComponentDTO> components;
         public String archiveddate;
         public Long aggregatetimeestimate;
-        public JiraUserDTO creator;
-        public JiraUserDTO reporter;
-        public JiraProgressDTO aggregateprogress;
-        public JiraProgressDTO progress;
-        public JiraVotesDTO votes;
+        public SourceJiraUserDTO creator;
+        public SourceJiraUserDTO reporter;
+        public SourceJiraProgressDTO aggregateprogress;
+        public SourceJiraProgressDTO progress;
+        public SourceJiraVotesDTO votes;
         public JiraWorklogDTO worklog;
         public Object archivedby;
-        public JiraIssueTypeDTO issuetype;
+        public SourceJiraIssueTypeDTO issuetype;
         public Long timespent;
-        public JiraProjectDTO project;
+        public SourceJiraProjectDTO project;
         public Long aggregatetimespent;
         public String resolutiondate;
         public Integer workratio;
-        public JiraWatchesDTO watches;
+        public SourceJiraWatchesDTO watches;
         public String created;
         public String updated;
         public Long timeoriginalestimate;
@@ -63,7 +63,7 @@ public class JiraIssueDTO {
         public String summary;
         public String environment;
         public String duedate;
-        public JiraCommentsDTO comment;
+        public SourceJiraCommentsDTO comment;
         public Map<String, Object> timetracking;
 
         /** Catch-all for the per-project "customfield_XXXXX" fields (and any other unmapped field). */
@@ -73,7 +73,7 @@ public class JiraIssueDTO {
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     @Data
-    public static class JiraUserDTO {
+    public static class SourceJiraUserDTO {
         public String self;
         public String name;
         public String key;
@@ -85,7 +85,7 @@ public class JiraIssueDTO {
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     @Data
-    public static class JiraResolutionDTO {
+    public static class SourceJiraResolutionDTO {
         public String self;
         public String id;
         public String description;
@@ -94,7 +94,7 @@ public class JiraIssueDTO {
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     @Data
-    public static class JiraPriorityDTO {
+    public static class SourceJiraPriorityDTO {
         public String self;
         public String iconUrl;
         public String name;
@@ -103,7 +103,7 @@ public class JiraIssueDTO {
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     @Data
-    public static class JiraStatusCategoryDTO {
+    public static class SourceJiraStatusCategoryDTO {
         public String self;
         public int id;
         public String key;
@@ -113,18 +113,18 @@ public class JiraIssueDTO {
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     @Data
-    public static class JiraStatusDTO {
+    public static class SourceJiraStatusDTO {
         public String self;
         public String description;
         public String iconUrl;
         public String name;
         public String id;
-        public JiraStatusCategoryDTO statusCategory;
+        public SourceJiraStatusCategoryDTO statusCategory;
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     @Data
-    public static class JiraComponentDTO {
+    public static class SourceJiraComponentDTO {
         public String self;
         public String id;
         public String name;
@@ -133,7 +133,7 @@ public class JiraIssueDTO {
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     @Data
-    public static class JiraIssueTypeDTO {
+    public static class SourceJiraIssueTypeDTO {
         public String self;
         public String id;
         public String description;
@@ -145,7 +145,7 @@ public class JiraIssueDTO {
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     @Data
-    public static class JiraIssueLinkTypeDTO {
+    public static class SourceJiraIssueLinkTypeDTO {
         public String id;
         public String self;
         public String name;
@@ -155,35 +155,35 @@ public class JiraIssueDTO {
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     @Data
-    public static class JiraLinkedIssueFieldsDTO {
+    public static class SourceJiraLinkedIssueFieldsDTO {
         public String summary;
-        public JiraStatusDTO status;
-        public JiraPriorityDTO priority;
-        public JiraIssueTypeDTO issuetype;
+        public SourceJiraStatusDTO status;
+        public SourceJiraPriorityDTO priority;
+        public SourceJiraIssueTypeDTO issuetype;
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     @Data
-    public static class JiraLinkedIssueDTO {
+    public static class SourceJiraLinkedIssueDTO {
         public String id;
         public String key;
         public String self;
-        public JiraLinkedIssueFieldsDTO fields;
+        public SourceJiraLinkedIssueFieldsDTO fields;
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     @Data
-    public static class JiraIssueLinkDTO {
+    public static class SourceJiraIssueLinkDTO {
         public String id;
         public String self;
-        public JiraIssueLinkTypeDTO type;
-        public JiraLinkedIssueDTO inwardIssue;
-        public JiraLinkedIssueDTO outwardIssue;
+        public SourceJiraIssueLinkTypeDTO type;
+        public SourceJiraLinkedIssueDTO inwardIssue;
+        public SourceJiraLinkedIssueDTO outwardIssue;
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     @Data
-    public static class JiraProjectDTO {
+    public static class SourceJiraProjectDTO {
         public String self;
         public String id;
         public String key;
@@ -194,14 +194,14 @@ public class JiraIssueDTO {
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     @Data
-    public static class JiraProgressDTO {
+    public static class SourceJiraProgressDTO {
         public int progress;
         public int total;
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     @Data
-    public static class JiraVotesDTO {
+    public static class SourceJiraVotesDTO {
         public String self;
         public int votes;
         public boolean hasVoted;
@@ -218,7 +218,7 @@ public class JiraIssueDTO {
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     @Data
-    public static class JiraWatchesDTO {
+    public static class SourceJiraWatchesDTO {
         public String self;
         public int watchCount;
         public boolean isWatching;
@@ -226,20 +226,20 @@ public class JiraIssueDTO {
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     @Data
-    public static class JiraCommentDTO {
+    public static class SourceJiraCommentDTO {
         public String self;
         public String id;
-        public JiraUserDTO author;
+        public SourceJiraUserDTO author;
         public String body;
-        public JiraUserDTO updateAuthor;
+        public SourceJiraUserDTO updateAuthor;
         public String created;
         public String updated;
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     @Data
-    public static class JiraCommentsDTO {
-        public List<JiraCommentDTO> comments;
+    public static class SourceJiraCommentsDTO {
+        public List<SourceJiraCommentDTO> comments;
         public int maxResults;
         public int total;
         public int startAt;
@@ -247,25 +247,25 @@ public class JiraIssueDTO {
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     @Data
-    public static class JiraChangelogDTO {
+    public static class SourceJiraChangelogDTO {
         public int startAt;
         public int maxResults;
         public int total;
-        public List<JiraHistoryDTO> histories;
+        public List<SourceJiraHistoryDTO> histories;
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     @Data
-    public static class JiraHistoryDTO {
+    public static class SourceJiraHistoryDTO {
         public String id;
-        public JiraUserDTO author;
+        public SourceJiraUserDTO author;
         public String created;
-        public List<JiraHistoryItemDTO> items;
+        public List<SourceJiraHistoryItemDTO> items;
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     @Data
-    public static class JiraHistoryItemDTO {
+    public static class SourceJiraHistoryItemDTO {
         public String field;
         public String fieldtype;
         public String from;

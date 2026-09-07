@@ -1,6 +1,6 @@
 package fr.an.jira.client;
 
-import fr.an.jira.client.dtos.JiraIssueDTO;
+import fr.an.jira.client.dtos.SourceJiraIssueDTO;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -10,7 +10,7 @@ import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** Ensures a real Jira REST API issue payload can be parsed into {@link JiraIssueDTO}. */
+/** Ensures a real Jira REST API issue payload can be parsed into {@link SourceJiraIssueDTO}. */
 class JiraIssueJsonParseTest {
 
     private static final Path SAMPLE_FILE = Path.of("src/test/data/issues/SPARK-12216.json");
@@ -21,7 +21,7 @@ class JiraIssueJsonParseTest {
     void shouldParseSampleIssueJson() throws IOException {
         String json = Files.readString(SAMPLE_FILE);
 
-        JiraIssueDTO issue = mapper.readValue(json, JiraIssueDTO.class);
+        SourceJiraIssueDTO issue = mapper.readValue(json, SourceJiraIssueDTO.class);
 
         assertThat(issue.key).isEqualTo("SPARK-12216");
         assertThat(issue.fields).isNotNull();
@@ -36,7 +36,7 @@ class JiraIssueJsonParseTest {
 
         assertThat(issue.changelog).isNotNull();
         assertThat(issue.changelog.histories).hasSize(5);
-        JiraIssueDTO.JiraHistoryDTO lastHistory = issue.changelog.histories.get(issue.changelog.histories.size() - 1);
+        SourceJiraIssueDTO.SourceJiraHistoryDTO lastHistory = issue.changelog.histories.get(issue.changelog.histories.size() - 1);
         assertThat(lastHistory.items.get(0).toString).isEqualTo("This issue is cloned by SPARK-50628");
 
         // per-project "customfield_XXXXX" entries are collected, not lost, without leaking known fields

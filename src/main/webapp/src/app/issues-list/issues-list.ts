@@ -101,13 +101,13 @@ export class IssuesList implements OnInit {
     { headerName: 'Updated', field: 'fields.updated', width: 100 },
     { headerName: 'Votes', width: 70,
       valueGetter: (params) => {
-        const votes = params.data?.fields?.votes?.votes;
+        const votes = params.data?.fields?.votes;
         return (votes)? votes : '';
       },
     },
     { headerName: 'Watches', width: 70,
       valueGetter: (params) => {
-        const watchCount = params.data?.fields?.watches?.watchCount;
+        const watchCount = (params.data?.fields as any)?.['watch#'];
         return (watchCount)? watchCount : '';
       },
     },

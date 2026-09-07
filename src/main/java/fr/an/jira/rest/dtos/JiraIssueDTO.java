@@ -1,5 +1,6 @@
 package fr.an.jira.rest.dtos;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -19,19 +20,17 @@ import java.util.Map;
  * {@code JiraIssueDTO}.
  */
 @Data
-public class AnnotatedJiraIssueDTO {
-    public String expand;
+public class JiraIssueDTO {
     public String id;
-    public String self;
     public String key;
-    public AnnotatedJiraFieldsDTO fields;
-    public AnnotatedJiraChangelogDTO changelog;
+    public IssueFieldsDTO fields;
+    public List<IssueHistoryDTO> histories;
 
     /** Extra data not coming from the source Jira server; not set by the mapper. */
-    public JiraAnnotatedDTO annotated;
+    public IssueExtraFieldsDTO annotated;
 
     @Data
-    public static class AnnotatedJiraFieldsDTO {
+    public static class IssueFieldsDTO {
         public List<Object> fixVersions;
         public String resolution;
         public String lastViewed;
@@ -40,7 +39,7 @@ public class AnnotatedJiraIssueDTO {
         public Long aggregatetimeoriginalestimate;
         public Long timeestimate;
         public List<Object> versions;
-        public List<AnnotatedJiraIssueLinkDTO> issuelinks;
+        public List<IssueLinkDTO> issuelinks;
         public String assignee;
         public List<Object> subtasks;
         public String status;
@@ -49,10 +48,11 @@ public class AnnotatedJiraIssueDTO {
         public Long aggregatetimeestimate;
         public String creator;
         public String reporter;
-        public AnnotatedJiraProgressDTO aggregateprogress;
-        public AnnotatedJiraProgressDTO progress;
-        public AnnotatedJiraVotesDTO votes;
-        public AnnotatedJiraWorklogDTO worklog;
+        public IssueProgressDTO aggregateprogress;
+        public IssueProgressDTO progress;
+        public int votes;
+        public Boolean hasVoted;
+        public List<Object> worklogs;
         public Object archivedby;
         public String issuetype;
         public Long timespent;
@@ -60,7 +60,9 @@ public class AnnotatedJiraIssueDTO {
         public Long aggregatetimespent;
         public String resolutiondate;
         public Integer workratio;
-        public AnnotatedJiraWatchesDTO watches;
+        @JsonProperty("watch#")
+        public int watchCount;
+        public Boolean watching;
         public String created;
         public String updated;
         public Long timeoriginalestimate;
@@ -68,34 +70,31 @@ public class AnnotatedJiraIssueDTO {
         public String summary;
         public String environment;
         public String duedate;
-        public AnnotatedJiraCommentsDTO comment;
+        public List<IssueCommentDTO> comments;
         public Map<String, Object> timetracking;
         public Map<String, Object> customFields = new LinkedHashMap<>();
     }
 
     @Data
-    public static class AnnotatedJiraIssueLinkDTO {
+    public static class IssueLinkDTO {
         public String id;
-        public String self;
-        public AnnotatedJiraIssueLinkTypeDTO type;
-        public AnnotatedJiraLinkedIssueDTO inwardIssue;
-        public AnnotatedJiraLinkedIssueDTO outwardIssue;
+        public IssueLinkTypeDTO type;
+        public LinkedIssueDTO inwardIssue;
+        public LinkedIssueDTO outwardIssue;
     }
 
     @Data
-    public static class AnnotatedJiraIssueLinkTypeDTO {
+    public static class IssueLinkTypeDTO {
         public String id;
-        public String self;
         public String name;
         public String inward;
         public String outward;
     }
 
     @Data
-    public static class AnnotatedJiraLinkedIssueDTO {
+    public static class LinkedIssueDTO {
         public String id;
         public String key;
-        public String self;
         public AnnotatedJiraLinkedIssueFieldsDTO fields;
     }
 
@@ -108,36 +107,13 @@ public class AnnotatedJiraIssueDTO {
     }
 
     @Data
-    public static class AnnotatedJiraProgressDTO {
+    public static class IssueProgressDTO {
         public int progress;
         public int total;
     }
 
     @Data
-    public static class AnnotatedJiraVotesDTO {
-        public String self;
-        public int votes;
-        public boolean hasVoted;
-    }
-
-    @Data
-    public static class AnnotatedJiraWorklogDTO {
-        public int startAt;
-        public int maxResults;
-        public int total;
-        public List<Object> worklogs;
-    }
-
-    @Data
-    public static class AnnotatedJiraWatchesDTO {
-        public String self;
-        public int watchCount;
-        public boolean isWatching;
-    }
-
-    @Data
-    public static class AnnotatedJiraCommentDTO {
-        public String self;
+    public static class IssueCommentDTO {
         public String id;
         public String author;
         public String body;
@@ -147,31 +123,15 @@ public class AnnotatedJiraIssueDTO {
     }
 
     @Data
-    public static class AnnotatedJiraCommentsDTO {
-        public List<AnnotatedJiraCommentDTO> comments;
-        public int maxResults;
-        public int total;
-        public int startAt;
-    }
-
-    @Data
-    public static class AnnotatedJiraChangelogDTO {
-        public int startAt;
-        public int maxResults;
-        public int total;
-        public List<AnnotatedJiraHistoryDTO> histories;
-    }
-
-    @Data
-    public static class AnnotatedJiraHistoryDTO {
+    public static class IssueHistoryDTO {
         public String id;
         public String author;
         public String created;
-        public List<AnnotatedJiraHistoryItemDTO> items;
+        public List<IssueHistoryItemDTO> items;
     }
 
     @Data
-    public static class AnnotatedJiraHistoryItemDTO {
+    public static class IssueHistoryItemDTO {
         public String field;
         public String fieldtype;
         public String from;
@@ -182,7 +142,7 @@ public class AnnotatedJiraIssueDTO {
 
     /** Extra fields enriched and persisted locally, not coming from the source Jira server. */
     @Data
-    public static class JiraAnnotatedDTO {
+    public static class IssueExtraFieldsDTO {
         public String comment;
         public LocalDateTime commentTime;
         public String summarised;

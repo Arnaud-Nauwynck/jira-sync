@@ -1,5 +1,8 @@
 package fr.an.jira.repository;
 
+import fr.an.jira.client.dtos.SourceJiraIssueDTO;
+import fr.an.jira.mapper.SourceJiraToAnnotatedIssueMapper;
+import fr.an.jira.rest.dtos.JiraIssueDTO;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
@@ -52,13 +55,15 @@ public class JiraIssueLegacyMigration {
             return;
         }
 
-        Map<Integer, List<JsonNode>> byPartitionYear = new TreeMap<>();
+        Map<Integer, List<JiraIssueDTO>> byPartitionYear = new TreeMap<>();
         for (Path file : legacyFiles) {
-            JsonNode issue = mapper.readTree(file.toFile());
+            JsonNode rawIssue = mapper.readTree(file.toFile());
+            SourceJiraIssueDTO srcIssue = mapper.treeToValue(rawIssue, SourceJiraIssueDTO.class);
+            JiraIssueDTO issue = SourceJiraToAnnotatedIssueMapper.from(srcIssue);
             byPartitionYear.computeIfAbsent(JiraIssueRepository.partitionYearOf(issue), y -> new ArrayList<>()).add(issue);
         }
 
-        for (Map.Entry<Integer, List<JsonNode>> entry : byPartitionYear.entrySet()) {
+        for (Map.Entry<Integer, List<JiraIssueDTO>> entry : byPartitionYear.entrySet()) {
             repository.importSnapshot(entry.getKey(), entry.getValue());
             System.out.println("migrated " + entry.getValue().size() + " issues into "
                     + JiraIssueRepository.partitionDirName(entry.getKey()));

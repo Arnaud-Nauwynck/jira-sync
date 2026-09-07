@@ -10,8 +10,6 @@ export * from './annotatedJiraIssueLinkTypeDTO';
 export * from './annotatedJiraLinkedIssueDTO';
 export * from './annotatedJiraLinkedIssueFieldsDTO';
 export * from './annotatedJiraProgressDTO';
-export * from './annotatedJiraVotesDTO';
-export * from './annotatedJiraWatchesDTO';
 export * from './annotatedJiraWorklogDTO';
 export * from './jiraAnnotatedDTO';
 export * from './userIssueCreatePerYearStatsDTO';
