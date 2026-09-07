@@ -17,7 +17,7 @@ import { Observable }                                        from 'rxjs';
 import { OpenApiHttpParams, QueryParamStyle } from '../query.params';
 
 // @ts-ignore
-import { AnnotatedJiraIssueDTO } from '../model/annotatedJiraIssueDTO';
+import { JiraIssueDTO } from '../model/jiraIssueDTO';
 // @ts-ignore
 import { UserIssueCreateStatsDTO } from '../model/userIssueCreateStatsDTO';
 
@@ -45,9 +45,9 @@ export class JiraIssuesService extends BaseService {
      * @param reportProgress flag to report request and response progress.
      * @param options additional options
      */
-    public findAnnotatedIssueByKey(key: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<AnnotatedJiraIssueDTO>;
-    public findAnnotatedIssueByKey(key: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<AnnotatedJiraIssueDTO>>;
-    public findAnnotatedIssueByKey(key: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<AnnotatedJiraIssueDTO>>;
+    public findAnnotatedIssueByKey(key: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<JiraIssueDTO>;
+    public findAnnotatedIssueByKey(key: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<JiraIssueDTO>>;
+    public findAnnotatedIssueByKey(key: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<JiraIssueDTO>>;
     public findAnnotatedIssueByKey(key: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
         if (key === null || key === undefined) {
             throw new Error('Required parameter key was null or undefined when calling findAnnotatedIssueByKey.');
@@ -80,7 +80,7 @@ export class JiraIssuesService extends BaseService {
 
         let localVarPath = `/api/v1/jira-issues/annotated-issues/${this.configuration.encodeParam({name: "key", value: key, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: undefined})}`;
         const { basePath, withCredentials } = this.configuration;
-        return this.httpClient.request<AnnotatedJiraIssueDTO>('get', `${basePath}${localVarPath}`,
+        return this.httpClient.request<JiraIssueDTO>('get', `${basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
                 responseType: <any>responseType_,
@@ -103,9 +103,9 @@ export class JiraIssuesService extends BaseService {
      * @param reportProgress flag to report request and response progress.
      * @param options additional options
      */
-    public queryAnnotatedIssues(fromYear?: number, toYear?: number, usernamePattern?: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<AnnotatedJiraIssueDTO>>;
-    public queryAnnotatedIssues(fromYear?: number, toYear?: number, usernamePattern?: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<AnnotatedJiraIssueDTO>>>;
-    public queryAnnotatedIssues(fromYear?: number, toYear?: number, usernamePattern?: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<Array<AnnotatedJiraIssueDTO>>>;
+    public queryAnnotatedIssues(fromYear?: number, toYear?: number, usernamePattern?: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<JiraIssueDTO>>;
+    public queryAnnotatedIssues(fromYear?: number, toYear?: number, usernamePattern?: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<JiraIssueDTO>>>;
+    public queryAnnotatedIssues(fromYear?: number, toYear?: number, usernamePattern?: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<Array<JiraIssueDTO>>>;
     public queryAnnotatedIssues(fromYear?: number, toYear?: number, usernamePattern?: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
 
         let localVarQueryParameters = new OpenApiHttpParams(this.encoder);
@@ -164,7 +164,7 @@ export class JiraIssuesService extends BaseService {
 
         let localVarPath = `/api/v1/jira-issues/annotated-issues`;
         const { basePath, withCredentials } = this.configuration;
-        return this.httpClient.request<Array<AnnotatedJiraIssueDTO>>('get', `${basePath}${localVarPath}`,
+        return this.httpClient.request<Array<JiraIssueDTO>>('get', `${basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
                 params: localVarQueryParameters.toHttpParams(),

@@ -236,11 +236,11 @@
           </div>
         }
 
-        @if (data.fields?.comment?.comments?.length) {
+        @if (data.fields?.comments?.length) {
           <div class="module">
-            <div class="module-header">Comments ({{ data.fields?.comment?.comments?.length }})</div>
+            <div class="module-header">Comments ({{ data.fields?.comments?.length }})</div>
             <div class="module-content">
-              @for (comment of data.fields?.comment?.comments; track comment.id) {
+              @for (comment of data.fields?.comments; track comment.id) {
                 <div class="comment">
                   <div class="comment-header"><strong>{{ comment.author }}</strong> commented on {{ comment.created }}</div>
                   <div class="comment-body">{{ comment.body }}</div>
@@ -278,7 +278,7 @@
           </div>
         </div>
 
-        @if (data.fields?.votes || data.fields?.['watch#']) {
+        @if (data.fields?.votes || data.fields?.watchCount) {
           <div class="module">
             <div class="module-header">Votes &amp; Watches</div>
             <div class="module-content">
@@ -286,7 +286,7 @@
                 <dt>Votes</dt>
                 <dd>{{ data.fields?.votes || 0 }}</dd>
                 <dt>Watchers</dt>
-                <dd>{{ data.fields?.['watch#'] || 0 }}</dd>
+                <dd>{{ data.fields?.watchCount || 0 }}</dd>
               </dl>
             </div>
           </div>

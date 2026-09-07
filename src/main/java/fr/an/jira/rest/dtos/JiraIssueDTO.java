@@ -1,6 +1,5 @@
 package fr.an.jira.rest.dtos;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -38,7 +37,7 @@ public class JiraIssueDTO {
         public List<String> labels;
         public Long aggregatetimeoriginalestimate;
         public Long timeestimate;
-        public List<Object> versions;
+        public List<String> versions;
         public List<IssueLinkDTO> issuelinks;
         public String assignee;
         public List<Object> subtasks;
@@ -60,8 +59,7 @@ public class JiraIssueDTO {
         public Long aggregatetimespent;
         public String resolutiondate;
         public Integer workratio;
-        @JsonProperty("watch#")
-        public int watchCount;
+        public Integer watchCount;
         public Boolean watching;
         public String created;
         public String updated;

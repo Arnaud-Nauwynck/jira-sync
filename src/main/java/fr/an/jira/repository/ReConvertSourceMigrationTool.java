@@ -34,7 +34,8 @@ import java.util.zip.ZipInputStream;
  * the Jira server. The per-issue {@link JiraIssueDTO#annotated} section (data enriched/persisted
  * locally, never coming from the source Jira server, so never filled in by the mapper) is not
  * present in the source file; it is instead read out of the previously persisted "data.ndjson.zip"
- * by key (via the repository's own typed read) and carried over onto the freshly re-mapped issue
+ * by key (as a raw {@link JsonNode}, not through the repository's typed read, since the "fields"
+ * shape may have changed since it was written) and carried over onto the freshly re-mapped issue
  * before it is overwritten.
  * <p>
  * Run manually, e.g. {@code java -cp ... fr.an.jira.repository.ReConvertSourceMigrationTool [jiraSyncLocalDir]}
@@ -44,6 +45,7 @@ import java.util.zip.ZipInputStream;
 public class ReConvertSourceMigrationTool {
 
     private static final String SOURCE_FILE = "data-source.ndjson.gz";
+    private static final String SNAPSHOT_FILE = "data.ndjson.zip";
 
     public static void main(String[] args) throws Exception {
         String jiraBaseDir = args.length > 0 ? args[0] : "/home/arnaud/spark/spark-jira";
@@ -88,18 +90,28 @@ public class ReConvertSourceMigrationTool {
     private void reconvertPartition(int year) {
         // folds any pending changes.ndjson into data.ndjson.zip first, so the "annotated" data we
         // are about to carry over reflects the latest recorded state, not a stale snapshot.
-        repository.compact(year);
+        // repository.compact(year);
 
-        Map<String, JiraIssueDTO> previousByKey = new LinkedHashMap<>();
-        repository.scanIssues(year, year, (y, issue) -> previousByKey.put(issue.key, issue));
+        // Read the previously persisted snapshot as raw JsonNode rather than through the
+        // repository's typed JiraIssueDTO read: the "fields" shape may have changed since it was
+        // written (e.g. a field that used to hold a raw JSON object now expects a String), which
+        // would make a strict typed read of the old snapshot fail. Only the "annotated" section
+        // is needed here, its shape is independent of "fields" and did not change.
+        Map<String, JsonNode> previousAnnotatedByKey = new LinkedHashMap<>();
+        for (JsonNode rawIssue : readNdjsonZip(snapshotFile(year))) {
+            JsonNode annotated = rawIssue.path("annotated");
+            if (!annotated.isMissingNode() && !annotated.isNull()) {
+                previousAnnotatedByKey.put(rawIssue.path("key").asText(), annotated);
+            }
+        }
 
         List<JiraIssueDTO> reconvertedIssues = new ArrayList<>();
         for (JsonNode rawIssue : readNdjsonZip(sourceFile(year))) {
             SourceJiraIssueDTO srcIssue = mapper.treeToValue(rawIssue, SourceJiraIssueDTO.class);
             JiraIssueDTO annotatedIssue = SourceJiraToAnnotatedIssueMapper.from(srcIssue);
-            JiraIssueDTO previousIssue = previousByKey.get(annotatedIssue.key);
-            if (previousIssue != null) {
-                annotatedIssue.annotated = previousIssue.annotated;
+            JsonNode previousAnnotated = previousAnnotatedByKey.get(annotatedIssue.key);
+            if (previousAnnotated != null) {
+                annotatedIssue.annotated = mapper.treeToValue(previousAnnotated, JiraIssueDTO.IssueExtraFieldsDTO.class);
             }
             reconvertedIssues.add(annotatedIssue);
         }
@@ -134,5 +146,9 @@ public class ReConvertSourceMigrationTool {
 
     private Path sourceFile(int year) {
         return issuesDir.resolve(JiraIssueRepository.partitionDirName(year)).resolve(SOURCE_FILE);
+    }
+
+    private Path snapshotFile(int year) {
+        return issuesDir.resolve(JiraIssueRepository.partitionDirName(year)).resolve(SNAPSHOT_FILE);
     }
 }

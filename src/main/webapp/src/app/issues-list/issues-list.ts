@@ -4,7 +4,7 @@ import { AgGridAngular } from 'ag-grid-angular';
 import type { CellClickedEvent, ColDef, GridApi, GridReadyEvent, IRowNode } from 'ag-grid-community';
 import { FormsModule } from '@angular/forms';
 import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
-import { AnnotatedJiraIssueDTO } from '../rest/model/annotatedJiraIssueDTO';
+import { JiraIssueDTO } from '../rest/model/jiraIssueDTO';
 import { IssuesDataService } from './issues-data.service';
 import { IssueView } from '../issue-view/issue-view';
 
@@ -19,7 +19,7 @@ const OTHER_TYPES = '(others)';
 export class IssuesList implements OnInit {
 
   // The issue currently shown in the master-detail panel below the grid, or undefined when closed.
-  readonly selectedIssue = signal<AnnotatedJiraIssueDTO | undefined>(undefined);
+  readonly selectedIssue = signal<JiraIssueDTO | undefined>(undefined);
 
   fromYear = 2020;
   toYear = 2050;
@@ -78,10 +78,10 @@ export class IssuesList implements OnInit {
   excludedResolutions = new Set<string>();
 
   // Column Definitions: Defines the columns to be displayed.
-  colDefs: ColDef<AnnotatedJiraIssueDTO>[] = [
+  colDefs: ColDef<JiraIssueDTO>[] = [
     { headerName: 'Key', field: 'key', width: 120,
       cellStyle: { cursor: 'pointer', textDecoration: 'underline' },
-      onCellClicked: (params: CellClickedEvent<AnnotatedJiraIssueDTO>) => {
+      onCellClicked: (params: CellClickedEvent<JiraIssueDTO>) => {
         if (params.data) {
           this.selectedIssue.set(params.data);
         }
@@ -107,13 +107,13 @@ export class IssuesList implements OnInit {
     },
     { headerName: 'Watches', width: 70,
       valueGetter: (params) => {
-        const watchCount = (params.data?.fields as any)?.['watch#'];
+        const watchCount = params.data?.fields?.watchCount;
         return (watchCount)? watchCount : '';
       },
     },
   ];
 
-  private gridApi?: GridApi<AnnotatedJiraIssueDTO>;
+  private gridApi?: GridApi<JiraIssueDTO>;
 
   constructor(readonly issuesDataService: IssuesDataService, private router: Router) {}
 
@@ -132,7 +132,7 @@ export class IssuesList implements OnInit {
     }
   }
 
-  onGridReady(event: GridReadyEvent<AnnotatedJiraIssueDTO>) {
+  onGridReady(event: GridReadyEvent<JiraIssueDTO>) {
     this.gridApi = event.api;
   }
 
@@ -255,7 +255,7 @@ export class IssuesList implements OnInit {
       || this.parseCsvList(this.commentAuthorContains).length > 0;
   };
 
-  doesExternalFilterPass = (node: IRowNode<AnnotatedJiraIssueDTO>): boolean => {
+  doesExternalFilterPass = (node: IRowNode<JiraIssueDTO>): boolean => {
     const fields = node.data?.fields;
     if (!fields) {
       return true;
@@ -281,7 +281,7 @@ export class IssuesList implements OnInit {
     if (this.excludedTypes.has(this.typeFilterKey(fields.issuetype))) {
       return false;
     }
-    const comments = fields.comment?.comments ?? [];
+    const comments = fields.comments ?? [];
     if (!this.matchesAny(this.commentsContains, ...comments.map((c) => c.body))) {
       return false;
     }

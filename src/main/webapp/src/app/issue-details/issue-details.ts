@@ -1,7 +1,7 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { switchMap } from 'rxjs';
-import { AnnotatedJiraIssueDTO } from '../rest/model/annotatedJiraIssueDTO';
+import { JiraIssueDTO } from '../rest/model/jiraIssueDTO';
 import { IssuesDataService } from '../issues-list/issues-data.service';
 import { IssueView } from '../issue-view/issue-view';
 
@@ -12,7 +12,7 @@ import { IssueView } from '../issue-view/issue-view';
 })
 export class IssueDetails implements OnInit {
 
-  readonly issue = signal<AnnotatedJiraIssueDTO | undefined>(undefined);
+  readonly issue = signal<JiraIssueDTO | undefined>(undefined);
   readonly notFound = signal(false);
 
   constructor(

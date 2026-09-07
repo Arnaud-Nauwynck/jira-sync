@@ -1,13 +1,13 @@
 import { Injectable, signal } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { JiraIssuesService } from '../rest/api/jiraIssues.service';
-import { AnnotatedJiraIssueDTO } from '../rest/model/annotatedJiraIssueDTO';
+import { JiraIssueDTO } from '../rest/model/jiraIssueDTO';
 
 @Injectable({ providedIn: 'root' })
 export class IssuesDataService {
 
   // Row Data: the last fetched issues, shared with anyone injecting this service.
-  readonly issues = signal<AnnotatedJiraIssueDTO[]>([]);
+  readonly issues = signal<JiraIssueDTO[]>([]);
 
   constructor(private jiraIssuesService: JiraIssuesService) {}
 
@@ -25,7 +25,7 @@ export class IssuesDataService {
   }
 
   /** Finds an issue by key, from the currently cached issues if present, otherwise from the server. */
-  findByKey(key: string): Observable<AnnotatedJiraIssueDTO> {
+  findByKey(key: string): Observable<JiraIssueDTO> {
     const cached = this.issues().find((issue) => issue.key === key);
     if (cached) {
       return of(cached);

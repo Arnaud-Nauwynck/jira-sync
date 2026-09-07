@@ -34,7 +34,7 @@ public class SourceJiraIssueDTO {
         public List<String> labels;
         public Long aggregatetimeoriginalestimate;
         public Long timeestimate;
-        public List<Object> versions;
+        public List<SourceJiraVersionDTO> versions;
         public List<SourceJiraIssueLinkDTO> issuelinks;
         public SourceJiraUserDTO assignee;
         public List<Object> subtasks;
@@ -129,6 +129,18 @@ public class SourceJiraIssueDTO {
         public String id;
         public String name;
         public String description;
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    @Data
+    public static class SourceJiraVersionDTO {
+        public String self;
+        public String id;
+        public String description;
+        public String name;
+        public boolean archived;
+        public boolean released;
+        public String releaseDate;
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)

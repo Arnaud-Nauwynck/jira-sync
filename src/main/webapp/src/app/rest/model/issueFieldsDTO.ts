@@ -7,15 +7,12 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
-import { AnnotatedJiraWorklogDTO } from './annotatedJiraWorklogDTO';
-import { AnnotatedJiraIssueLinkDTO } from './annotatedJiraIssueLinkDTO';
-import { AnnotatedJiraCommentsDTO } from './annotatedJiraCommentsDTO';
-import { AnnotatedJiraVotesDTO } from './annotatedJiraVotesDTO';
-import { AnnotatedJiraProgressDTO } from './annotatedJiraProgressDTO';
-import { AnnotatedJiraWatchesDTO } from './annotatedJiraWatchesDTO';
+import { IssueProgressDTO } from './issueProgressDTO';
+import { IssueLinkDTO } from './issueLinkDTO';
+import { IssueCommentDTO } from './issueCommentDTO';
 
 
-export interface AnnotatedJiraFieldsDTO { 
+export interface IssueFieldsDTO { 
     fixVersions?: Array<any>;
     resolution?: string;
     lastViewed?: string;
@@ -23,8 +20,8 @@ export interface AnnotatedJiraFieldsDTO {
     labels?: Array<string>;
     aggregatetimeoriginalestimate?: number;
     timeestimate?: number;
-    versions?: Array<any>;
-    issuelinks?: Array<AnnotatedJiraIssueLinkDTO>;
+    versions?: Array<string>;
+    issuelinks?: Array<IssueLinkDTO>;
     assignee?: string;
     subtasks?: Array<any>;
     status?: string;
@@ -33,10 +30,11 @@ export interface AnnotatedJiraFieldsDTO {
     aggregatetimeestimate?: number;
     creator?: string;
     reporter?: string;
-    aggregateprogress?: AnnotatedJiraProgressDTO;
-    progress?: AnnotatedJiraProgressDTO;
-    votes?: AnnotatedJiraVotesDTO;
-    worklog?: AnnotatedJiraWorklogDTO;
+    aggregateprogress?: IssueProgressDTO;
+    progress?: IssueProgressDTO;
+    votes?: number;
+    hasVoted?: boolean;
+    worklogs?: Array<any>;
     archivedby?: any | null;
     issuetype?: string;
     timespent?: number;
@@ -44,7 +42,8 @@ export interface AnnotatedJiraFieldsDTO {
     aggregatetimespent?: number;
     resolutiondate?: string;
     workratio?: number;
-    watches?: AnnotatedJiraWatchesDTO;
+    watchCount?: number;
+    watching?: boolean;
     created?: string;
     updated?: string;
     timeoriginalestimate?: number;
@@ -52,7 +51,7 @@ export interface AnnotatedJiraFieldsDTO {
     summary?: string;
     environment?: string;
     duedate?: string;
-    comment?: AnnotatedJiraCommentsDTO;
+    comments?: Array<IssueCommentDTO>;
     timetracking?: { [key: string]: any | null; };
     customFields?: { [key: string]: any | null; };
 }

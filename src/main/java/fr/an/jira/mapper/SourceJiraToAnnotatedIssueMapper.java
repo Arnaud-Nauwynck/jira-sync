@@ -52,7 +52,8 @@ public class SourceJiraToAnnotatedIssueMapper {
         dest.labels = src.labels;
         dest.aggregatetimeoriginalestimate = src.aggregatetimeoriginalestimate;
         dest.timeestimate = src.timeestimate;
-        dest.versions = src.versions;
+        dest.versions = src.versions == null ? null
+                : src.versions.stream().map(v -> v.name).collect(Collectors.toList());
         dest.issuelinks = src.issuelinks == null ? null
                 : src.issuelinks.stream().map(SourceJiraToAnnotatedIssueMapper::from).collect(Collectors.toList());
         dest.assignee = userDisplay(src.assignee);
@@ -77,7 +78,7 @@ public class SourceJiraToAnnotatedIssueMapper {
         dest.aggregatetimespent = src.aggregatetimespent;
         dest.resolutiondate = src.resolutiondate;
         dest.workratio = src.workratio;
-        dest.watchCount = (src.watches != null) ? src.watches.watchCount : 0;
+        dest.watchCount = (src.watches != null && src.watches.watchCount != 0) ? src.watches.watchCount : null;
         dest.watching = src.watches != null && src.watches.isWatching;
         dest.created = src.created;
         dest.updated = src.updated;
