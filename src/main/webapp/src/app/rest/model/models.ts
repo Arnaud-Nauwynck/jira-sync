@@ -10,5 +10,6 @@ export * from './issueProgressDTO';
 export * from './jiraIssueAnnotationDTO';
 export * from './jiraIssueDTO';
 export * from './linkedIssueDTO';
+export * from './personalInterrestCommentDTO';
 export * from './userIssueCreatePerYearStatsDTO';
 export * from './userIssueCreateStatsDTO';

@@ -269,8 +269,28 @@
         <input class="form-control" type="text" [(ngModel)]="personalInterrestCommentContains" (ngModelChange)="onFilterInputsChanged()" placeholder="comma separated" />
       </div>
       <div>
-        <label class="form-label">Personal interest min priority</label>
+        <label class="form-label">Priority from</label>
         <input class="form-control" type="number" min="0" max="10" [(ngModel)]="personalInterrestMinPriority" (ngModelChange)="onFilterInputsChanged()" />
+      </div>
+      <div>
+        <label class="form-label">Priority to</label>
+        <input class="form-control" type="number" min="0" max="10" [(ngModel)]="personalInterrestMaxPriority" (ngModelChange)="onFilterInputsChanged()" />
+      </div>
+      <div>
+        <label class="form-label d-block">Available</label>
+        <div class="btn-group" role="group">
+          <input type="radio" class="btn-check" name="personalInterrestAvailability" id="personalInterrestAvailabilityNo" autocomplete="off"
+            [(ngModel)]="personalInterrestAvailability" (ngModelChange)="onFilterInputsChanged()" value="no" />
+          <label class="btn btn-outline-secondary" for="personalInterrestAvailabilityNo">✗</label>
+
+          <input type="radio" class="btn-check" name="personalInterrestAvailability" id="personalInterrestAvailabilityAny" autocomplete="off"
+            [(ngModel)]="personalInterrestAvailability" (ngModelChange)="onFilterInputsChanged()" value="any" />
+          <label class="btn btn-outline-secondary" for="personalInterrestAvailabilityAny">Any</label>
+
+          <input type="radio" class="btn-check" name="personalInterrestAvailability" id="personalInterrestAvailabilityYes" autocomplete="off"
+            [(ngModel)]="personalInterrestAvailability" (ngModelChange)="onFilterInputsChanged()" value="yes" />
+          <label class="btn btn-outline-secondary" for="personalInterrestAvailabilityYes">✓</label>
+        </div>
       </div>
     </div>
   </div>

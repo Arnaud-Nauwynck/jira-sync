@@ -2,6 +2,7 @@ package fr.an.jira.rest;
 
 import fr.an.jira.rest.dtos.JiraIssueAnnotationDTO;
 import fr.an.jira.rest.dtos.JiraIssueDTO;
+import fr.an.jira.rest.dtos.PersonalInterrestCommentDTO;
 import fr.an.jira.rest.dtos.UserIssueCreateStatsDTO;
 import fr.an.jira.service.JiraIssueService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -44,6 +45,13 @@ public class JiraIssueAnnotationRestController {
     public void putAnnotation(@RequestBody JiraIssueAnnotationDTO req) {
         log.info("http POST {} (key={})", BASE_URL, req.key);
         delegate.putAnnotation(req.key, req.annotated);
+    }
+
+    @Operation(summary = "Put personal interest comment for issue")
+    @PutMapping("/personnal-interrest")
+    public void putPersonalInterrestComment(@RequestBody PersonalInterrestCommentDTO req) {
+        log.info("http PUT {}/personnal-interrest (key={})", BASE_URL, req.key);
+        delegate.putPersonalInterrestComment(req.key, req.personalInterrestComment, req.personalInterrestPriority10);
     }
 
     @Operation(summary = "Delete annotation for issue")

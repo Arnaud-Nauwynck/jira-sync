@@ -89,6 +89,17 @@ public class JiraIssueService {
         repository.putAnnotation(key, annotated);
     }
 
+    public void putPersonalInterrestComment(String key, String personalInterrestComment, Integer personalInterrestPriority10) {
+        JiraIssueDTO issue = repository.getByKey(key);
+        IssueExtraFieldsDTO annotated = issue.getAnnotated();
+        if (annotated == null) {
+            annotated = new IssueExtraFieldsDTO();
+        }
+        annotated.setPersonalInterrestComment(personalInterrestComment);
+        annotated.setPersonalInterrestPriority10(personalInterrestPriority10);
+        repository.putAnnotation(key, annotated);
+    }
+
     public void removeAnnotation(String key) {
         repository.removeAnnotation(key);
     }

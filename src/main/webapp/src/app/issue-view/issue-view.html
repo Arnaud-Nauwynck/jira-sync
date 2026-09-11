@@ -62,6 +62,12 @@
           <app-timeline-issue-view [issue]="data" />
         </ng-template>
       </li>
+      <li [ngbNavItem]="5">
+        <button ngbNavLink>Personal Interrest</button>
+        <ng-template ngbNavContent>
+          <app-personal-interest-issue-view [issue]="data" />
+        </ng-template>
+      </li>
     </ul>
     <div [ngbNavOutlet]="nav" class="mt-3"></div>
   </div>

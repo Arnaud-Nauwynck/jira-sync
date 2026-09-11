@@ -1,0 +1,95 @@
+<style>
+  .module {
+    border: 1px solid #dfe1e6;
+    border-radius: 3px;
+    margin-bottom: 16px;
+  }
+  .module-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #f4f5f7;
+    padding: 8px 12px;
+    font-weight: 600;
+    font-size: 13px;
+    border-bottom: 1px solid #dfe1e6;
+    border-radius: 3px 3px 0 0;
+  }
+  .module-content {
+    padding: 12px;
+  }
+  .description {
+    white-space: pre-wrap;
+    font-size: 14px;
+  }
+  .comment-textarea {
+    width: 100%;
+    min-height: 120px;
+    font-size: 14px;
+    font-family: inherit;
+    padding: 8px;
+    border: 1px solid #dfe1e6;
+    border-radius: 3px;
+    resize: vertical;
+  }
+  .actions {
+    margin-top: 8px;
+    display: flex;
+    gap: 8px;
+  }
+  .priority-field {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+  }
+  .priority-field input {
+    width: 70px;
+  }
+  .side-dl dt {
+    font-size: 12px;
+    color: #6b778c;
+    margin-top: 8px;
+  }
+  .side-dl dt:first-child {
+    margin-top: 0;
+  }
+  .side-dl dd {
+    margin: 0;
+    font-size: 14px;
+  }
+</style>
+
+<div class="module">
+  <div class="module-header">
+    Personal Interest
+    <button type="button" class="btn btn-sm btn-secondary" (click)="toggleEdit()" [disabled]="saving">
+      {{ editing ? 'Cancel' : 'Edit' }}
+    </button>
+  </div>
+  <div class="module-content">
+    @if (editing) {
+      <textarea class="comment-textarea" [(ngModel)]="draftComment"></textarea>
+      <div class="priority-field">
+        <label for="personalInterrestPriority10">Priority (0-10)</label>
+        <input id="personalInterrestPriority10" type="number" class="form-control form-control-sm" min="0" max="10" [(ngModel)]="draftPriority10" />
+      </div>
+      <div class="actions">
+        <button type="button" class="btn btn-sm btn-primary" (click)="save()" [disabled]="saving">
+          {{ saving ? 'Saving...' : 'Save' }}
+        </button>
+      </div>
+    } @else {
+      @if (issue?.annotated?.personalInterrestComment) {
+        <div class="description">{{ issue?.annotated?.personalInterrestComment }}</div>
+      } @else {
+        <p>No personal interest comment available.</p>
+      }
+      <dl class="side-dl mt-2">
+        <dt>Priority</dt>
+        <dd>{{ issue?.annotated?.personalInterrestPriority10 || 0 }} / 10</dd>
+      </dl>
+    }
+  </div>
+</div>

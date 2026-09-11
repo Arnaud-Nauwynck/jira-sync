@@ -64,6 +64,8 @@ export class IssuesList implements OnInit {
   isPersonalInterestCriteriaCollapsed = true;
   personalInterrestCommentContains = '';
   personalInterrestMinPriority: number | null = null;
+  personalInterrestMaxPriority: number | null = null;
+  personalInterrestAvailability: AvailabilityFilter = 'any';
 
   // Status enum filter: clicking a status button excludes that status from the results.
   statusOptions = ['Open', 'In Progress', 'Reopened', 'Resolved', 'Closed'];
@@ -177,6 +179,11 @@ export class IssuesList implements OnInit {
         return (tokens) ? tokens : '';
       },
     },
+
+    { headerName: 'Has Personal Interest', width: 130, cellDataType: 'boolean',
+      valueGetter: (params) => !!params.data?.annotated?.personalInterrestComment,
+    },
+    { headerName: 'Personal Interest Priority', field: 'annotated.personalInterrestPriority10', width: 150 },
   ];
 
   private gridApi?: GridApi<JiraIssueDTO>;
@@ -334,7 +341,9 @@ export class IssuesList implements OnInit {
       || this.parseCsvList(this.developmentWorkUserExtraPromptsContains).length > 0
       || this.developmentWorkAvailability !== 'any'
       || this.parseCsvList(this.personalInterrestCommentContains).length > 0
-      || this.personalInterrestMinPriority != null;
+      || this.personalInterrestMinPriority != null
+      || this.personalInterrestMaxPriority != null
+      || this.personalInterrestAvailability !== 'any';
   };
 
   doesExternalFilterPass = (node: IRowNode<JiraIssueDTO>): boolean => {
@@ -401,10 +410,13 @@ export class IssuesList implements OnInit {
     if (!this.matchesAny(this.developmentWorkUserExtraPromptsContains, ...(annotated?.developmentWorkUserExtraPrompts ?? []))) {
       return false;
     }
+    if (!this.matchesAvailability(this.personalInterrestAvailability, !!annotated?.personalInterrestComment)) {
+      return false;
+    }
     if (!this.matchesAny(this.personalInterrestCommentContains, annotated?.personalInterrestComment)) {
       return false;
     }
-    if (!this.matchesMinNumber(this.personalInterrestMinPriority, annotated?.personalInterrestPriority10)) {
+    if (!this.matchesNumberRange(this.personalInterrestMinPriority, this.personalInterrestMaxPriority, annotated?.personalInterrestPriority10)) {
       return false;
     }
     return true;
@@ -445,11 +457,20 @@ export class IssuesList implements OnInit {
     return true;
   }
 
-  private matchesMinNumber(min: number | null, value: number | undefined): boolean {
-    if (min == null) {
+  private matchesNumberRange(min: number | null, max: number | null, value: number | undefined): boolean {
+    if (min == null && max == null) {
       return true;
     }
-    return value != null && value >= min;
+    if (value == null) {
+      return false;
+    }
+    if (min != null && value < min) {
+      return false;
+    }
+    if (max != null && value > max) {
+      return false;
+    }
+    return true;
   }
 
   /** min/max are expressed in kilo-tokens (thousands); value is the raw token count. */

@@ -24,5 +24,5 @@ public class IssueExtraFieldsDTO {
     // public String developmentWorkAgentSessionTranscript;
 
     public String personalInterrestComment;
-    public int personalInterrestPriority10;
+    public Integer personalInterrestPriority10;
 }
