@@ -1,8 +1,10 @@
 package fr.an.jira.service;
 
 import fr.an.jira.client.JiraApiClient;
+import fr.an.jira.client.dtos.SourceJiraIssueDTO;
 import fr.an.jira.configuration.JiraSyncProperties;
 import fr.an.jira.repository.JiraIssueRepository;
+import lombok.val;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -16,6 +18,7 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 
 /**
  * Sync Jira Server/DC issues to local JSON files.
@@ -87,8 +90,10 @@ public class JiraSyncRunner {
             }
 
             for (JsonNode n : issues) {
-                ObjectNode issue = (ObjectNode) n;
-                String key = issue.path("key").asText();
+                ObjectNode issueNode = (ObjectNode) n;
+                SourceJiraIssueDTO issue = mapper.treeToValue(issueNode, SourceJiraIssueDTO.class);
+                String key = issue.key;;
+                fixMalformedCreatedYear(issue, key);
                 completeComments(issue, key);
                 completeChangelog(issue, key);
                 issueRepository.save(issue);
@@ -133,49 +138,79 @@ public class JiraSyncRunner {
     }
 
     /** fields.comment is capped in /search responses; re-fetch all when truncated. */
-    private void completeComments(ObjectNode issue, String key) throws Exception {
-        JsonNode c = issue.path("fields").path("comment");
-        if (c.isMissingNode()) return;
-        int total = c.path("total").asInt();
-        int got = c.path("comments").size();
+    private void completeComments(SourceJiraIssueDTO issue, String key) throws Exception {
+        SourceJiraIssueDTO.SourceJiraCommentsDTO comment = issue.fields.comment;
+        if (null == comment) return;
+        int total = comment.total;
+        int got = comment.comments.size();
         if (got >= total) return;
 
-        ArrayNode all = mapper.createArrayNode();
+        val all = new ArrayList<SourceJiraIssueDTO.SourceJiraCommentDTO>();
         int start = 0;
         while (start < total) {
             JsonNode page = apiClient.callHttpGet("/rest/api/2/issue/" + key
                     + "/comment?startAt=" + start + "&maxResults=100");
             JsonNode comments = page.path("comments");
             if (comments.isEmpty()) break;
-            comments.forEach(all::add);
+            comments.forEach(commentNode -> {
+                val item = mapper.treeToValue(commentNode, SourceJiraIssueDTO.SourceJiraCommentDTO.class);
+                all.add(item);
+            });
             start += comments.size();
             total = page.path("total").asInt(); // may move under our feet
             sleep(syncDelayMs);
         }
-        ObjectNode full = mapper.createObjectNode();
-        full.set("comments", all);
-        full.put("total", all.size());
-        full.put("startAt", 0);
-        full.put("maxResults", all.size());
-        ((ObjectNode) issue.path("fields")).set("comment", full);
+        comment.comments.clear();
+        comment.comments.addAll(all);
+        comment.total = all.size();
+        comment.startAt = 0;
+        comment.maxResults = all.size();
         log.info("  {} : fetched {} comments", key, all.size());
     }
 
     /** changelog via expand on /search is capped; re-fetch the issue alone when truncated. */
-    private void completeChangelog(ObjectNode issue, String key) throws Exception {
-        JsonNode cl = issue.path("changelog");
-        if (cl.isMissingNode()) return;
-        int total = cl.path("total").asInt();
-        int got = cl.path("histories").size();
+    private void completeChangelog(SourceJiraIssueDTO issue, String key) throws Exception {
+        val changelog = issue.changelog;
+        if (changelog == null) return;
+        int total = changelog.total;
+        int got = changelog.histories.size();
         if (got >= total) return;
 
         // Server/DC has no paginated /issue/{key}/changelog endpoint (Cloud only):
         // a direct issue GET returns the full changelog.
         JsonNode fullIssue = apiClient.callHttpGet("/rest/api/2/issue/" + key + "?fields=key&expand=changelog");
-        issue.set("changelog", fullIssue.path("changelog"));
-        log.info("  {} : fetched {} changelog entries", key,
-                fullIssue.path("changelog").path("histories").size());
+        JsonNode fullChangelogNode = fullIssue.path("changelog");
+        val fullChangeLog = mapper.treeToValue(fullChangelogNode, SourceJiraIssueDTO.SourceJiraChangelogDTO.class);
+        issue.changelog = fullChangeLog;
+        log.info("  {} : fetched {} changelog entries", key, fullChangeLog.histories.size());
         sleep(syncDelayMs);
+    }
+
+    /**
+     * Some very old issues have their "fields.created" year mis-recorded with the century
+     * dropped, e.g. "12-03-15T10:00:00.000+0000" or "0012-03-15T10:00:00.000+0000" instead of
+     * "2012-03-15T10:00:00.000+0000". Left as-is, {@link JiraIssueRepository#save} would file the
+     * issue into a bogus "created_year=12"/"created_year=0012" partition instead of
+     * "created_year=2012".
+     */
+    private int fixMalformedCreatedYear(SourceJiraIssueDTO issue, String key) {
+        val fields = issue.fields;
+        String created = fields.created;
+        int dash = created.indexOf('-');
+        if (dash <= 0) return 0;
+        String yearPart = created.substring(0, dash);
+        int year;
+        try {
+            year = Integer.parseInt(yearPart);
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+        if (year < 1000) {
+            int fixedYear = year + 2000;
+            fields.created = String.format("%04d", fixedYear) + created.substring(dash);
+            log.warn("  {} : fixed malformed created year \"{}\" -> {}", key, yearPart, fixedYear);
+        }
+        return year;
     }
 
     private static void sleep(long ms) {

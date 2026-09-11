@@ -1,16 +1,20 @@
 package fr.an.jira.repository;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import fr.an.jira.client.dtos.SourceJiraIssueDTO;
 import fr.an.jira.configuration.JiraSyncProperties;
 import fr.an.jira.mapper.SourceJiraToAnnotatedIssueMapper;
 import fr.an.jira.rest.dtos.JiraIssueDTO;
+import jakarta.annotation.Nonnull;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.node.ObjectNode;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -96,34 +100,22 @@ public class JiraIssueRepository {
      * {@code annotated} data (not coming from the source Jira server) is carried over onto the
      * newly mapped issue; on insert, {@code annotated} is left null.
      */
-    public void save(JsonNode issue) {
-        JiraIssueDTO annotatedIssue = SourceJiraToAnnotatedIssueMapper.from(mapper.treeToValue(issue, SourceJiraIssueDTO.class));
-        String key = requireKey(annotatedIssue);
-        int year = partitionYearOf(annotatedIssue);
-        Map<String, JiraIssueDTO> current = loadPartition(year);
+    public void save(SourceJiraIssueDTO jiraSourceIssue) {
+        JiraIssueDTO issue = SourceJiraToAnnotatedIssueMapper.from(jiraSourceIssue);
+        String key = requireKey(issue);
+        int year = partitionYearOf(issue);
+        Map<String, JiraIssueDTO> cachedPartition = cachedPartitionData(year);
 
-        JiraIssueDTO previous = current.get(key);
-        String change;
+        JiraIssueDTO previous = cachedPartition.get(key);
+        IssueChangeRecord chgRecord;
         if (previous == null) {
-            change = "insert";
+            chgRecord = new CreateIssueChangeRecord(issue); // may use jiraSourceIssue
         } else {
-            change = "update";
-            annotatedIssue.annotated = previous.annotated;
+            chgRecord = new UpdateSyncIssueChangeRecord(issue); // may use jiraSourceIssue
+            issue.annotated = previous.annotated;
         }
-        appendChange(year, change, key, annotatedIssue);
-        current.put(key, annotatedIssue);
-    }
-
-    /** Deletes the issue by key, recording a "delete" change, if it is currently known. */
-    public boolean deleteByKey(String key) {
-        for (int year : findAllPartitionYears()) {
-            Map<String, JiraIssueDTO> current = loadPartition(year);
-            if (current.remove(key) != null) {
-                appendChange(year, "delete", key, null);
-                return true;
-            }
-        }
-        return false;
+        appendChange(year, chgRecord);
+        cachedPartition.put(key, issue);
     }
 
     public boolean exists(String key) {
@@ -145,7 +137,7 @@ public class JiraIssueRepository {
     /** Reads a single issue by key across all partitions, or null if not found. */
     public JiraIssueDTO findByKey(String key) {
         for (int year : findAllPartitionYears()) {
-            JiraIssueDTO found = loadPartition(year).get(key);
+            JiraIssueDTO found = cachedPartitionData(year).get(key);
             if (found != null) {
                 return found;
             }
@@ -153,11 +145,21 @@ public class JiraIssueRepository {
         return null;
     }
 
+    /** get by key, throws exception if not found. */
+    @Nonnull
+    public JiraIssueDTO getByKey(String key) {
+        JiraIssueDTO found = findByKey(key);
+        if (found == null) {
+            throw new IllegalArgumentException("Issue " + key + "not found");
+        }
+        return found;
+    }
+
     /** Lists the keys of all issues currently stored on disk. */
     public List<String> findAllKeys() {
         List<String> keys = new ArrayList<>();
         for (int year : findAllPartitionYears()) {
-            keys.addAll(loadPartition(year).keySet());
+            keys.addAll(cachedPartitionData(year).keySet());
         }
         return keys;
     }
@@ -166,7 +168,7 @@ public class JiraIssueRepository {
     public List<JiraIssueDTO> findAll() {
         List<JiraIssueDTO> all = new ArrayList<>();
         for (int year : findAllPartitionYears()) {
-            all.addAll(loadPartition(year).values());
+            all.addAll(cachedPartitionData(year).values());
         }
         return all;
     }
@@ -202,7 +204,7 @@ public class JiraIssueRepository {
 
     /** Folds the pending changes log into a fresh compacted snapshot, then clears the changes log. */
     public void compact(int year) {
-        writeSnapshot(year, loadPartition(year).values());
+        writeSnapshot(year, cachedPartitionData(year).values());
         clearChangesFile(year);
     }
 
@@ -269,14 +271,19 @@ public class JiraIssueRepository {
         return key;
     }
 
-    private Map<String, JiraIssueDTO> loadPartition(int year) {
+    private Map<String, JiraIssueDTO> cachedPartitionData(int year) {
         return partitionCache.computeIfAbsent(year, this::readPartitionFromDisk);
     }
 
     private Map<String, JiraIssueDTO> readPartitionFromDisk(int year) {
         long startMillis = System.currentTimeMillis();
         Map<String, JiraIssueDTO> result = new LinkedHashMap<>();
-        readSnapshot(year, result);
+        try {
+            readSnapshot(year, result);
+        } catch(Exception ex) {
+            log.error("Failed to read issue snapshot for partition year=" + year, ex);
+            // throw new RuntimeException("Failed to read issue snapshot for partition year=" + year, ex);
+        }
         replayChanges(year, result);
         int millis = (int) (System.currentTimeMillis() - startMillis);
         if (millis >= logReloadPartitionThresholdMillis) {
@@ -307,7 +314,86 @@ public class JiraIssueRepository {
         }
     }
 
-    private void replayChanges(int year, Map<String, JiraIssueDTO> target) {
+    public enum IssueChangeType {
+        create, // importSync
+        update, // updateSync
+        updateAnnotation,
+        removeAnnotation
+    }
+
+    @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include=JsonTypeInfo.As.PROPERTY, property="change")
+    @JsonSubTypes({ //
+            @JsonSubTypes.Type(value = CreateIssueChangeRecord.class, name = "create"), //
+            @JsonSubTypes.Type(value = UpdateSyncIssueChangeRecord.class, name = "update"), //
+            @JsonSubTypes.Type(value = UpdateAnnotationSyncIssueChangeRecord.class, name = "updateAnnotation"), //
+            @JsonSubTypes.Type(value = RemoveAnnotationSyncIssueChangeRecord.class, name = "removeAnnotation") //
+    })
+    public static abstract class IssueChangeRecord {
+        // LocalDateTime timestamp;
+        public abstract IssueChangeType getChange();
+        public abstract String key();
+    }
+
+    @AllArgsConstructor
+    public static class CreateIssueChangeRecord extends IssueChangeRecord {
+        public JiraIssueDTO data;
+
+        @Override
+        public IssueChangeType getChange() { return IssueChangeType.create; }
+
+        @Override
+        public String key() {
+            return data.key;
+        }
+    }
+
+    @AllArgsConstructor
+    public static class UpdateSyncIssueChangeRecord extends IssueChangeRecord {
+        public JiraIssueDTO data;
+        // public String key;
+        // public IssueFieldsDTO fields;
+        // public List<IssueHistoryDTO> histories;
+
+        @Override
+        public IssueChangeType getChange() { return IssueChangeType.update; }
+
+        @Override
+        public String key() {
+            return data.key;
+        }
+    }
+
+    @AllArgsConstructor
+    public static class UpdateAnnotationSyncIssueChangeRecord extends IssueChangeRecord {
+        public String key;
+        public JiraIssueDTO.IssueExtraFieldsDTO annotated;
+
+        @Override
+        public IssueChangeType getChange() { return IssueChangeType.updateAnnotation; }
+
+        @Override
+        public String key() {
+            return key;
+        }
+    }
+
+    @AllArgsConstructor
+    public static class RemoveAnnotationSyncIssueChangeRecord extends IssueChangeRecord {
+        public String key;
+
+        @Override
+        public IssueChangeType getChange() { return IssueChangeType.removeAnnotation; }
+
+        @Override
+        public String key() {
+            return key;
+        }
+
+    }
+
+
+
+    private void replayChanges(int year, Map<String, JiraIssueDTO> issueByKey) {
         Path file = changesFile(year);
         if (!Files.exists(file)) {
             return;
@@ -315,15 +401,39 @@ public class JiraIssueRepository {
         try {
             for (String line : Files.readAllLines(file, StandardCharsets.UTF_8)) {
                 if (line.isBlank()) continue;
-                JsonNode rec = mapper.readTree(line);
-                String change = rec.path("change").asText();
-                switch (change) {
-                    case "insert", "update" -> {
-                        JiraIssueDTO data = mapper.treeToValue(rec.path("data"), JiraIssueDTO.class);
-                        target.put(data.key, data);
+                IssueChangeRecord rec = mapper.readValue(line, IssueChangeRecord.class);
+                if (rec instanceof CreateIssueChangeRecord chg) {
+                    JiraIssueDTO newData = chg.data;
+                    JiraIssueDTO prev = issueByKey.put(newData.key, newData);
+                    // assert prev == null;
+                } else if (rec instanceof UpdateSyncIssueChangeRecord chg) {
+                    JiraIssueDTO syncData = chg.data; // may be limited to source jira data (not annotation)
+                    val key = syncData.key;
+                    JiraIssueDTO prev = issueByKey.get(key);
+                    if (prev != null) {
+                        // preserve annotation if any
+                        // val prevAnnotation = prev.getAnnotated();
+                        prev.setFields(syncData.fields);
+                        prev.setHistories(syncData.histories);
+                    } else {
+                        // should not occur
+                        issueByKey.put(key, syncData);
                     }
-                    case "delete" -> target.remove(rec.path("key").asText());
-                    default -> throw new IllegalStateException("unknown change type '" + change + "' in " + file);
+                } else if (rec instanceof UpdateAnnotationSyncIssueChangeRecord chg) {
+                    val key = chg.key;
+                    val newAnnotation = chg.annotated;
+                    JiraIssueDTO prev = issueByKey.get(key);
+                    if (prev != null) {
+                        prev.setAnnotated(newAnnotation);
+                    } // else should not occur, ignore anyway
+                } else if (rec instanceof RemoveAnnotationSyncIssueChangeRecord chg) {
+                    val key = chg.key;
+                    JiraIssueDTO prev = issueByKey.get(key);
+                    if (prev != null) {
+                        prev.setAnnotated(null);
+                    } // else should not occur, ignore anyway
+                } else {
+                    log.warn("unexpected change type " + rec.getChange() + " in file '" + file + "' ... ignore");
                 }
             }
         } catch (IOException e) {
@@ -331,21 +441,14 @@ public class JiraIssueRepository {
         }
     }
 
-    private void appendChange(int year, String change, String key, JiraIssueDTO issue) {
-        ObjectNode rec = mapper.createObjectNode();
-        rec.put("change", change);
-        if (issue != null) {
-            rec.set("data", mapper.valueToTree(issue));
-        } else {
-            rec.put("key", key);
-        }
-        String line = mapper.writeValueAsString(rec);
+    private void appendChange(int year, IssueChangeRecord chgRecord) {
+        String line = mapper.writeValueAsString(chgRecord);
         try {
             Files.createDirectories(partitionDir(year));
             Files.writeString(changesFile(year), line + "\n",
                     StandardOpenOption.CREATE, StandardOpenOption.APPEND);
         } catch (IOException e) {
-            throw new UncheckedIOException("failed to append change for " + key + " in " + partitionDirName(year), e);
+            throw new UncheckedIOException("failed to append change for " + chgRecord.key() + " in " + partitionDirName(year), e);
         }
     }
 
@@ -399,9 +502,26 @@ public class JiraIssueRepository {
     public void scanIssues(int fromYear, int toYear, BiConsumer<Integer,JiraIssueDTO> callback) {
         List<Integer> partitions = findPartitionYearBetween(fromYear, toYear);
         for (int year : partitions) {
-            for (JiraIssueDTO issue : loadPartition(year).values()) {
+            Map<String, JiraIssueDTO> issueByKey = cachedPartitionData(year);
+            for (JiraIssueDTO issue : issueByKey.values()) {
                 callback.accept(year, issue);
             }
         }
     }
+
+
+    public void putAnnotation(String key, JiraIssueDTO.IssueExtraFieldsDTO annotated) {
+        JiraIssueDTO issue = getByKey(key); // point to cached partition data... updating => update cache!
+        issue.setAnnotated(annotated);
+        int year = partitionYearOf(issue);
+        appendChange(year, new UpdateAnnotationSyncIssueChangeRecord(key, annotated));
+    }
+
+    public void removeAnnotation(String key) {
+        JiraIssueDTO issue = getByKey(key); // point to cached partition data... updating => update cache!
+        issue.setAnnotated(null);
+        int year = partitionYearOf(issue);
+        appendChange(year, new RemoveAnnotationSyncIssueChangeRecord(key));
+    }
+
 }

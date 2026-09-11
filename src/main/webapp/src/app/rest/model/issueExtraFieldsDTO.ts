@@ -10,10 +10,15 @@
 
 
 export interface IssueExtraFieldsDTO { 
-    comment?: string;
-    commentTime?: string;
-    summarised?: string;
-    summarisedTime?: string;
-    interrest?: string;
+    analysisSummary?: string;
+    analysisSummaryLastUpdateTime?: string;
+    analysisSummaryTokensConsumed?: number;
+    analysisUserExtraPrompts?: Array<string>;
+    developmentWorkDescribed?: string;
+    developmentWorkLastUpdateTime?: string;
+    developmentWorkTokensConsumed?: number;
+    developmentWorkUserExtraPrompts?: Array<string>;
+    personalInterrestComment?: string;
+    personalInterrestPriority10?: number;
 }
 

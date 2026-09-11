@@ -28,6 +28,13 @@ public class JiraIssueDTO {
     /** Extra data not coming from the source Jira server; not set by the mapper. */
     public IssueExtraFieldsDTO annotated;
 
+    public IssueExtraFieldsDTO annotatedOrCreate() {
+        if (annotated == null) {
+            annotated = new IssueExtraFieldsDTO();
+        }
+        return annotated;
+    }
+
     @Data
     public static class IssueFieldsDTO {
         public List<Object> fixVersions;
@@ -141,10 +148,21 @@ public class JiraIssueDTO {
     /** Extra fields enriched and persisted locally, not coming from the source Jira server. */
     @Data
     public static class IssueExtraFieldsDTO {
-        public String comment;
-        public LocalDateTime commentTime;
-        public String summarised;
-        public LocalDateTime summarisedTime;
-        public String interrest;
+
+        public String analysisSummary;
+        public LocalDateTime analysisSummaryLastUpdateTime;
+        public int analysisSummaryTokensConsumed;
+        public List<String> analysisUserExtraPrompts;
+        // public String analysisAgentSessionTranscript;
+
+        public String developmentWorkDescribed;
+        public LocalDateTime developmentWorkLastUpdateTime;
+        public int developmentWorkTokensConsumed;
+        public List<String> developmentWorkUserExtraPrompts;
+        // public String developmentWorkAgentSessionTranscript;
+
+        public String personalInterrestComment;
+        public int personalInterrestPriority10;
     }
+
 }

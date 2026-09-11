@@ -7,6 +7,7 @@ export * from './issueHistoryItemDTO';
 export * from './issueLinkDTO';
 export * from './issueLinkTypeDTO';
 export * from './issueProgressDTO';
+export * from './jiraIssueAnnotationDTO';
 export * from './jiraIssueDTO';
 export * from './linkedIssueDTO';
 export * from './userIssueCreatePerYearStatsDTO';

@@ -1,10 +1,12 @@
 package fr.an.jira.service;
 
 import fr.an.jira.repository.JiraIssueRepository;
+import fr.an.jira.rest.dtos.JiraIssueAnnotationDTO;
 import fr.an.jira.rest.dtos.JiraIssueDTO;
 import fr.an.jira.rest.dtos.UserIssueCreateStatsDTO;
 import fr.an.jira.rest.dtos.UserIssueCreateStatsDTO.UserIssueCreatePerYearStatsDTO;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -66,4 +68,28 @@ public class JiraIssueService {
         }
         return name != null && !name.isBlank() ? name : UNKNOWN_USER;
     }
+
+    public List<JiraIssueAnnotationDTO> listIssueAnnotations(int fromYear, int toYear) {
+        val res = new ArrayList<JiraIssueAnnotationDTO>();
+        repository.scanIssues(fromYear, toYear, (year, issue) -> {
+            val annotation = issue.getAnnotated();
+            if (annotation != null) {
+                res.add(new JiraIssueAnnotationDTO(issue.key, annotation));
+            }
+        });
+        return res;
+    }
+
+    public JiraIssueDTO getByKey(String key) {
+        return repository.getByKey(key);
+    }
+
+    public void putAnnotation(String key, JiraIssueDTO.IssueExtraFieldsDTO annotated) {
+        repository.putAnnotation(key, annotated);
+    }
+
+    public void removeAnnotation(String key) {
+        repository.removeAnnotation(key);
+    }
+
 }

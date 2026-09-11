@@ -1,5 +1,6 @@
 package fr.an.jira.rest;
 
+import fr.an.jira.rest.dtos.JiraIssueAnnotationDTO;
 import fr.an.jira.rest.dtos.JiraIssueDTO;
 import fr.an.jira.rest.dtos.UserIssueCreateStatsDTO;
 import fr.an.jira.service.JiraIssueService;
@@ -15,12 +16,15 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Collection;
+import java.util.List;
 
 @RestController
 @RequestMapping(path="/api/v1/jira-issues", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "JiraIssues")
 @Slf4j
 public class JiraIssuesRestController {
+
+    private static final String BASE_URL = "/api/v1/jira-issues";
 
     private final JiraIssueService delegate;
 
@@ -35,14 +39,14 @@ public class JiraIssuesRestController {
             @RequestParam(name="toYear", defaultValue = "2050") int toYear,
             @RequestParam(name="usernamePattern") String usernamePattern
     ) {
-        log.info("http GET /user-issue-create-stats?fromYear={}&toYear={}&usernamePattern={}", fromYear, toYear, usernamePattern);
+        log.info("http GET {}/user-issue-create-stats?fromYear={}&toYear={}&usernamePattern={}", BASE_URL, fromYear, toYear, usernamePattern);
         return delegate.queryUserIssueCreateStats(fromYear, toYear, usernamePattern);
     }
 
     @Operation(summary = "Find a single issue by its key")
     @GetMapping("/annotated-issues/{key}")
     public ResponseEntity<JiraIssueDTO> findAnnotatedIssueByKey(@PathVariable("key") String key) {
-        log.info("http GET /annotated-issues/{}", key);
+        log.info("http GET {}/annotated-issues/{}", BASE_URL, key);
         JiraIssueDTO found = delegate.findAnnotatedIssueByKey(key);
         return found != null ? ResponseEntity.ok(found) : ResponseEntity.notFound().build();
     }
@@ -54,7 +58,8 @@ public class JiraIssuesRestController {
             @RequestParam(name="toYear", defaultValue = "2050") int toYear,
             @RequestParam(name="usernamePattern", required = false) String usernamePattern
     ) {
-        log.info("http GET /annotated-issues?fromYear={}&toYear={}&usernamePattern={}", fromYear, toYear, usernamePattern);
+        log.info("http GET {}/annotated-issues?fromYear={}&toYear={}&usernamePattern={}", BASE_URL, fromYear, toYear, usernamePattern);
         return delegate.queryAnnotatedIssues(fromYear, toYear, usernamePattern);
     }
+
 }

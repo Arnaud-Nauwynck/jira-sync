@@ -9,6 +9,7 @@ import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
@@ -52,7 +53,7 @@ public class JiraMcpTools {
         return issueService.queryUserIssueCreateStats(fromYear, toYear, usernamePattern);
     }
 
-    @Tool(description = "Run the Jira synchronization for the configured project, pulling new/updated issues from the remote Jira server into the local mirror. May take a while on a full sync.")
+    @Tool(description = "Run the Jira synchronization for the configured project, pulling new/updated issues from the remote Jira server into the local mirror.")
     public String runJiraSyncAll() throws Exception {
         log.info("mcp tool runJiraSyncAll()");
         long startTime = System.currentTimeMillis();
@@ -60,4 +61,50 @@ public class JiraMcpTools {
         int millis = (int) (System.currentTimeMillis() - startTime);
         return "sync completed in " + millis + " ms";
     }
+
+    @Tool(description = "Get jira issue annotation data")
+    public JiraIssueDTO.IssueExtraFieldsDTO getJiraAnnotationFields(
+            @ToolParam(description = "key") String key
+    ) {
+        log.info("mcp tool getJiraAnnotationFields({}, ..)", key);
+        JiraIssueDTO issue = issueService.getByKey(key);
+        JiraIssueDTO.IssueExtraFieldsDTO annotated = issue.getAnnotated();
+        return annotated;
+    }
+
+    @Tool(description = "Set jira issue annotation analysisSummary = "
+            + "human readable summarized text, result of agent analysis on the issue (phase 1, plan only, read-only), "
+            + "to explain synthetically the issue, current status, progress and remaining steps"
+            + " (compacting all jira issue changelog, histories changes, and correlating with git commits)")
+    public void setJiraAnnotationSummarised(
+            @ToolParam(description = "key") String key,
+            @ToolParam(description = "analysis summary human readable text result") String analysisSummary,
+            @ToolParam(description = "analysis summary tokens consumed") int analysisSummaryTokensConsumed
+    ) {
+        log.info("mcp tool updateJiraAnnotation({}, ..) tokens:{}\n" +
+                "analysisSummary:\n{}", key, analysisSummaryTokensConsumed, analysisSummary);
+        JiraIssueDTO issue = issueService.getByKey(key);
+        JiraIssueDTO.IssueExtraFieldsDTO annotated = issue.annotatedOrCreate();
+        annotated.analysisSummary = analysisSummary;
+        annotated.analysisSummaryLastUpdateTime = LocalDateTime.now();
+        annotated.analysisSummaryTokensConsumed = analysisSummaryTokensConsumed;
+    }
+
+    @Tool(description = "Set jira issue annotations developmentWorkDescribed = "
+            + "result comment text from agent/user development work on the issue (phase 2, development, write local changes)"
+            + ": triage, difficulty, what has been done, what remains to be done, etc..")
+    public void putJiraAnnotationComment(
+            @ToolParam(description = "key") String key,
+            @ToolParam(description = "development work described") String developmentWorkDescribed,
+            @ToolParam(description = "development work tokens consumed") int developmentWorkTokensConsumed
+    ) {
+        log.info("mcp tool updateJiraAnnotationComment({}, ..) tokens:{}\n"
+                + "developmentWorkDescribed: \n{}", key, developmentWorkTokensConsumed, developmentWorkDescribed);
+        JiraIssueDTO issue = issueService.getByKey(key);
+        JiraIssueDTO.IssueExtraFieldsDTO annotated = issue.annotatedOrCreate();
+        annotated.developmentWorkDescribed = developmentWorkDescribed;
+        annotated.developmentWorkTokensConsumed = developmentWorkTokensConsumed;
+        annotated.developmentWorkLastUpdateTime = LocalDateTime.now();
+    }
+
 }
