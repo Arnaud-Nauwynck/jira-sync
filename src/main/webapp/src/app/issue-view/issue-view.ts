@@ -1,25 +1,19 @@
 import { Component, Input } from '@angular/core';
-import { NgClass } from '@angular/common';
+import { NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
 import { JiraIssueDTO } from '../rest/model/jiraIssueDTO';
-
-const STATUS_LOZENGE_CLASS: Record<string, string> = {
-  'open': 'lozenge-default',
-  'reopened': 'lozenge-default',
-  'in progress': 'lozenge-inprogress',
-  'resolved': 'lozenge-success',
-  'closed': 'lozenge-success',
-  'done': 'lozenge-success',
-};
+import { JiraIssueView } from '../jira-issue-view/jira-issue-view';
+import { AnalysisIssueView } from '../analysis-issue-view/analysis-issue-view';
+import { WorkDevelopmentIssueView } from '../work-development-issue-view/work-development-issue-view';
+import { TimelineIssueView } from '../timeline-issue-view/timeline-issue-view';
 
 @Component({
-  imports: [NgClass],
+  imports: [NgbNavModule, JiraIssueView, AnalysisIssueView, WorkDevelopmentIssueView, TimelineIssueView],
   selector: 'app-issue-view',
   templateUrl: './issue-view.html',
 })
 export class IssueView {
   @Input() issue?: JiraIssueDTO;
 
-  statusLozengeClass(status: string | undefined): string {
-    return STATUS_LOZENGE_CLASS[(status ?? '').toLowerCase()] ?? 'lozenge-default';
-  }
+  // Active tab: 1 = Jira Source, 2 = Analysis, 3 = Development Work, 4 = Timeline.
+  active = 1;
 }

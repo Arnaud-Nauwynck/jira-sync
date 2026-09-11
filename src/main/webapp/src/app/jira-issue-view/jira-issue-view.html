@@ -1,0 +1,261 @@
+<style>
+  .issue-body {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+  }
+  .issue-main {
+    flex: 1;
+    min-width: 0;
+  }
+  .issue-side {
+    width: 260px;
+    flex-shrink: 0;
+  }
+  .module {
+    border: 1px solid #dfe1e6;
+    border-radius: 3px;
+    margin-bottom: 16px;
+  }
+  .module-header {
+    background: #f4f5f7;
+    padding: 8px 12px;
+    font-weight: 600;
+    font-size: 13px;
+    border-bottom: 1px solid #dfe1e6;
+    border-radius: 3px 3px 0 0;
+  }
+  .module-content {
+    padding: 12px;
+  }
+  .property-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 24px;
+    margin: 0;
+  }
+  .property-item.full-width {
+    grid-column: 1 / -1;
+  }
+  .property-item .name {
+    display: block;
+    font-size: 12px;
+    color: #6b778c;
+  }
+  .property-item .value {
+    font-size: 14px;
+  }
+  .lozenge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 600;
+    background: #dfe1e6;
+    color: #42526e;
+  }
+  .lozenge-inprogress {
+    background: #deebff;
+    color: #0052cc;
+  }
+  .lozenge-success {
+    background: #e3fcef;
+    color: #006644;
+  }
+  .labels .label {
+    display: inline-block;
+    background: #dfe1e6;
+    border-radius: 3px;
+    padding: 2px 8px;
+    font-size: 12px;
+    margin: 0 4px 4px 0;
+  }
+  .description {
+    white-space: pre-wrap;
+    font-size: 14px;
+  }
+  .comment {
+    border-top: 1px solid #f0f0f0;
+    padding: 10px 0;
+  }
+  .comment:first-child {
+    border-top: none;
+    padding-top: 0;
+  }
+  .comment-header {
+    font-size: 12px;
+    color: #6b778c;
+    margin-bottom: 4px;
+  }
+  .comment-body {
+    font-size: 14px;
+    white-space: pre-wrap;
+  }
+  .side-dl dt {
+    font-size: 12px;
+    color: #6b778c;
+    margin-top: 8px;
+  }
+  .side-dl dt:first-child {
+    margin-top: 0;
+  }
+  .side-dl dd {
+    margin: 0;
+    font-size: 14px;
+  }
+  .links-list dt {
+    font-size: 12px;
+    color: #6b778c;
+    margin: 8px 0 4px;
+  }
+  .links-list dt:first-child {
+    margin-top: 0;
+  }
+  .link-item {
+    font-size: 14px;
+    margin-bottom: 4px;
+  }
+  .link-item a {
+    color: #0052cc;
+    text-decoration: none;
+  }
+</style>
+
+@if (issue; as data) {
+  <div class="issue-body">
+    <div class="issue-main">
+      <div class="module">
+        <div class="module-header">Details</div>
+        <div class="module-content">
+          <div class="property-list">
+            <div class="property-item">
+              <span class="name">Type</span>
+              <span class="value">{{ data.fields?.issuetype }}</span>
+            </div>
+            <div class="property-item">
+              <span class="name">Status</span>
+              <span class="value">
+                <span class="lozenge" [ngClass]="statusLozengeClass(data.fields?.status)">{{ data.fields?.status }}</span>
+              </span>
+            </div>
+            <div class="property-item">
+              <span class="name">Priority</span>
+              <span class="value">{{ data.fields?.priority }}</span>
+            </div>
+            <div class="property-item">
+              <span class="name">Resolution</span>
+              <span class="value">{{ data.fields?.resolution || 'Unresolved' }}</span>
+            </div>
+            @if (data.fields?.versions?.length) {
+              <div class="property-item">
+                <span class="name">Affects Version/s</span>
+                <span class="value">{{ data.fields?.versions?.join(', ') }}</span>
+              </div>
+            }
+            @if (data.fields?.fixVersions?.length) {
+              <div class="property-item">
+                <span class="name">Fix Version/s</span>
+                <span class="value">{{ data.fields?.fixVersions?.join(', ') }}</span>
+              </div>
+            }
+            @if (data.fields?.components?.length) {
+              <div class="property-item">
+                <span class="name">Component/s</span>
+                <span class="value">{{ data.fields?.components?.join(', ') }}</span>
+              </div>
+            }
+            @if (data.fields?.labels?.length) {
+              <div class="property-item full-width">
+                <span class="name">Labels</span>
+                <span class="value labels">
+                  @for (label of data.fields?.labels; track label) {
+                    <span class="label">{{ label }}</span>
+                  }
+                </span>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="module">
+        <div class="module-header">Description</div>
+        <div class="module-content">
+          <div class="description">{{ data.fields?.description }}</div>
+        </div>
+      </div>
+
+      @if (data.fields?.issuelinks?.length) {
+        <div class="module">
+          <div class="module-header">Issue Links</div>
+          <div class="module-content">
+            @for (link of data.fields?.issuelinks; track link.id) {
+              @if (link.outwardIssue; as linked) {
+                <div class="link-item">{{ link.type?.outward }}: <a>{{ linked.key }}</a> {{ linked.fields?.summary }}</div>
+              }
+              @if (link.inwardIssue; as linked) {
+                <div class="link-item">{{ link.type?.inward }}: <a>{{ linked.key }}</a> {{ linked.fields?.summary }}</div>
+              }
+            }
+          </div>
+        </div>
+      }
+
+      @if (data.fields?.comments?.length) {
+        <div class="module">
+          <div class="module-header">Comments ({{ data.fields?.comments?.length }})</div>
+          <div class="module-content">
+            @for (comment of data.fields?.comments; track comment.id) {
+              <div class="comment">
+                <div class="comment-header"><strong>{{ comment.author }}</strong> commented on {{ comment.created }}</div>
+                <div class="comment-body">{{ comment.body }}</div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="issue-side">
+      <div class="module">
+        <div class="module-header">People</div>
+        <div class="module-content">
+          <dl class="side-dl">
+            <dt>Assignee</dt>
+            <dd>{{ data.fields?.assignee || 'Unassigned' }}</dd>
+            <dt>Reporter</dt>
+            <dd>{{ data.fields?.reporter }}</dd>
+            <dt>Creator</dt>
+            <dd>{{ data.fields?.creator }}</dd>
+          </dl>
+        </div>
+      </div>
+
+      <div class="module">
+        <div class="module-header">Dates</div>
+        <div class="module-content">
+          <dl class="side-dl">
+            <dt>Created</dt>
+            <dd>{{ data.fields?.created }}</dd>
+            <dt>Updated</dt>
+            <dd>{{ data.fields?.updated }}</dd>
+          </dl>
+        </div>
+      </div>
+
+      @if (data.fields?.votes || data.fields?.watchCount) {
+        <div class="module">
+          <div class="module-header">Votes &amp; Watches</div>
+          <div class="module-content">
+            <dl class="side-dl">
+              <dt>Votes</dt>
+              <dd>{{ data.fields?.votes || 0 }}</dd>
+              <dt>Watchers</dt>
+              <dd>{{ data.fields?.watchCount || 0 }}</dd>
+            </dl>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+}

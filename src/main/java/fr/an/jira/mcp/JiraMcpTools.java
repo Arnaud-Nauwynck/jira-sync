@@ -1,5 +1,6 @@
 package fr.an.jira.mcp;
 
+import fr.an.jira.rest.dtos.IssueExtraFieldsDTO;
 import fr.an.jira.rest.dtos.JiraIssueDTO;
 import fr.an.jira.rest.dtos.UserIssueCreateStatsDTO;
 import fr.an.jira.service.JiraIssueService;
@@ -63,12 +64,12 @@ public class JiraMcpTools {
     }
 
     @Tool(description = "Get jira issue annotation data")
-    public JiraIssueDTO.IssueExtraFieldsDTO getJiraAnnotationFields(
+    public IssueExtraFieldsDTO getJiraAnnotationFields(
             @ToolParam(description = "key") String key
     ) {
         log.info("mcp tool getJiraAnnotationFields({}, ..)", key);
         JiraIssueDTO issue = issueService.getByKey(key);
-        JiraIssueDTO.IssueExtraFieldsDTO annotated = issue.getAnnotated();
+        IssueExtraFieldsDTO annotated = issue.getAnnotated();
         return annotated;
     }
 
@@ -84,7 +85,7 @@ public class JiraMcpTools {
         log.info("mcp tool updateJiraAnnotation({}, ..) tokens:{}\n" +
                 "analysisSummary:\n{}", key, analysisSummaryTokensConsumed, analysisSummary);
         JiraIssueDTO issue = issueService.getByKey(key);
-        JiraIssueDTO.IssueExtraFieldsDTO annotated = issue.annotatedOrCreate();
+        IssueExtraFieldsDTO annotated = issue.annotatedOrCreate();
         annotated.analysisSummary = analysisSummary;
         annotated.analysisSummaryLastUpdateTime = LocalDateTime.now();
         annotated.analysisSummaryTokensConsumed = analysisSummaryTokensConsumed;
@@ -101,7 +102,7 @@ public class JiraMcpTools {
         log.info("mcp tool updateJiraAnnotationComment({}, ..) tokens:{}\n"
                 + "developmentWorkDescribed: \n{}", key, developmentWorkTokensConsumed, developmentWorkDescribed);
         JiraIssueDTO issue = issueService.getByKey(key);
-        JiraIssueDTO.IssueExtraFieldsDTO annotated = issue.annotatedOrCreate();
+        IssueExtraFieldsDTO annotated = issue.annotatedOrCreate();
         annotated.developmentWorkDescribed = developmentWorkDescribed;
         annotated.developmentWorkTokensConsumed = developmentWorkTokensConsumed;
         annotated.developmentWorkLastUpdateTime = LocalDateTime.now();

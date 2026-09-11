@@ -1,0 +1,137 @@
+<style>
+  .module {
+    border: 1px solid #dfe1e6;
+    border-radius: 3px;
+    margin-bottom: 16px;
+  }
+  .module-header {
+    background: #f4f5f7;
+    padding: 8px 12px;
+    font-weight: 600;
+    font-size: 13px;
+    border-bottom: 1px solid #dfe1e6;
+    border-radius: 3px 3px 0 0;
+  }
+  .module-content {
+    padding: 12px;
+  }
+  .timeline {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .timeline-item {
+    display: flex;
+    gap: 12px;
+    padding: 10px 0;
+    border-top: 1px solid #f0f0f0;
+  }
+  .timeline-item:first-child {
+    border-top: none;
+    padding-top: 0;
+  }
+  .timeline-marker {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-top: 5px;
+    flex-shrink: 0;
+    background: #8993a4;
+  }
+  .timeline-marker.type-created {
+    background: #0052cc;
+  }
+  .timeline-marker.type-change {
+    background: #8993a4;
+  }
+  .timeline-marker.type-comment {
+    background: #ffab00;
+  }
+  .timeline-marker.type-analysis {
+    background: #00875a;
+  }
+  .timeline-marker.type-development {
+    background: #6554c0;
+  }
+  .timeline-body {
+    flex: 1;
+    min-width: 0;
+  }
+  .timeline-header {
+    font-size: 13px;
+  }
+  .timeline-header .author {
+    font-weight: 600;
+  }
+  .timeline-time {
+    font-size: 12px;
+    color: #6b778c;
+    margin-left: 6px;
+  }
+  .timeline-title {
+    font-size: 14px;
+    margin-top: 2px;
+  }
+  .timeline-description {
+    font-size: 13px;
+    color: #42526e;
+    white-space: pre-wrap;
+    margin-top: 4px;
+  }
+  .timeline-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    margin-bottom: 10px;
+  }
+  .timeline-item.compact {
+    padding: 4px 0;
+  }
+  .timeline-summary {
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+</style>
+
+<div class="module">
+  <div class="module-header">Timeline</div>
+  <div class="module-content">
+    <label class="timeline-toggle">
+      <input type="checkbox" [(ngModel)]="showDetails" />
+      Show details
+    </label>
+    @if (entries.length) {
+      <ul class="timeline">
+        @for (entry of entries; track $index) {
+          @if (showDetails) {
+            <li class="timeline-item">
+              <span class="timeline-marker" [ngClass]="'type-' + entry.type"></span>
+              <div class="timeline-body">
+                <div class="timeline-header">
+                  @if (entry.author) {
+                    <span class="author">{{ entry.author }}</span>
+                  }
+                  <span class="timeline-time">{{ entry.time }}</span>
+                </div>
+                <div class="timeline-title">{{ entry.title }}</div>
+                @if (entry.description) {
+                  <div class="timeline-description">{{ entry.description }}</div>
+                }
+              </div>
+            </li>
+          } @else {
+            <li class="timeline-item compact">
+              <span class="timeline-marker" [ngClass]="'type-' + entry.type"></span>
+              <div class="timeline-summary" [title]="summaryLine(entry)">{{ summaryLine(entry) }}</div>
+            </li>
+          }
+        }
+      </ul>
+    } @else {
+      <p>No timeline events available.</p>
+    }
+  </div>
+</div>

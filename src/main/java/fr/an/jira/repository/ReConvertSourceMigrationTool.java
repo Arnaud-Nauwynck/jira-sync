@@ -2,6 +2,7 @@ package fr.an.jira.repository;
 
 import fr.an.jira.client.dtos.SourceJiraIssueDTO;
 import fr.an.jira.mapper.SourceJiraToAnnotatedIssueMapper;
+import fr.an.jira.rest.dtos.IssueExtraFieldsDTO;
 import fr.an.jira.rest.dtos.JiraIssueDTO;
 import lombok.val;
 import tools.jackson.databind.JsonNode;
@@ -111,7 +112,7 @@ public class ReConvertSourceMigrationTool {
             JiraIssueDTO annotatedIssue = SourceJiraToAnnotatedIssueMapper.from(srcIssue);
             JsonNode previousAnnotated = previousAnnotatedByKey.get(annotatedIssue.key);
             if (previousAnnotated != null) {
-                annotatedIssue.annotated = mapper.treeToValue(previousAnnotated, JiraIssueDTO.IssueExtraFieldsDTO.class);
+                annotatedIssue.annotated = mapper.treeToValue(previousAnnotated, IssueExtraFieldsDTO.class);
             }
             reconvertedIssues.add(annotatedIssue);
         }

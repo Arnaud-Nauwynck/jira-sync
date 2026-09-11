@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import fr.an.jira.client.dtos.SourceJiraIssueDTO;
 import fr.an.jira.configuration.JiraSyncProperties;
 import fr.an.jira.mapper.SourceJiraToAnnotatedIssueMapper;
+import fr.an.jira.rest.dtos.IssueExtraFieldsDTO;
 import fr.an.jira.rest.dtos.JiraIssueDTO;
 import jakarta.annotation.Nonnull;
 import lombok.AllArgsConstructor;
@@ -366,7 +367,7 @@ public class JiraIssueRepository {
     @AllArgsConstructor
     public static class UpdateAnnotationSyncIssueChangeRecord extends IssueChangeRecord {
         public String key;
-        public JiraIssueDTO.IssueExtraFieldsDTO annotated;
+        public IssueExtraFieldsDTO annotated;
 
         @Override
         public IssueChangeType getChange() { return IssueChangeType.updateAnnotation; }
@@ -510,7 +511,7 @@ public class JiraIssueRepository {
     }
 
 
-    public void putAnnotation(String key, JiraIssueDTO.IssueExtraFieldsDTO annotated) {
+    public void putAnnotation(String key, IssueExtraFieldsDTO annotated) {
         JiraIssueDTO issue = getByKey(key); // point to cached partition data... updating => update cache!
         issue.setAnnotated(annotated);
         int year = partitionYearOf(issue);

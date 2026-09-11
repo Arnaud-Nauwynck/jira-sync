@@ -9,6 +9,6 @@ import lombok.NoArgsConstructor;
 public class JiraIssueAnnotationDTO {
 
     public String key;
-    public JiraIssueDTO.IssueExtraFieldsDTO annotated;
+    public IssueExtraFieldsDTO annotated;
 
 }

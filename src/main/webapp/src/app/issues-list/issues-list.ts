@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { AgGridAngular } from 'ag-grid-angular';
 import type { CellClickedEvent, ColDef, GridApi, GridReadyEvent, IRowNode } from 'ag-grid-community';
 import { FormsModule } from '@angular/forms';
-import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgbCollapseModule, NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import { JiraIssueDTO } from '../rest/model/jiraIssueDTO';
 import { IssuesDataService } from './issues-data.service';
 import { IssueView } from '../issue-view/issue-view';
@@ -11,8 +11,11 @@ import { IssueView } from '../issue-view/issue-view';
 const OTHER_RESOLUTIONS = '(others)';
 const OTHER_TYPES = '(others)';
 
+/** Tri-state availability filter: 'no' = not present, 'yes' = present, 'any' = no filtering. */
+export type AvailabilityFilter = 'no' | 'any' | 'yes';
+
 @Component({
-  imports: [AgGridAngular, FormsModule, NgbDropdownModule, IssueView],
+  imports: [AgGridAngular, FormsModule, NgbDropdownModule, NgbCollapseModule, IssueView],
   selector: 'app-issues-list',
   templateUrl: './issues-list.html',
 })
@@ -21,9 +24,14 @@ export class IssuesList implements OnInit {
   // The issue currently shown in the master-detail panel below the grid, or undefined when closed.
   readonly selectedIssue = signal<JiraIssueDTO | undefined>(undefined);
 
+  // Data fetching panel: collapsible, expanded by default.
+  isDataFetchingCollapsed = false;
   fromYear = 2020;
   toYear = 2050;
   usernamePattern = '';
+
+  // Main criteria panel: collapsible, expanded by default.
+  isMainCriteriaCollapsed = false;
 
   // Row filter criteria (client-side, applied via ag-grid external filter).
   summaryContains = '';
@@ -31,6 +39,31 @@ export class IssuesList implements OnInit {
   authorContains = '';
   commentsContains = '';
   commentAuthorContains = '';
+
+  // Analysis criteria panel: collapsible, collapsed by default.
+  isAnalysisCriteriaCollapsed = true;
+  analysisSummaryContains = '';
+  analysisSummaryUpdatedFrom = '';
+  analysisSummaryUpdatedTo = '';
+  analysisSummaryMinTokensK: number | null = null;
+  analysisSummaryMaxTokensK: number | null = null;
+  analysisUserExtraPromptsContains = '';
+  analysisAvailability: AvailabilityFilter = 'any';
+
+  // Development work criteria panel: collapsible, collapsed by default.
+  isDevelopmentWorkCriteriaCollapsed = true;
+  developmentWorkDescribedContains = '';
+  developmentWorkUpdatedFrom = '';
+  developmentWorkUpdatedTo = '';
+  developmentWorkMinTokensK: number | null = null;
+  developmentWorkMaxTokensK: number | null = null;
+  developmentWorkUserExtraPromptsContains = '';
+  developmentWorkAvailability: AvailabilityFilter = 'any';
+
+  // Personal interest criteria panel: collapsible, collapsed by default.
+  isPersonalInterestCriteriaCollapsed = true;
+  personalInterrestCommentContains = '';
+  personalInterrestMinPriority: number | null = null;
 
   // Status enum filter: clicking a status button excludes that status from the results.
   statusOptions = ['Open', 'In Progress', 'Reopened', 'Resolved', 'Closed'];
@@ -109,6 +142,39 @@ export class IssuesList implements OnInit {
       valueGetter: (params) => {
         const watchCount = params.data?.fields?.watchCount;
         return (watchCount)? watchCount : '';
+      },
+    },
+    { headerName: 'Annotated', width: 100, cellDataType: 'boolean',
+      valueGetter: (params) => !!params.data?.annotated,
+    },
+    { headerName: 'Total Tokens', width: 110,
+      valueGetter: (params) => {
+        const sum = (params.data?.annotated?.analysisSummaryTokensConsumed ?? 0)
+          + (params.data?.annotated?.developmentWorkTokensConsumed ?? 0);
+        return (sum) ? sum : '';
+      },
+    },
+
+    { headerName: 'Has Analysis', width: 110, cellDataType: 'boolean',
+      valueGetter: (params) => !!params.data?.annotated?.analysisSummary,
+    },
+    { headerName: 'Analysis Updated', field: 'annotated.analysisSummaryLastUpdateTime', width: 130 },
+    { headerName: 'Analysis Tokens', width: 110,
+      valueGetter: (params) => {
+        const tokens = params.data?.annotated?.analysisSummaryTokensConsumed;
+        return (tokens) ? tokens : '';
+      },
+    },
+
+
+    { headerName: 'Has Dev Work', width: 110, cellDataType: 'boolean',
+      valueGetter: (params) => !!params.data?.annotated?.developmentWorkDescribed,
+    },
+    { headerName: 'Dev Work Updated', field: 'annotated.developmentWorkLastUpdateTime', width: 130 },
+    { headerName: 'Dev Tokens', width: 110,
+      valueGetter: (params) => {
+        const tokens = params.data?.annotated?.developmentWorkTokensConsumed;
+        return (tokens) ? tokens : '';
       },
     },
   ];
@@ -252,7 +318,23 @@ export class IssuesList implements OnInit {
       || this.excludedStatuses.size > 0
       || this.excludedPriorities.size > 0
       || this.excludedTypes.size > 0
-      || this.parseCsvList(this.commentAuthorContains).length > 0;
+      || this.parseCsvList(this.commentAuthorContains).length > 0
+      || this.parseCsvList(this.analysisSummaryContains).length > 0
+      || this.analysisSummaryUpdatedFrom.length > 0
+      || this.analysisSummaryUpdatedTo.length > 0
+      || this.analysisSummaryMinTokensK != null
+      || this.analysisSummaryMaxTokensK != null
+      || this.parseCsvList(this.analysisUserExtraPromptsContains).length > 0
+      || this.analysisAvailability !== 'any'
+      || this.parseCsvList(this.developmentWorkDescribedContains).length > 0
+      || this.developmentWorkUpdatedFrom.length > 0
+      || this.developmentWorkUpdatedTo.length > 0
+      || this.developmentWorkMinTokensK != null
+      || this.developmentWorkMaxTokensK != null
+      || this.parseCsvList(this.developmentWorkUserExtraPromptsContains).length > 0
+      || this.developmentWorkAvailability !== 'any'
+      || this.parseCsvList(this.personalInterrestCommentContains).length > 0
+      || this.personalInterrestMinPriority != null;
   };
 
   doesExternalFilterPass = (node: IRowNode<JiraIssueDTO>): boolean => {
@@ -288,8 +370,55 @@ export class IssuesList implements OnInit {
     if (!this.matchesAny(this.commentAuthorContains, ...comments.map((c) => c.author))) {
       return false;
     }
+    const annotated = node.data?.annotated;
+    if (!this.matchesAvailability(this.analysisAvailability, !!annotated?.analysisSummary)) {
+      return false;
+    }
+    if (!this.matchesAny(this.analysisSummaryContains, annotated?.analysisSummary)) {
+      return false;
+    }
+    if (!this.matchesDateRange(this.analysisSummaryUpdatedFrom, this.analysisSummaryUpdatedTo, annotated?.analysisSummaryLastUpdateTime)) {
+      return false;
+    }
+    if (!this.matchesTokensRangeK(this.analysisSummaryMinTokensK, this.analysisSummaryMaxTokensK, annotated?.analysisSummaryTokensConsumed)) {
+      return false;
+    }
+    if (!this.matchesAny(this.analysisUserExtraPromptsContains, ...(annotated?.analysisUserExtraPrompts ?? []))) {
+      return false;
+    }
+    if (!this.matchesAvailability(this.developmentWorkAvailability, !!annotated?.developmentWorkDescribed)) {
+      return false;
+    }
+    if (!this.matchesAny(this.developmentWorkDescribedContains, annotated?.developmentWorkDescribed)) {
+      return false;
+    }
+    if (!this.matchesDateRange(this.developmentWorkUpdatedFrom, this.developmentWorkUpdatedTo, annotated?.developmentWorkLastUpdateTime)) {
+      return false;
+    }
+    if (!this.matchesTokensRangeK(this.developmentWorkMinTokensK, this.developmentWorkMaxTokensK, annotated?.developmentWorkTokensConsumed)) {
+      return false;
+    }
+    if (!this.matchesAny(this.developmentWorkUserExtraPromptsContains, ...(annotated?.developmentWorkUserExtraPrompts ?? []))) {
+      return false;
+    }
+    if (!this.matchesAny(this.personalInterrestCommentContains, annotated?.personalInterrestComment)) {
+      return false;
+    }
+    if (!this.matchesMinNumber(this.personalInterrestMinPriority, annotated?.personalInterrestPriority10)) {
+      return false;
+    }
     return true;
   };
+
+  private matchesAvailability(filter: AvailabilityFilter, present: boolean): boolean {
+    if (filter === 'yes') {
+      return present;
+    }
+    if (filter === 'no') {
+      return !present;
+    }
+    return true;
+  }
 
   private matchesAny(filterValue: string, ...values: (string | undefined)[]): boolean {
     const terms = this.parseCsvList(filterValue);
@@ -298,6 +427,46 @@ export class IssuesList implements OnInit {
     }
     return values.some((value) =>
       value != null && terms.some((term) => value.toLowerCase().includes(term.toLowerCase())));
+  }
+
+  private matchesDateRange(from: string, to: string, value: string | undefined): boolean {
+    if (!from && !to) {
+      return true;
+    }
+    if (value == null) {
+      return false;
+    }
+    if (from && value < from) {
+      return false;
+    }
+    if (to && value > `${to}T23:59:59`) {
+      return false;
+    }
+    return true;
+  }
+
+  private matchesMinNumber(min: number | null, value: number | undefined): boolean {
+    if (min == null) {
+      return true;
+    }
+    return value != null && value >= min;
+  }
+
+  /** min/max are expressed in kilo-tokens (thousands); value is the raw token count. */
+  private matchesTokensRangeK(minK: number | null, maxK: number | null, value: number | undefined): boolean {
+    if (minK == null && maxK == null) {
+      return true;
+    }
+    if (value == null) {
+      return false;
+    }
+    if (minK != null && value < minK * 1000) {
+      return false;
+    }
+    if (maxK != null && value > maxK * 1000) {
+      return false;
+    }
+    return true;
   }
 
   private parseCsvList(value: string): string[] {

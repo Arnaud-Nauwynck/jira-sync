@@ -1,6 +1,7 @@
 package fr.an.jira.service;
 
 import fr.an.jira.repository.JiraIssueRepository;
+import fr.an.jira.rest.dtos.IssueExtraFieldsDTO;
 import fr.an.jira.rest.dtos.JiraIssueAnnotationDTO;
 import fr.an.jira.rest.dtos.JiraIssueDTO;
 import fr.an.jira.rest.dtos.UserIssueCreateStatsDTO;
@@ -84,7 +85,7 @@ public class JiraIssueService {
         return repository.getByKey(key);
     }
 
-    public void putAnnotation(String key, JiraIssueDTO.IssueExtraFieldsDTO annotated) {
+    public void putAnnotation(String key, IssueExtraFieldsDTO annotated) {
         repository.putAnnotation(key, annotated);
     }
 
