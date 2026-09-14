@@ -9,11 +9,7 @@
  */
 
 
-export interface AnnotatedJiraIssueLinkTypeDTO { 
-    id?: string;
-    self?: string;
-    name?: string;
-    inward?: string;
-    outward?: string;
+export interface MailingListSyncStatusDTO { 
+    lastClosedMonth?: string;
 }
 

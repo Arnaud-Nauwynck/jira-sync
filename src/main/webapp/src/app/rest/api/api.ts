@@ -1,5 +1,13 @@
+export * from './gitHubPullRequests.service';
+import { GitHubPullRequestsService } from './gitHubPullRequests.service';
+export * from './gitHubSync.service';
+import { GitHubSyncService } from './gitHubSync.service';
 export * from './jiraIssues.service';
 import { JiraIssuesService } from './jiraIssues.service';
 export * from './jiraSync.service';
 import { JiraSyncService } from './jiraSync.service';
-export const APIS = [JiraIssuesService, JiraSyncService];
+export * from './mailMessages.service';
+import { MailMessagesService } from './mailMessages.service';
+export * from './mailingListSync.service';
+import { MailingListSyncService } from './mailingListSync.service';
+export const APIS = [GitHubPullRequestsService, GitHubSyncService, JiraIssuesService, JiraSyncService, MailMessagesService, MailingListSyncService];

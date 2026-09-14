@@ -12,5 +12,6 @@
 export interface PersonalInterrestCommentDTO { 
     key?: string;
     personalInterrestComment?: string;
+    personalInterrestPriority10?: number;
 }
 

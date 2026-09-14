@@ -115,7 +115,7 @@ public class JiraSyncRunner {
     }
 
     /** Reads the start time of the last successful run, or null if none / unreadable. */
-    private Instant loadLastSyncTime() {
+    public Instant loadLastSyncTime() {
         if (!Files.exists(jiraStateFile)) {
             return null;
         }

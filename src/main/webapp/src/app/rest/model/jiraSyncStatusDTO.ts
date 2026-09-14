@@ -9,13 +9,7 @@
  */
 
 
-export interface AnnotatedJiraCommentDTO { 
-    self?: string;
-    id?: string;
-    author?: string;
-    body?: string;
-    updateAuthor?: string;
-    created?: string;
-    updated?: string;
+export interface JiraSyncStatusDTO { 
+    lastSyncTime?: string;
 }
 

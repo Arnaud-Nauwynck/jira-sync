@@ -17,7 +17,7 @@ import { Observable }                                        from 'rxjs';
 import { OpenApiHttpParams, QueryParamStyle } from '../query.params';
 
 // @ts-ignore
-import { JiraSyncStatusDTO } from '../model/jiraSyncStatusDTO';
+import { GitHubSyncStatusDTO } from '../model/gitHubSyncStatusDTO';
 
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS }                     from '../variables';
@@ -29,23 +29,23 @@ import { BaseService } from '../api.base.service';
 @Injectable({
   providedIn: 'root'
 })
-export class JiraSyncService extends BaseService {
+export class GitHubSyncService extends BaseService {
 
     constructor(protected httpClient: HttpClient, @Optional() @Inject(BASE_PATH) basePath: string|string[], @Optional() configuration?: Configuration) {
         super(basePath, configuration);
     }
 
     /**
-     * Get info about the last successful Jira sync run
-     * @endpoint get /api/v1/jira-sync/last-sync
+     * Get info about the last successful GitHub pull-request sync run
+     * @endpoint get /api/v1/github-sync/last-sync
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      * @param options additional options
      */
-    public getLastSync1(observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<JiraSyncStatusDTO>;
-    public getLastSync1(observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<JiraSyncStatusDTO>>;
-    public getLastSync1(observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<JiraSyncStatusDTO>>;
-    public getLastSync1(observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+    public getLastSync2(observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<GitHubSyncStatusDTO>;
+    public getLastSync2(observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<GitHubSyncStatusDTO>>;
+    public getLastSync2(observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<GitHubSyncStatusDTO>>;
+    public getLastSync2(observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
 
         let localVarHeaders = this.defaultHeaders;
 
@@ -72,9 +72,9 @@ export class JiraSyncService extends BaseService {
             }
         }
 
-        let localVarPath = `/api/v1/jira-sync/last-sync`;
+        let localVarPath = `/api/v1/github-sync/last-sync`;
         const { basePath, withCredentials } = this.configuration;
-        return this.httpClient.request<JiraSyncStatusDTO>('get', `${basePath}${localVarPath}`,
+        return this.httpClient.request<GitHubSyncStatusDTO>('get', `${basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
                 responseType: <any>responseType_,
@@ -88,16 +88,16 @@ export class JiraSyncService extends BaseService {
     }
 
     /**
-     * Run the Jira synchronization for all configured projects
-     * @endpoint post /api/v1/jira-sync/run-sync-all
+     * Run the GitHub pull-request synchronization for the configured org/repo
+     * @endpoint post /api/v1/github-sync/run-sync-all
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      * @param options additional options
      */
-    public runSyncAll1(observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<any>;
-    public runSyncAll1(observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<any>>;
-    public runSyncAll1(observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<any>>;
-    public runSyncAll1(observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<any> {
+    public runSyncAll2(observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<any>;
+    public runSyncAll2(observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<any>>;
+    public runSyncAll2(observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<any>>;
+    public runSyncAll2(observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<any> {
 
         let localVarHeaders = this.defaultHeaders;
 
@@ -123,7 +123,7 @@ export class JiraSyncService extends BaseService {
             }
         }
 
-        let localVarPath = `/api/v1/jira-sync/run-sync-all`;
+        let localVarPath = `/api/v1/github-sync/run-sync-all`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<any>('post', `${basePath}${localVarPath}`,
             {

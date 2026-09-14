@@ -1,7 +1,7 @@
-package fr.an.jira.rest;
+package fr.an.jira.mailinglist.rest;
 
-import fr.an.jira.rest.dtos.JiraSyncStatusDTO;
-import fr.an.jira.service.JiraSyncRunner;
+import fr.an.jira.mailinglist.rest.dtos.MailingListSyncStatusDTO;
+import fr.an.jira.mailinglist.service.MailingListSyncRunner;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
@@ -9,39 +9,38 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping(path="/api/v1/jira-sync", produces = MediaType.APPLICATION_JSON_VALUE)
-@Tag(name = "JiraSync")
+@RequestMapping(path = "/api/v1/mailing-list-sync", produces = MediaType.APPLICATION_JSON_VALUE)
+@Tag(name = "MailingListSync")
 @Slf4j
-public class JiraSyncRestController {
+public class MailingListSyncRestController {
 
-     private static final String BASE_URL = "/api/v1/jira-sync";
+    private static final String BASE_URL = "/api/v1/mailing-list-sync";
 
-    private final JiraSyncRunner jiraSyncRunner;
+    private final MailingListSyncRunner mailingListSyncRunner;
 
-    public JiraSyncRestController(JiraSyncRunner jiraSyncRunner) {
-        this.jiraSyncRunner = jiraSyncRunner;
+    public MailingListSyncRestController(MailingListSyncRunner mailingListSyncRunner) {
+        this.mailingListSyncRunner = mailingListSyncRunner;
     }
 
-    @Operation(summary = "Get info about the last successful Jira sync run")
+    @Operation(summary = "Get info about the last successful mailing-list sync run")
     @GetMapping("/last-sync")
-    public JiraSyncStatusDTO getLastSync() {
+    public MailingListSyncStatusDTO getLastSync() {
         log.info("http GET " + BASE_URL + "/last-sync");
-        JiraSyncStatusDTO dto = new JiraSyncStatusDTO();
-        dto.lastSyncTime = jiraSyncRunner.loadLastSyncTime();
+        MailingListSyncStatusDTO dto = new MailingListSyncStatusDTO();
+        dto.lastClosedMonth = mailingListSyncRunner.loadLastClosedMonth();
         return dto;
     }
 
-    @Operation(summary = "Run the Jira synchronization for all configured projects")
+    @Operation(summary = "Run the mailing-list synchronization for the configured list/domain")
     @PostMapping("/run-sync-all")
     public void runSyncAll() {
         log.info("http POST " + BASE_URL + "/run-sync-all");
         long startTime = System.currentTimeMillis();
         try {
-            jiraSyncRunner.syncAll();
+            mailingListSyncRunner.syncAll();
 
             int millis = (int) (System.currentTimeMillis() - startTime);
             log.info("... done http POST /run-sync-all, took {} ms", millis);

@@ -17,7 +17,7 @@ import { Observable }                                        from 'rxjs';
 import { OpenApiHttpParams, QueryParamStyle } from '../query.params';
 
 // @ts-ignore
-import { JiraSyncStatusDTO } from '../model/jiraSyncStatusDTO';
+import { GitHubPullRequestDTO } from '../model/gitHubPullRequestDTO';
 
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS }                     from '../variables';
@@ -29,23 +29,27 @@ import { BaseService } from '../api.base.service';
 @Injectable({
   providedIn: 'root'
 })
-export class JiraSyncService extends BaseService {
+export class GitHubPullRequestsService extends BaseService {
 
     constructor(protected httpClient: HttpClient, @Optional() @Inject(BASE_PATH) basePath: string|string[], @Optional() configuration?: Configuration) {
         super(basePath, configuration);
     }
 
     /**
-     * Get info about the last successful Jira sync run
-     * @endpoint get /api/v1/jira-sync/last-sync
+     * Find a single pull request by its number
+     * @endpoint get /api/v1/github-pull-requests/pull-requests/{number}
+     * @param number 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      * @param options additional options
      */
-    public getLastSync1(observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<JiraSyncStatusDTO>;
-    public getLastSync1(observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<JiraSyncStatusDTO>>;
-    public getLastSync1(observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<JiraSyncStatusDTO>>;
-    public getLastSync1(observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+    public findPullRequestByNumber(number: number, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<GitHubPullRequestDTO>;
+    public findPullRequestByNumber(number: number, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<GitHubPullRequestDTO>>;
+    public findPullRequestByNumber(number: number, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<GitHubPullRequestDTO>>;
+    public findPullRequestByNumber(number: number, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (number === null || number === undefined) {
+            throw new Error('Required parameter number was null or undefined when calling findPullRequestByNumber.');
+        }
 
         let localVarHeaders = this.defaultHeaders;
 
@@ -72,9 +76,9 @@ export class JiraSyncService extends BaseService {
             }
         }
 
-        let localVarPath = `/api/v1/jira-sync/last-sync`;
+        let localVarPath = `/api/v1/github-pull-requests/pull-requests/${this.configuration.encodeParam({name: "number", value: number, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: "int32"})}`;
         const { basePath, withCredentials } = this.configuration;
-        return this.httpClient.request<JiraSyncStatusDTO>('get', `${basePath}${localVarPath}`,
+        return this.httpClient.request<GitHubPullRequestDTO>('get', `${basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
                 responseType: <any>responseType_,
@@ -88,20 +92,53 @@ export class JiraSyncService extends BaseService {
     }
 
     /**
-     * Run the Jira synchronization for all configured projects
-     * @endpoint post /api/v1/jira-sync/run-sync-all
+     * List pull requests created between fromYear and toYear (inclusive), optionally filtered by author login
+     * @endpoint get /api/v1/github-pull-requests/pull-requests
+     * @param fromYear 
+     * @param toYear 
+     * @param usernamePattern 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      * @param options additional options
      */
-    public runSyncAll1(observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<any>;
-    public runSyncAll1(observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<any>>;
-    public runSyncAll1(observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<any>>;
-    public runSyncAll1(observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: undefined, context?: HttpContext, transferCache?: boolean}): Observable<any> {
+    public queryPullRequests(fromYear?: number, toYear?: number, usernamePattern?: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<GitHubPullRequestDTO>>;
+    public queryPullRequests(fromYear?: number, toYear?: number, usernamePattern?: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<GitHubPullRequestDTO>>>;
+    public queryPullRequests(fromYear?: number, toYear?: number, usernamePattern?: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<Array<GitHubPullRequestDTO>>>;
+    public queryPullRequests(fromYear?: number, toYear?: number, usernamePattern?: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+
+        let localVarQueryParameters = new OpenApiHttpParams(this.encoder);
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'fromYear',
+            <any>fromYear,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'toYear',
+            <any>toYear,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'usernamePattern',
+            <any>usernamePattern,
+            QueryParamStyle.Form,
+            true,
+        );
+
 
         let localVarHeaders = this.defaultHeaders;
 
         const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json'
         ]);
         if (localVarHttpHeaderAcceptSelected !== undefined) {
             localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
@@ -123,11 +160,12 @@ export class JiraSyncService extends BaseService {
             }
         }
 
-        let localVarPath = `/api/v1/jira-sync/run-sync-all`;
+        let localVarPath = `/api/v1/github-pull-requests/pull-requests`;
         const { basePath, withCredentials } = this.configuration;
-        return this.httpClient.request<any>('post', `${basePath}${localVarPath}`,
+        return this.httpClient.request<Array<GitHubPullRequestDTO>>('get', `${basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
+                params: localVarQueryParameters.toHttpParams(),
                 responseType: <any>responseType_,
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,

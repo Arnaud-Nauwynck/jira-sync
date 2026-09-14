@@ -14,4 +14,18 @@ public class McpServerConfiguration {
                 .toolObjects(jiraMcpTools)
                 .build();
     }
+
+    @Bean
+    public ToolCallbackProvider gitHubPrMcpToolCallbackProvider(GitHubPrMcpTools gitHubPrMcpTools) {
+        return MethodToolCallbackProvider.builder()
+                .toolObjects(gitHubPrMcpTools)
+                .build();
+    }
+
+    @Bean
+    public ToolCallbackProvider mailingListMcpToolCallbackProvider(MailingListMcpTools mailingListMcpTools) {
+        return MethodToolCallbackProvider.builder()
+                .toolObjects(mailingListMcpTools)
+                .build();
+    }
 }

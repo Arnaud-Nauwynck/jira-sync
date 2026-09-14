@@ -1,5 +1,26 @@
 <H1>Jira Synchronisation</H1>
 
+<div class="text-secondary small mb-2">
+  Last sync: {{ lastSyncTime() ?? 'never' }}
+</div>
 <button class="btn btn-primary" type="button" [disabled]="running()" (click)="runSyncAll()">
+  Run Sync All
+</button>
+
+<H1>GitHub Pull-Requests Sync</H1>
+
+<div class="text-secondary small mb-2">
+  Last sync: {{ githubLastSyncTime() ?? 'never' }}
+</div>
+<button class="btn btn-primary" type="button" [disabled]="githubRunning()" (click)="runGitHubSyncAll()">
+  Run Sync All
+</button>
+
+<H1>Mailing List Sync</H1>
+
+<div class="text-secondary small mb-2">
+  Last fully-archived month: {{ mailingListLastClosedMonth() ?? 'never' }}
+</div>
+<button class="btn btn-primary" type="button" [disabled]="mailingListRunning()" (click)="runMailingListSyncAll()">
   Run Sync All
 </button>

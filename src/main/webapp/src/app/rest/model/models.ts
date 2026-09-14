@@ -1,4 +1,6 @@
 export * from './annotatedJiraLinkedIssueFieldsDTO';
+export * from './gitHubPullRequestDTO';
+export * from './gitHubSyncStatusDTO';
 export * from './issueCommentDTO';
 export * from './issueExtraFieldsDTO';
 export * from './issueFieldsDTO';
@@ -9,7 +11,10 @@ export * from './issueLinkTypeDTO';
 export * from './issueProgressDTO';
 export * from './jiraIssueAnnotationDTO';
 export * from './jiraIssueDTO';
+export * from './jiraSyncStatusDTO';
 export * from './linkedIssueDTO';
+export * from './mailMessageDTO';
+export * from './mailingListSyncStatusDTO';
 export * from './personalInterrestCommentDTO';
 export * from './userIssueCreatePerYearStatsDTO';
 export * from './userIssueCreateStatsDTO';

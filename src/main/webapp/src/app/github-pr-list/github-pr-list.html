@@ -1,0 +1,111 @@
+<H4>GitHub Pull Requests</H4>
+
+<div class="mb-2">
+  <div class="small text-secondary mb-1" style="cursor: pointer;" (click)="dataFetchingCollapse.toggle()" [attr.aria-expanded]="!isDataFetchingCollapsed">
+    {{ isDataFetchingCollapsed ? '▸' : '▾' }} Data Fetching
+  </div>
+  <div #dataFetchingCollapse="ngbCollapse" [(ngbCollapse)]="isDataFetchingCollapsed">
+    <div class="d-flex gap-2 align-items-end">
+      <div>
+        <label class="form-label">From year</label>
+        <input class="form-control" type="number" [(ngModel)]="fromYear" />
+      </div>
+      <div>
+        <label class="form-label">To year</label>
+        <input class="form-control" type="number" [(ngModel)]="toYear" />
+      </div>
+      <div>
+        <label class="form-label">Author login pattern</label>
+        <input class="form-control" type="text" [(ngModel)]="usernamePattern" placeholder="regex, optional" />
+      </div>
+      <button class="btn btn-primary" type="button" (click)="search()">Search</button>
+    </div>
+  </div>
+</div>
+
+<div class="mb-3">
+  <div class="small text-secondary mb-1" style="cursor: pointer;" (click)="mainCriteriaCollapse.toggle()" [attr.aria-expanded]="!isMainCriteriaCollapsed">
+    {{ isMainCriteriaCollapsed ? '▸' : '▾' }} Main Criteria
+  </div>
+  <div #mainCriteriaCollapse="ngbCollapse" [(ngbCollapse)]="isMainCriteriaCollapsed">
+    <div class="d-flex gap-2 align-items-end flex-wrap">
+      <div>
+        <label class="form-label">Title contains</label>
+        <input class="form-control" type="text" [(ngModel)]="titleContains" (ngModelChange)="onFilterInputsChanged()" placeholder="comma separated" />
+      </div>
+      <div>
+        <label class="form-label">Body contains</label>
+        <input class="form-control" type="text" [(ngModel)]="bodyContains" (ngModelChange)="onFilterInputsChanged()" placeholder="comma separated" />
+      </div>
+      <div>
+        <label class="form-label">Author contains</label>
+        <input class="form-control" type="text" [(ngModel)]="authorContains" (ngModelChange)="onFilterInputsChanged()" placeholder="author, assignee or reviewer" />
+      </div>
+      <div>
+        <label class="form-label">Label contains</label>
+        <input class="form-control" type="text" [(ngModel)]="labelContains" (ngModelChange)="onFilterInputsChanged()" placeholder="comma separated" />
+      </div>
+      <div>
+        <label class="form-label">Base branch contains</label>
+        <input class="form-control" type="text" [(ngModel)]="baseRefContains" (ngModelChange)="onFilterInputsChanged()" placeholder="comma separated" />
+      </div>
+
+      <div>
+        <label class="form-label d-block">State</label>
+        <div class="btn-group" role="group">
+          @for (state of stateOptions; track state) {
+            <button
+              class="btn"
+              [class.btn-outline-secondary]="!isStateExcluded(state)"
+              [class.btn-secondary]="isStateExcluded(state)"
+              [class.text-decoration-line-through]="isStateExcluded(state)"
+              type="button"
+              (click)="toggleStateFilter(state)">{{ state }}</button>
+          }
+        </div>
+      </div>
+
+      <div>
+        <label class="form-label d-block">Draft</label>
+        <div class="btn-group" role="group">
+          <input type="radio" class="btn-check" name="draftAvailability" id="draftAvailabilityNo" autocomplete="off"
+            [(ngModel)]="draftAvailability" (ngModelChange)="onFilterInputsChanged()" value="no" />
+          <label class="btn btn-outline-secondary" for="draftAvailabilityNo">✗</label>
+
+          <input type="radio" class="btn-check" name="draftAvailability" id="draftAvailabilityAny" autocomplete="off"
+            [(ngModel)]="draftAvailability" (ngModelChange)="onFilterInputsChanged()" value="any" />
+          <label class="btn btn-outline-secondary" for="draftAvailabilityAny">Any</label>
+
+          <input type="radio" class="btn-check" name="draftAvailability" id="draftAvailabilityYes" autocomplete="off"
+            [(ngModel)]="draftAvailability" (ngModelChange)="onFilterInputsChanged()" value="yes" />
+          <label class="btn btn-outline-secondary" for="draftAvailabilityYes">✓</label>
+        </div>
+      </div>
+
+      <div>
+        <label class="form-label d-block">Merged</label>
+        <div class="btn-group" role="group">
+          <input type="radio" class="btn-check" name="mergedAvailability" id="mergedAvailabilityNo" autocomplete="off"
+            [(ngModel)]="mergedAvailability" (ngModelChange)="onFilterInputsChanged()" value="no" />
+          <label class="btn btn-outline-secondary" for="mergedAvailabilityNo">✗</label>
+
+          <input type="radio" class="btn-check" name="mergedAvailability" id="mergedAvailabilityAny" autocomplete="off"
+            [(ngModel)]="mergedAvailability" (ngModelChange)="onFilterInputsChanged()" value="any" />
+          <label class="btn btn-outline-secondary" for="mergedAvailabilityAny">Any</label>
+
+          <input type="radio" class="btn-check" name="mergedAvailability" id="mergedAvailabilityYes" autocomplete="off"
+            [(ngModel)]="mergedAvailability" (ngModelChange)="onFilterInputsChanged()" value="yes" />
+          <label class="btn btn-outline-secondary" for="mergedAvailabilityYes">✓</label>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<ag-grid-angular
+  style="width: 100%; height: 500px;"
+  [rowData]="pullRequestsDataService.pullRequests()"
+  [columnDefs]="colDefs"
+  [isExternalFilterPresent]="isExternalFilterPresent"
+  [doesExternalFilterPass]="doesExternalFilterPass"
+  (gridReady)="onGridReady($event)" />

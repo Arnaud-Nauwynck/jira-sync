@@ -9,8 +9,7 @@
  */
 
 
-export interface AnnotatedJiraProgressDTO { 
-    progress?: number;
-    total?: number;
+export interface GitHubSyncStatusDTO { 
+    lastSyncTime?: string;
 }
 
