@@ -4,8 +4,7 @@ import fr.an.jira.repository.JiraIssueRepository;
 import fr.an.jira.rest.dtos.IssueExtraFieldsDTO;
 import fr.an.jira.rest.dtos.JiraIssueAnnotationDTO;
 import fr.an.jira.rest.dtos.JiraIssueDTO;
-import fr.an.jira.rest.dtos.UserIssueCreateStatsDTO;
-import fr.an.jira.rest.dtos.UserIssueCreateStatsDTO.UserIssueCreatePerYearStatsDTO;
+import fr.an.jira.rest.dtos.UserJiraIssueStatsDTO;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.stereotype.Component;
@@ -29,19 +28,65 @@ public class JiraIssueService {
         this.repository = repository;
     }
 
-    public Collection<UserIssueCreateStatsDTO> queryUserIssueCreateStats(int fromYear, int toYear, String usernamePatternText) {
-        Map<String,UserIssueCreateStatsDTO> tmp = new LinkedHashMap<>();
-        Pattern usernamePattern = (usernamePatternText != null && !usernamePatternText.isBlank())? Pattern.compile(usernamePatternText) : null;
+    public Collection<UserJiraIssueStatsDTO> queryUserIssueStats(
+            int fromYear, int toYear,
+            String usernamePatternText,
+            String summaryPatternText,
+            String descriptionPatternText,
+            String commentPatternText,
+            String commentAuthorPatternText
+    ) {
+        Map<String, UserJiraIssueStatsDTO> tmp = new LinkedHashMap<>();
+        Pattern usernamePattern = compilePattern(usernamePatternText);
+        Pattern summaryPattern = compilePattern(summaryPatternText);
+        Pattern descriptionPattern = compilePattern(descriptionPatternText);
+        Pattern commentPattern = compilePattern(commentPatternText);
+        Pattern commentAuthorPattern = compilePattern(commentAuthorPatternText);
         repository.scanIssues(fromYear, toYear, (year, issue) -> {
             String user = creatorOf(issue);
-            if (usernamePattern == null || usernamePattern.matcher(user).matches()) {
-                UserIssueCreateStatsDTO statPerUser = tmp.computeIfAbsent(user, UserIssueCreateStatsDTO::new);
-                statPerUser.issueCreateCount++;
-                UserIssueCreatePerYearStatsDTO perUserPerYear = statPerUser.perYear.computeIfAbsent(Integer.toString(year), y -> new UserIssueCreatePerYearStatsDTO(Integer.parseInt(y)));
-                perUserPerYear.issueCreateCount++;
+            if (usernamePattern != null && !usernamePattern.matcher(user).matches()) {
+                return;
             }
+            if (!matchesText(summaryPattern, issue.fields != null ? issue.fields.summary : null)) {
+                return;
+            }
+            if (!matchesText(descriptionPattern, issue.fields != null ? issue.fields.description : null)) {
+                return;
+            }
+            if (!matchesComments(commentPattern, commentAuthorPattern, issue)) {
+                return;
+            }
+            UserJiraIssueStatsDTO statPerUser = tmp.computeIfAbsent(user, UserJiraIssueStatsDTO::new);
+            statPerUser.add(year, issue);
         });
         return tmp.values();
+    }
+
+    private static Pattern compilePattern(String patternText) {
+        return (patternText != null && !patternText.isBlank()) ? Pattern.compile(patternText) : null;
+    }
+
+    private static boolean matchesText(Pattern pattern, String text) {
+        return pattern == null || (text != null && pattern.matcher(text).find());
+    }
+
+    /** True when neither pattern is set, or the issue has at least one comment matching both given patterns. */
+    private static boolean matchesComments(Pattern commentPattern, Pattern commentAuthorPattern, JiraIssueDTO issue) {
+        if (commentPattern == null && commentAuthorPattern == null) {
+            return true;
+        }
+        List<JiraIssueDTO.IssueCommentDTO> comments = issue.fields != null ? issue.fields.comments : null;
+        if (comments == null) {
+            return false;
+        }
+        for (JiraIssueDTO.IssueCommentDTO comment : comments) {
+            boolean bodyMatches = commentPattern == null || (comment.body != null && commentPattern.matcher(comment.body).find());
+            boolean authorMatches = commentAuthorPattern == null || (comment.author != null && commentAuthorPattern.matcher(comment.author).matches());
+            if (bodyMatches && authorMatches) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** Finds a single issue by its key, or returns null if not found. */

@@ -7,10 +7,11 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
+import { UserIssueCreatePerYearStatsDTO } from './userIssueCreatePerYearStatsDTO';
 
 
-export interface UserIssueCreatePerYearStatsDTO { 
-    year?: number;
+export interface UserJiraIssueStatsDTO { 
+    user?: string;
     issueCreateCount?: number;
     closedIssuesCount?: number;
     closedBySelfIssuesCount?: number;
@@ -19,6 +20,6 @@ export interface UserIssueCreatePerYearStatsDTO {
     rejectedIssuesCount?: number;
     reopenedIssuesCount?: number;
     issuesCommentsCount?: number;
-    firstIssues?: Array<string>;
+    perYear?: { [key: string]: UserIssueCreatePerYearStatsDTO; };
 }
 

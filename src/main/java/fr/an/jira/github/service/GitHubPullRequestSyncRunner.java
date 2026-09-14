@@ -14,8 +14,7 @@ import tools.jackson.databind.node.ObjectNode;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Sync GitHub pull requests (all states) to local JSON files.
@@ -44,6 +43,7 @@ public class GitHubPullRequestSyncRunner {
 
     private long syncGetByIdDelayMs;
     private long syncDelayMs;
+    private Set<Integer> ignorePRNumbers;
 
     public GitHubPullRequestSyncRunner(GitHubSyncProperties props, ObjectMapper mapper,
                                        GitHubPullRequestRepository prRepository, GitHubApiClient apiClient) {
@@ -54,6 +54,7 @@ public class GitHubPullRequestSyncRunner {
         this.syncStateFile = Path.of(props.getGithubSyncLocalDir(), "pulls-sync-state.json");
         this.syncGetByIdDelayMs = props.getSyncGetByIdDelayMs();
         this.syncDelayMs = props.getDelayMs();
+        this.ignorePRNumbers = (props.getIgnorePRNumbers() != null)? new HashSet<>(props.getIgnorePRNumbers()) : null;
     }
 
     /** Full or incremental sync of all pull requests (open, closed, merged) for the configured org/repo. */
@@ -98,13 +99,16 @@ public class GitHubPullRequestSyncRunner {
             return 0;
         }
         Map<Integer, Instant> alreadyLoaded = prRepository.listAllPRNumberWithUpdateTime();
-        final int remainCount = maxPrNumber - alreadyLoaded.size();
-        log.info("initial load: scanning PR #1..#{}, {} already stored locally, remain to load: {}", maxPrNumber, alreadyLoaded.size(), remainCount);
+        final int prToLoadCount = maxPrNumber - alreadyLoaded.size();
+        log.info("initial load: scanning PR #1..#{}, {} already stored locally, remain to load: {}", maxPrNumber, alreadyLoaded.size(), prToLoadCount);
 
         int firstNumber = 1;
         int prChangeCount = 0;
         for (int number = firstNumber; number <= maxPrNumber; number++) {
             if (alreadyLoaded.containsKey(number)) {
+                continue;
+            }
+            if (ignorePRNumbers != null && ignorePRNumbers.contains(number)) {
                 continue;
             }
             try {
@@ -113,13 +117,20 @@ public class GitHubPullRequestSyncRunner {
                 prRepository.save(pr);
                 prChangeCount++;
             } catch (Exception e) {
+                String errorMsg = e.getMessage();
+                if (errorMsg.contains("GitHub primary rate limit exhausted ... wait")) {
+                    sleep(120_000);
+                    syncGetByIdDelayMs += 15;
+                    number--;
+                    continue;
+                }
                 // PR numbers share the same sequence as plain issues, so a 404 here just means
                 // #number is an issue, not a PR; log and move on rather than aborting the load.
                 log.warn("  #{} : not a pull request, or failed to fetch, skipping: {}", number, e.toString());
             }
             sleep(syncGetByIdDelayMs);
             if (number % 100 == 0) {
-                log.info("initial load progress: #{} [/{}] ({}), saved {} so far", number, remainCount, maxPrNumber, prChangeCount);
+                log.info("initial load progress: #{} ({}), saved [{}/{}] so far", number, maxPrNumber, prChangeCount, prToLoadCount);
             }
         }
         return prChangeCount;

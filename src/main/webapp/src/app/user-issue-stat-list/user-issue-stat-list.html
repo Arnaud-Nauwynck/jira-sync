@@ -18,6 +18,25 @@
 
 <div class="d-flex gap-2 align-items-end mb-3">
   <div>
+    <label class="form-label">Summary pattern</label>
+    <input class="form-control" type="text" [(ngModel)]="summaryPattern" placeholder="regex, optional" />
+  </div>
+  <div>
+    <label class="form-label">Description pattern</label>
+    <input class="form-control" type="text" [(ngModel)]="descriptionPattern" placeholder="regex, optional" />
+  </div>
+  <div>
+    <label class="form-label">Comment pattern</label>
+    <input class="form-control" type="text" [(ngModel)]="commentPattern" placeholder="regex, optional" />
+  </div>
+  <div>
+    <label class="form-label">Comment author pattern</label>
+    <input class="form-control" type="text" [(ngModel)]="commentAuthorPattern" placeholder="regex, optional" />
+  </div>
+</div>
+
+<div class="d-flex gap-2 align-items-end mb-3">
+  <div>
     <label class="form-label">Min created issues</label>
     <input class="form-control" type="number" [(ngModel)]="minCreatedIssues" (ngModelChange)="onFilterInputsChanged()" />
   </div>
@@ -42,3 +61,13 @@
   [isExternalFilterPresent]="isExternalFilterPresent"
   [doesExternalFilterPass]="doesExternalFilterPass"
   (gridReady)="onGridReady($event)" />
+
+@if (selectedIssueKey(); as key) {
+  <div class="border rounded mt-3 p-3">
+    <div class="d-flex justify-content-end gap-2 mb-2">
+      <button class="btn btn-sm btn-outline-secondary" type="button" (click)="openDetailAsRoute()">Show as page</button>
+      <button class="btn btn-sm btn-outline-secondary" type="button" (click)="closeDetail()">Close</button>
+    </div>
+    <app-issue-details [issueKey]="key" />
+  </div>
+}

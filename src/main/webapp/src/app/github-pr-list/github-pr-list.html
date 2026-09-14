@@ -109,3 +109,12 @@
   [isExternalFilterPresent]="isExternalFilterPresent"
   [doesExternalFilterPass]="doesExternalFilterPass"
   (gridReady)="onGridReady($event)" />
+
+@if (selectedPullRequest(); as pr) {
+  <div class="border rounded mt-3 p-3">
+    <div class="d-flex justify-content-end gap-2 mb-2">
+      <button class="btn btn-sm btn-outline-secondary" type="button" (click)="closeDetail()">Close</button>
+    </div>
+    <app-github-pr-view [pullRequest]="pr" />
+  </div>
+}

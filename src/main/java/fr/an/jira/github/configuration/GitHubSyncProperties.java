@@ -4,6 +4,9 @@ import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Component
 @ConfigurationProperties(prefix = "github")
 @Data
@@ -19,9 +22,10 @@ public class GitHubSyncProperties {
 
     protected int perPage = 100;
 
-    protected long syncGetByIdDelayMs = 10;
+    protected long syncGetByIdDelayMs = 15;
     protected long delayMs = 500;
 
     protected String httpHeaderAuth;
 
+    protected List<Integer> ignorePRNumbers = new ArrayList<>();
 }

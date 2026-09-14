@@ -17,4 +17,4 @@ export * from './mailMessageDTO';
 export * from './mailingListSyncStatusDTO';
 export * from './personalInterrestCommentDTO';
 export * from './userIssueCreatePerYearStatsDTO';
-export * from './userIssueCreateStatsDTO';
+export * from './userJiraIssueStatsDTO';

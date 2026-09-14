@@ -2,7 +2,7 @@ package fr.an.jira.mcp;
 
 import fr.an.jira.rest.dtos.IssueExtraFieldsDTO;
 import fr.an.jira.rest.dtos.JiraIssueDTO;
-import fr.an.jira.rest.dtos.UserIssueCreateStatsDTO;
+import fr.an.jira.rest.dtos.UserJiraIssueStatsDTO;
 import fr.an.jira.service.JiraIssueService;
 import fr.an.jira.service.JiraSyncRunner;
 import lombok.extern.slf4j.Slf4j;
@@ -45,13 +45,19 @@ public class JiraMcpTools {
         return issueService.queryAnnotatedIssues(fromYear, toYear, usernamePattern);
     }
 
-    @Tool(description = "Count issues created per user (with a per-year breakdown), for issues created between fromYear and toYear (inclusive), filtered by creator/reporter username regex")
-    public Collection<UserIssueCreateStatsDTO> queryUserIssueCreateStats(
+    @Tool(description = "Count issues created per user (with a per-year breakdown), for issues created between fromYear and toYear (inclusive), filtered by creator/reporter username regex and optional summary/description/comment criteria")
+    public Collection<UserJiraIssueStatsDTO> queryUserIssueCreateStats(
             @ToolParam(description = "Earliest creation year, inclusive") int fromYear,
             @ToolParam(description = "Latest creation year, inclusive") int toYear,
-            @ToolParam(description = "Regex to filter by creator/reporter username") String usernamePattern) {
-        log.info("mcp tool queryUserIssueCreateStats(fromYear={}, toYear={}, usernamePattern={})", fromYear, toYear, usernamePattern);
-        return issueService.queryUserIssueCreateStats(fromYear, toYear, usernamePattern);
+            @ToolParam(description = "Regex to filter by creator/reporter username") String usernamePattern,
+            @ToolParam(description = "Optional regex that must be found in the issue summary", required = false) String summaryPattern,
+            @ToolParam(description = "Optional regex that must be found in the issue description", required = false) String descriptionPattern,
+            @ToolParam(description = "Optional regex that must be found in at least one issue comment's body", required = false) String commentPattern,
+            @ToolParam(description = "Optional regex that the author of at least one issue comment must match", required = false) String commentAuthorPattern) {
+        log.info("mcp tool queryUserIssueCreateStats(fromYear={}, toYear={}, usernamePattern={}, summaryPattern={}, descriptionPattern={}, commentPattern={}, commentAuthorPattern={})",
+                fromYear, toYear, usernamePattern, summaryPattern, descriptionPattern, commentPattern, commentAuthorPattern);
+        return issueService.queryUserIssueStats(fromYear, toYear, usernamePattern,
+                summaryPattern, descriptionPattern, commentPattern, commentAuthorPattern);
     }
 
     @Tool(description = "Run the Jira synchronization for the configured project, pulling new/updated issues from the remote Jira server into the local mirror.")

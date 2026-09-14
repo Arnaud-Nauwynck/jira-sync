@@ -1,18 +1,14 @@
 package fr.an.jira.rest;
 
 import fr.an.jira.rest.dtos.JiraIssueAnnotationDTO;
-import fr.an.jira.rest.dtos.JiraIssueDTO;
 import fr.an.jira.rest.dtos.PersonalInterrestCommentDTO;
-import fr.an.jira.rest.dtos.UserIssueCreateStatsDTO;
 import fr.an.jira.service.JiraIssueService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collection;
 import java.util.List;
 
 @RestController

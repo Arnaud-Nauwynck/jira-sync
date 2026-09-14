@@ -5,16 +5,20 @@ import { FormsModule } from '@angular/forms';
 import { NgbCollapseModule, NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import { GitHubPullRequestDTO } from '../rest/model/gitHubPullRequestDTO';
 import { GithubPullRequestsDataService } from './github-pull-requests-data.service';
+import { GithubPrView } from '../github-pr-view/github-pr-view';
 
 /** Tri-state availability/boolean filter: 'no' = false, 'yes' = true, 'any' = no filtering. */
 export type AvailabilityFilter = 'no' | 'any' | 'yes';
 
 @Component({
-  imports: [AgGridAngular, FormsModule, NgbDropdownModule, NgbCollapseModule],
+  imports: [AgGridAngular, FormsModule, NgbDropdownModule, NgbCollapseModule, GithubPrView],
   selector: 'app-github-pr-list',
   templateUrl: './github-pr-list.html',
 })
 export class GithubPRList implements OnInit {
+
+  // The pull request currently shown in the master-detail panel below the grid, or undefined when closed.
+  readonly selectedPullRequest = signal<GitHubPullRequestDTO | undefined>(undefined);
 
   // Data fetching panel: collapsible, expanded by default.
   isDataFetchingCollapsed = false;
@@ -44,9 +48,8 @@ export class GithubPRList implements OnInit {
     { headerName: 'Number', field: 'number', width: 100,
       cellStyle: { cursor: 'pointer', textDecoration: 'underline' },
       onCellClicked: (params: CellClickedEvent<GitHubPullRequestDTO>) => {
-        const url = params.data?.htmlUrl;
-        if (url) {
-          window.open(url, '_blank', 'noopener');
+        if (params.data) {
+          this.selectedPullRequest.set(params.data);
         }
       },
     },
@@ -97,6 +100,10 @@ export class GithubPRList implements OnInit {
 
   onFilterInputsChanged() {
     this.gridApi?.onFilterChanged();
+  }
+
+  closeDetail() {
+    this.selectedPullRequest.set(undefined);
   }
 
   toggleStateFilter(state: string) {

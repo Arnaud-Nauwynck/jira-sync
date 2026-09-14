@@ -23,7 +23,7 @@ import { JiraIssueDTO } from '../model/jiraIssueDTO';
 // @ts-ignore
 import { PersonalInterrestCommentDTO } from '../model/personalInterrestCommentDTO';
 // @ts-ignore
-import { UserIssueCreateStatsDTO } from '../model/userIssueCreateStatsDTO';
+import { UserJiraIssueStatsDTO } from '../model/userJiraIssueStatsDTO';
 
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS }                     from '../variables';
@@ -443,19 +443,23 @@ export class JiraIssuesService extends BaseService {
     }
 
     /**
-     * Count issues created per user, for issues created between fromYear and toYear (inclusive)
+     * Count issues created per user, for issues created between fromYear and toYear (inclusive), optionally filtered by summary/description/comment criteria
      * @endpoint get /api/v1/jira-issues/user-issue-create-stats
      * @param usernamePattern 
      * @param fromYear 
      * @param toYear 
+     * @param summaryPattern 
+     * @param descriptionPattern 
+     * @param commentPattern 
+     * @param commentAuthorPattern 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      * @param options additional options
      */
-    public queryUserIssueCreateStats(usernamePattern: string, fromYear?: number, toYear?: number, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<UserIssueCreateStatsDTO>>;
-    public queryUserIssueCreateStats(usernamePattern: string, fromYear?: number, toYear?: number, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<UserIssueCreateStatsDTO>>>;
-    public queryUserIssueCreateStats(usernamePattern: string, fromYear?: number, toYear?: number, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<Array<UserIssueCreateStatsDTO>>>;
-    public queryUserIssueCreateStats(usernamePattern: string, fromYear?: number, toYear?: number, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+    public queryUserIssueCreateStats(usernamePattern: string, fromYear?: number, toYear?: number, summaryPattern?: string, descriptionPattern?: string, commentPattern?: string, commentAuthorPattern?: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<UserJiraIssueStatsDTO>>;
+    public queryUserIssueCreateStats(usernamePattern: string, fromYear?: number, toYear?: number, summaryPattern?: string, descriptionPattern?: string, commentPattern?: string, commentAuthorPattern?: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<UserJiraIssueStatsDTO>>>;
+    public queryUserIssueCreateStats(usernamePattern: string, fromYear?: number, toYear?: number, summaryPattern?: string, descriptionPattern?: string, commentPattern?: string, commentAuthorPattern?: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<Array<UserJiraIssueStatsDTO>>>;
+    public queryUserIssueCreateStats(usernamePattern: string, fromYear?: number, toYear?: number, summaryPattern?: string, descriptionPattern?: string, commentPattern?: string, commentAuthorPattern?: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
         if (usernamePattern === null || usernamePattern === undefined) {
             throw new Error('Required parameter usernamePattern was null or undefined when calling queryUserIssueCreateStats.');
         }
@@ -489,6 +493,42 @@ export class JiraIssuesService extends BaseService {
         );
 
 
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'summaryPattern',
+            <any>summaryPattern,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'descriptionPattern',
+            <any>descriptionPattern,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'commentPattern',
+            <any>commentPattern,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'commentAuthorPattern',
+            <any>commentAuthorPattern,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
         let localVarHeaders = this.defaultHeaders;
 
         const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
@@ -516,7 +556,7 @@ export class JiraIssuesService extends BaseService {
 
         let localVarPath = `/api/v1/jira-issues/user-issue-create-stats`;
         const { basePath, withCredentials } = this.configuration;
-        return this.httpClient.request<Array<UserIssueCreateStatsDTO>>('get', `${basePath}${localVarPath}`,
+        return this.httpClient.request<Array<UserJiraIssueStatsDTO>>('get', `${basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
                 params: localVarQueryParameters.toHttpParams(),
