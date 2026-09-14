@@ -25,6 +25,7 @@ export interface IssuesSearchCriteria {
   excludedPriorities?: Set<string>;
   labelsContains?: string;
   pullRequestAvailableLabel?: AvailabilityFilter;
+  componentsContains?: string;
 
   analysisSummaryContains?: string;
   analysisUserExtraPromptsContains?: string;
@@ -66,6 +67,7 @@ export class IssuesDataService {
         joinCsv(criteria.excludedTypes), joinCsv(criteria.excludedResolutions),
         joinCsv(criteria.excludedStatuses), joinCsv(criteria.excludedPriorities),
         criteria.labelsContains || undefined, availabilityOrUndefined(criteria.pullRequestAvailableLabel),
+        criteria.componentsContains || undefined,
         criteria.analysisSummaryContains || undefined, criteria.analysisUserExtraPromptsContains || undefined,
         criteria.analysisSummaryUpdatedFrom || undefined, criteria.analysisSummaryUpdatedTo || undefined,
         criteria.analysisSummaryMinTokensK ?? undefined, criteria.analysisSummaryMaxTokensK ?? undefined,

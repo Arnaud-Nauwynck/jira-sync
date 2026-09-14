@@ -52,6 +52,7 @@ export class IssuesList implements OnInit {
   commentAuthorContains = '';
   labelsContains = '';
   pullRequestAvailableLabel: AvailabilityFilter = 'any';
+  componentsContains = '';
 
   // Analysis criteria panel: collapsible, collapsed by default.
   isAnalysisCriteriaCollapsed = true;
@@ -287,6 +288,7 @@ export class IssuesList implements OnInit {
       || this.parseCsvList(this.commentAuthorContains).length > 0
       || this.parseCsvList(this.labelsContains).length > 0
       || this.pullRequestAvailableLabel !== 'any'
+      || this.parseCsvList(this.componentsContains).length > 0
       || this.parseCsvList(this.analysisSummaryContains).length > 0
       || this.analysisSummaryUpdatedFrom.length > 0
       || this.analysisSummaryUpdatedTo.length > 0
@@ -350,6 +352,10 @@ export class IssuesList implements OnInit {
       return false;
     }
     if (!this.matchesAvailability(this.pullRequestAvailableLabel, labels.includes(PULL_REQUEST_AVAILABLE_LABEL))) {
+      return false;
+    }
+    const components = fields.components ?? [];
+    if (!this.matchesAny(this.componentsContains, ...components)) {
       return false;
     }
     const comments = fields.comments ?? [];
@@ -564,6 +570,7 @@ export class IssuesList implements OnInit {
       excludedPriorities: this.excludedPriorities,
       labelsContains: this.labelsContains,
       pullRequestAvailableLabel: this.pullRequestAvailableLabel,
+      componentsContains: this.componentsContains,
       analysisSummaryContains: this.analysisSummaryContains,
       analysisUserExtraPromptsContains: this.analysisUserExtraPromptsContains,
       analysisSummaryUpdatedFrom: this.analysisSummaryUpdatedFrom,

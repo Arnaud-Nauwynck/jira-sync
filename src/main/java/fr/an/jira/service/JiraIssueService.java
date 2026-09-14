@@ -184,6 +184,10 @@ public class JiraIssueService {
         if (!matchesAvailability(c.pullRequestAvailableLabel, labels.contains(PULL_REQUEST_AVAILABLE_LABEL))) {
             return false;
         }
+        List<String> components = fields != null && fields.components != null ? fields.components : List.of();
+        if (!matchesAny(c.componentsContains, components.toArray(String[]::new))) {
+            return false;
+        }
 
         IssueExtraFieldsDTO annotated = issue.annotated;
         boolean hasAnalysis = annotated != null && annotated.analysisSummary != null && !annotated.analysisSummary.isBlank();

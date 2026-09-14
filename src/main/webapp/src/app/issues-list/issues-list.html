@@ -39,8 +39,10 @@
         [value]="commentAuthorContains" (valueChange)="commentAuthorContains = $event; onFilterInputsChanged()" />
       <app-text-contains-filter label="Labels contains"
         [value]="labelsContains" (valueChange)="labelsContains = $event; onFilterInputsChanged()" />
-      <app-availability-filter label="Pull Request Available" name="pullRequestAvailableLabel"
-        [value]="pullRequestAvailableLabel" (valueChange)="pullRequestAvailableLabel = $event; onFilterInputsChanged()" />
+      <app-text-contains-filter label="Components contains"
+        [value]="componentsContains" (valueChange)="componentsContains = $event; onFilterInputsChanged()" />
+
+      <div class="w-100"></div>
 
       <app-exclude-dropdown-filter label="Type" [options]="typeFilterOptions"
         [excluded]="excludedTypes" (excludedChange)="onExcludedTypesChange($event)" />
@@ -50,6 +52,8 @@
         [excluded]="excludedStatuses" (excludedChange)="onExcludedStatusesChange($event)" />
       <app-exclude-dropdown-filter label="Priority" [options]="priorityFilterOptions"
         [excluded]="excludedPriorities" (excludedChange)="onExcludedPrioritiesChange($event)" />
+      <app-availability-filter label="Pull Request Available" name="pullRequestAvailableLabel"
+        [value]="pullRequestAvailableLabel" (valueChange)="pullRequestAvailableLabel = $event; onFilterInputsChanged()" />
     </div>
   </div>
 </div>

@@ -23,6 +23,7 @@ public class JiraIssueQueryCriteriaDTO {
     public String labelsContains;
     /** Tri-state ('yes'/'no'/'any'): whether the issue's labels contain "pull-request-available". */
     public String pullRequestAvailableLabel;
+    public String componentsContains;
 
     // Analysis criteria
     public String analysisSummaryContains;

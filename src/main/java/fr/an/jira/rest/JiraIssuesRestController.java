@@ -78,6 +78,7 @@ public class JiraIssuesRestController {
             @RequestParam(name="excludedPriorities", required = false) String excludedPriorities,
             @RequestParam(name="labelsContains", required = false) String labelsContains,
             @RequestParam(name="pullRequestAvailableLabel", required = false) String pullRequestAvailableLabel,
+            @RequestParam(name="componentsContains", required = false) String componentsContains,
 
             @RequestParam(name="analysisSummaryContains", required = false) String analysisSummaryContains,
             @RequestParam(name="analysisUserExtraPromptsContains", required = false) String analysisUserExtraPromptsContains,
@@ -114,6 +115,7 @@ public class JiraIssuesRestController {
         criteria.setExcludedPriorities(excludedPriorities);
         criteria.setLabelsContains(labelsContains);
         criteria.setPullRequestAvailableLabel(pullRequestAvailableLabel);
+        criteria.setComponentsContains(componentsContains);
         criteria.setAnalysisSummaryContains(analysisSummaryContains);
         criteria.setAnalysisUserExtraPromptsContains(analysisUserExtraPromptsContains);
         criteria.setAnalysisSummaryUpdatedFrom(analysisSummaryUpdatedFrom);
