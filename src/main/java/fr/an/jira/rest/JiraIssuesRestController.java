@@ -55,15 +55,19 @@ public class JiraIssuesRestController {
         return found != null ? ResponseEntity.ok(found) : ResponseEntity.notFound().build();
     }
 
-    @Operation(summary = "List issues created between fromYear and toYear (inclusive), optionally filtered by creator username")
+    @Operation(summary = "List issues created between fromYear and toYear (inclusive), optionally filtered by creator username, issue number range, and/or key pattern")
     @GetMapping("/annotated-issues")
     public Collection<JiraIssueDTO> queryAnnotatedIssues(
             @RequestParam(name="fromYear", defaultValue = "2020") int fromYear,
             @RequestParam(name="toYear", defaultValue = "2050") int toYear,
-            @RequestParam(name="usernamePattern", required = false) String usernamePattern
+            @RequestParam(name="usernamePattern", required = false) String usernamePattern,
+            @RequestParam(name="fromNumber", required = false) Integer fromNumber,
+            @RequestParam(name="toNumber", required = false) Integer toNumber,
+            @RequestParam(name="keyPattern", required = false) String keyPattern
     ) {
-        log.info("http GET {}/annotated-issues?fromYear={}&toYear={}&usernamePattern={}", BASE_URL, fromYear, toYear, usernamePattern);
-        return delegate.queryAnnotatedIssues(fromYear, toYear, usernamePattern);
+        log.info("http GET {}/annotated-issues?fromYear={}&toYear={}&usernamePattern={}&fromNumber={}&toNumber={}&keyPattern={}",
+                BASE_URL, fromYear, toYear, usernamePattern, fromNumber, toNumber, keyPattern);
+        return delegate.queryAnnotatedIssues(fromYear, toYear, usernamePattern, fromNumber, toNumber, keyPattern);
     }
 
 }

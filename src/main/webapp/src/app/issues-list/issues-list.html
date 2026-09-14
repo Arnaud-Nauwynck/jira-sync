@@ -8,15 +8,27 @@
     <div class="d-flex gap-2 align-items-end">
       <div>
         <label class="form-label">From year</label>
-        <input class="form-control" type="number" [(ngModel)]="fromYear" />
+        <input class="form-control" type="number" [(ngModel)]="fromYear" (ngModelChange)="onFilterInputsChanged()" />
       </div>
       <div>
         <label class="form-label">To year</label>
-        <input class="form-control" type="number" [(ngModel)]="toYear" />
+        <input class="form-control" type="number" [(ngModel)]="toYear" (ngModelChange)="onFilterInputsChanged()" />
       </div>
       <div>
         <label class="form-label">Username pattern</label>
-        <input class="form-control" type="text" [(ngModel)]="usernamePattern" placeholder="regex, optional" />
+        <input class="form-control" type="text" [(ngModel)]="usernamePattern" (ngModelChange)="onFilterInputsChanged()" placeholder="regex, optional" />
+      </div>
+      <div>
+        <label class="form-label">From number</label>
+        <input class="form-control" type="number" [(ngModel)]="fromNumber" (ngModelChange)="onFilterInputsChanged()" />
+      </div>
+      <div>
+        <label class="form-label">To number</label>
+        <input class="form-control" type="number" [(ngModel)]="toNumber" (ngModelChange)="onFilterInputsChanged()" />
+      </div>
+      <div>
+        <label class="form-label">Key pattern</label>
+        <input class="form-control" type="text" [(ngModel)]="keyPattern" (ngModelChange)="onFilterInputsChanged()" placeholder="regex, optional" />
       </div>
       <button class="btn btn-primary" type="button" (click)="search()">Search</button>
     </div>

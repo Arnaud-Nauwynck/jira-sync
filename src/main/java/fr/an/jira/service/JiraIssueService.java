@@ -96,14 +96,58 @@ public class JiraIssueService {
 
     /** Lists the issues created between fromYear and toYear (inclusive), optionally filtered by creator username. */
     public List<JiraIssueDTO> queryAnnotatedIssues(int fromYear, int toYear, String usernamePatternText) {
+        return queryAnnotatedIssues(fromYear, toYear, usernamePatternText, null, null, null);
+    }
+
+    /** Lists the issues created between fromYear and toYear (inclusive), optionally filtered by creator username,
+     * issue number range (the numeric suffix of the key), and/or a regex on the full issue key. */
+    public List<JiraIssueDTO> queryAnnotatedIssues(int fromYear, int toYear, String usernamePatternText,
+            Integer fromNumber, Integer toNumber, String keyPatternText) {
         List<JiraIssueDTO> result = new ArrayList<>();
         Pattern usernamePattern = (usernamePatternText != null && !usernamePatternText.isBlank())? Pattern.compile(usernamePatternText) : null;
+        Pattern keyPattern = (keyPatternText != null && !keyPatternText.isBlank())? Pattern.compile(keyPatternText) : null;
         repository.scanIssues(fromYear, toYear, (year, issue) -> {
-            if (usernamePattern == null || usernamePattern.matcher(creatorOf(issue)).matches()) {
+            boolean matches = (usernamePattern == null || usernamePattern.matcher(creatorOf(issue)).matches())
+                    && (keyPattern == null || (issue.key != null && keyPattern.matcher(issue.key).matches()))
+                    && matchesNumberRange(issue.key, fromNumber, toNumber);
+            if (matches) {
                 result.add(issue);
             }
         });
         return result;
+    }
+
+    /** Whether the numeric suffix of the key (eg "123" in "PROJ-123") falls within [fromNumber, toNumber] (inclusive, either bound optional). */
+    private static boolean matchesNumberRange(String key, Integer fromNumber, Integer toNumber) {
+        if (fromNumber == null && toNumber == null) {
+            return true;
+        }
+        Integer number = issueNumberOf(key);
+        if (number == null) {
+            return false;
+        }
+        if (fromNumber != null && number < fromNumber) {
+            return false;
+        }
+        if (toNumber != null && number > toNumber) {
+            return false;
+        }
+        return true;
+    }
+
+    private static Integer issueNumberOf(String key) {
+        if (key == null) {
+            return null;
+        }
+        int dashIdx = key.lastIndexOf('-');
+        if (dashIdx < 0 || dashIdx == key.length() - 1) {
+            return null;
+        }
+        try {
+            return Integer.parseInt(key.substring(dashIdx + 1));
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     /** The issue creator's username, falling back to the reporter, when missing. */

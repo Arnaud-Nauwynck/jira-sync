@@ -10,8 +10,10 @@ export class GithubPullRequestsDataService {
 
   constructor(private gitHubPullRequestsService: GitHubPullRequestsService) {}
 
-  search(fromYear: number, toYear: number, usernamePattern?: string) {
+  search(fromYear: number, toYear: number, usernamePattern?: string,
+      fromPullRequestNumber?: number | null, toPullRequestNumber?: number | null, pullRequestNumberPattern?: string) {
     this.gitHubPullRequestsService.queryPullRequests(fromYear, toYear, usernamePattern || undefined,
+        fromPullRequestNumber ?? undefined, toPullRequestNumber ?? undefined, pullRequestNumberPattern || undefined,
         'body', false, { httpHeaderAccept: 'application/json' as any })
       .subscribe({
         next: (pullRequests) => {

@@ -26,11 +26,24 @@ public class GitHubPullRequestService {
 
     /** Lists the PRs created between fromYear and toYear (inclusive), optionally filtered by author login. */
     public List<GitHubPullRequestDTO> queryPullRequests(int fromYear, int toYear, String usernamePatternText) {
+        return queryPullRequests(fromYear, toYear, usernamePatternText, null, null, null);
+    }
+
+    /** Lists the PRs created between fromYear and toYear (inclusive), optionally filtered by author login,
+     * PR number range, and/or a regex on the PR number (as text). */
+    public List<GitHubPullRequestDTO> queryPullRequests(int fromYear, int toYear, String usernamePatternText,
+            Integer fromPullRequestNumber, Integer toPullRequestNumber, String pullRequestNumberPatternText) {
         List<GitHubPullRequestDTO> result = new ArrayList<>();
         Pattern usernamePattern = (usernamePatternText != null && !usernamePatternText.isBlank())
                 ? Pattern.compile(usernamePatternText) : null;
+        Pattern pullRequestNumberPattern = (pullRequestNumberPatternText != null && !pullRequestNumberPatternText.isBlank())
+                ? Pattern.compile(pullRequestNumberPatternText) : null;
         repository.scanPullRequests(fromYear, toYear, (year, pr) -> {
-            if (usernamePattern == null || usernamePattern.matcher(authorOf(pr)).matches()) {
+            boolean matches = (usernamePattern == null || usernamePattern.matcher(authorOf(pr)).matches())
+                    && (fromPullRequestNumber == null || pr.number >= fromPullRequestNumber)
+                    && (toPullRequestNumber == null || pr.number <= toPullRequestNumber)
+                    && (pullRequestNumberPattern == null || pullRequestNumberPattern.matcher(String.valueOf(pr.number)).matches());
+            if (matches) {
                 result.add(pr);
             }
         });

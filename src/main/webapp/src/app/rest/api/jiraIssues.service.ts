@@ -283,19 +283,22 @@ export class JiraIssuesService extends BaseService {
     }
 
     /**
-     * List issues created between fromYear and toYear (inclusive), optionally filtered by creator username
+     * List issues created between fromYear and toYear (inclusive), optionally filtered by creator username, issue number range, and/or key pattern
      * @endpoint get /api/v1/jira-issues/annotated-issues
      * @param fromYear 
      * @param toYear 
      * @param usernamePattern 
+     * @param fromNumber 
+     * @param toNumber 
+     * @param keyPattern 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      * @param options additional options
      */
-    public queryAnnotatedIssues(fromYear?: number, toYear?: number, usernamePattern?: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<JiraIssueDTO>>;
-    public queryAnnotatedIssues(fromYear?: number, toYear?: number, usernamePattern?: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<JiraIssueDTO>>>;
-    public queryAnnotatedIssues(fromYear?: number, toYear?: number, usernamePattern?: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<Array<JiraIssueDTO>>>;
-    public queryAnnotatedIssues(fromYear?: number, toYear?: number, usernamePattern?: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+    public queryAnnotatedIssues(fromYear?: number, toYear?: number, usernamePattern?: string, fromNumber?: number, toNumber?: number, keyPattern?: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<JiraIssueDTO>>;
+    public queryAnnotatedIssues(fromYear?: number, toYear?: number, usernamePattern?: string, fromNumber?: number, toNumber?: number, keyPattern?: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<JiraIssueDTO>>>;
+    public queryAnnotatedIssues(fromYear?: number, toYear?: number, usernamePattern?: string, fromNumber?: number, toNumber?: number, keyPattern?: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<Array<JiraIssueDTO>>>;
+    public queryAnnotatedIssues(fromYear?: number, toYear?: number, usernamePattern?: string, fromNumber?: number, toNumber?: number, keyPattern?: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
 
         let localVarQueryParameters = new OpenApiHttpParams(this.encoder);
 
@@ -321,6 +324,33 @@ export class JiraIssuesService extends BaseService {
             localVarQueryParameters,
             'usernamePattern',
             <any>usernamePattern,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'fromNumber',
+            <any>fromNumber,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'toNumber',
+            <any>toNumber,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'keyPattern',
+            <any>keyPattern,
             QueryParamStyle.Form,
             true,
         );

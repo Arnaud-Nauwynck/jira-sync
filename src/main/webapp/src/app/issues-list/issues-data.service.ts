@@ -11,8 +11,10 @@ export class IssuesDataService {
 
   constructor(private jiraIssuesService: JiraIssuesService) {}
 
-  search(fromYear: number, toYear: number, usernamePattern?: string) {
+  search(fromYear: number, toYear: number, usernamePattern?: string,
+      fromNumber?: number | null, toNumber?: number | null, keyPattern?: string) {
     this.jiraIssuesService.queryAnnotatedIssues(fromYear, toYear, usernamePattern || undefined,
+        fromNumber ?? undefined, toNumber ?? undefined, keyPattern || undefined,
         'body', false, { httpHeaderAccept: 'application/json' as any })
       .subscribe({
         next: (issues) => {

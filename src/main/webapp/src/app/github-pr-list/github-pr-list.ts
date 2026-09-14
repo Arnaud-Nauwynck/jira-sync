@@ -25,6 +25,9 @@ export class GithubPRList implements OnInit {
   fromYear = 2020;
   toYear = 2050;
   usernamePattern = '';
+  fromPullRequestNumber: number | null = null;
+  toPullRequestNumber: number | null = null;
+  pullRequestNumberPattern = '';
 
   // Main criteria panel: collapsible, expanded by default.
   isMainCriteriaCollapsed = false;
@@ -120,7 +123,13 @@ export class GithubPRList implements OnInit {
   }
 
   isExternalFilterPresent = (): boolean => {
-    return this.parseCsvList(this.titleContains).length > 0
+    return this.fromYear != null
+      || this.toYear != null
+      || this.usernamePattern.trim().length > 0
+      || this.fromPullRequestNumber != null
+      || this.toPullRequestNumber != null
+      || this.pullRequestNumberPattern.trim().length > 0
+      || this.parseCsvList(this.titleContains).length > 0
       || this.parseCsvList(this.bodyContains).length > 0
       || this.parseCsvList(this.authorContains).length > 0
       || this.parseCsvList(this.labelContains).length > 0
@@ -134,6 +143,18 @@ export class GithubPRList implements OnInit {
     const pr = node.data;
     if (!pr) {
       return true;
+    }
+    if (!this.matchesYearRange(pr.createdAt)) {
+      return false;
+    }
+    if (!this.matchesUsernamePattern(this.usernamePattern, pr.authorLogin)) {
+      return false;
+    }
+    if (!this.matchesPullRequestNumberPattern(this.pullRequestNumberPattern, pr.number)) {
+      return false;
+    }
+    if (!this.matchesPullRequestNumberRange(this.fromPullRequestNumber, this.toPullRequestNumber, pr.number)) {
+      return false;
     }
     if (!this.matchesAny(this.titleContains, pr.title)) {
       return false;
@@ -172,6 +193,61 @@ export class GithubPRList implements OnInit {
     return true;
   }
 
+  /** Whether the createdAt date's year falls within [fromYear, toYear] (inclusive); unparsable/missing dates pass through. */
+  private matchesYearRange(createdAt: string | undefined): boolean {
+    if (createdAt == null) {
+      return true;
+    }
+    const year = parseInt(createdAt.substring(0, 4), 10);
+    if (isNaN(year)) {
+      return true;
+    }
+    return year >= this.fromYear && year <= this.toYear;
+  }
+
+  /** Matches the given regex (full match) against the author login, falling back to "unknown", mirroring the server-side filter. */
+  private matchesUsernamePattern(patternText: string, authorLogin: string | undefined): boolean {
+    const name = (authorLogin && authorLogin.trim()) ? authorLogin : 'unknown';
+    return this.matchesRegex(patternText, name);
+  }
+
+  private matchesPullRequestNumberPattern(patternText: string, number: number | undefined): boolean {
+    return this.matchesRegex(patternText, number != null ? String(number) : undefined);
+  }
+
+  /** Whether the PR number falls within [fromNumber, toNumber] (inclusive, either bound optional). */
+  private matchesPullRequestNumberRange(fromNumber: number | null, toNumber: number | null, number: number | undefined): boolean {
+    if (fromNumber == null && toNumber == null) {
+      return true;
+    }
+    if (number == null) {
+      return false;
+    }
+    if (fromNumber != null && number < fromNumber) {
+      return false;
+    }
+    if (toNumber != null && number > toNumber) {
+      return false;
+    }
+    return true;
+  }
+
+  /** Full-match regex test; a blank pattern always matches, and an invalid regex is treated as no filter. */
+  private matchesRegex(patternText: string, value: string | undefined): boolean {
+    const text = (patternText ?? '').trim();
+    if (!text) {
+      return true;
+    }
+    if (value == null) {
+      return false;
+    }
+    try {
+      return new RegExp(`^(?:${text})$`).test(value);
+    } catch {
+      return true;
+    }
+  }
+
   private matchesAny(filterValue: string, ...values: (string | undefined)[]): boolean {
     const terms = this.parseCsvList(filterValue);
     if (terms.length === 0) {
@@ -189,7 +265,8 @@ export class GithubPRList implements OnInit {
   }
 
   search() {
-    this.pullRequestsDataService.search(this.fromYear, this.toYear, this.usernamePattern);
+    this.pullRequestsDataService.search(this.fromYear, this.toYear, this.usernamePattern,
+      this.fromPullRequestNumber, this.toPullRequestNumber, this.pullRequestNumberPattern);
   }
 
 }

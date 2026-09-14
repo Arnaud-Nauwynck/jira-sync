@@ -37,15 +37,20 @@ public class GitHubPullRequestsRestController {
         return found != null ? ResponseEntity.ok(found) : ResponseEntity.notFound().build();
     }
 
-    @Operation(summary = "List pull requests created between fromYear and toYear (inclusive), optionally filtered by author login")
+    @Operation(summary = "List pull requests created between fromYear and toYear (inclusive), optionally filtered by author login, PR number range, and/or PR number pattern")
     @GetMapping("/pull-requests")
     public Collection<GitHubPullRequestDTO> queryPullRequests(
             @RequestParam(name = "fromYear", defaultValue = "2020") int fromYear,
             @RequestParam(name = "toYear", defaultValue = "2050") int toYear,
-            @RequestParam(name = "usernamePattern", required = false) String usernamePattern
+            @RequestParam(name = "usernamePattern", required = false) String usernamePattern,
+            @RequestParam(name = "fromPullRequestNumber", required = false) Integer fromPullRequestNumber,
+            @RequestParam(name = "toPullRequestNumber", required = false) Integer toPullRequestNumber,
+            @RequestParam(name = "pullRequestNumberPattern", required = false) String pullRequestNumberPattern
     ) {
-        log.info("http GET {}/pull-requests?fromYear={}&toYear={}&usernamePattern={}", BASE_URL, fromYear, toYear, usernamePattern);
-        return delegate.queryPullRequests(fromYear, toYear, usernamePattern);
+        log.info("http GET {}/pull-requests?fromYear={}&toYear={}&usernamePattern={}&fromPullRequestNumber={}&toPullRequestNumber={}&pullRequestNumberPattern={}",
+                BASE_URL, fromYear, toYear, usernamePattern, fromPullRequestNumber, toPullRequestNumber, pullRequestNumberPattern);
+        return delegate.queryPullRequests(fromYear, toYear, usernamePattern,
+                fromPullRequestNumber, toPullRequestNumber, pullRequestNumberPattern);
     }
 
 }

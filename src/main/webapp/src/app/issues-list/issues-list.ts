@@ -29,6 +29,9 @@ export class IssuesList implements OnInit {
   fromYear = 2020;
   toYear = 2050;
   usernamePattern = '';
+  fromNumber: number | null = null;
+  toNumber: number | null = null;
+  keyPattern = '';
 
   // Main criteria panel: collapsible, expanded by default.
   isMainCriteriaCollapsed = false;
@@ -317,7 +320,13 @@ export class IssuesList implements OnInit {
   }
 
   isExternalFilterPresent = (): boolean => {
-    return this.parseCsvList(this.summaryContains).length > 0
+    return this.fromYear != null
+      || this.toYear != null
+      || this.usernamePattern.trim().length > 0
+      || this.fromNumber != null
+      || this.toNumber != null
+      || this.keyPattern.trim().length > 0
+      || this.parseCsvList(this.summaryContains).length > 0
       || this.parseCsvList(this.descriptionContains).length > 0
       || this.parseCsvList(this.authorContains).length > 0
       || this.parseCsvList(this.commentsContains).length > 0
@@ -350,6 +359,18 @@ export class IssuesList implements OnInit {
     const fields = node.data?.fields;
     if (!fields) {
       return true;
+    }
+    if (!this.matchesYearRange(fields.created)) {
+      return false;
+    }
+    if (!this.matchesUsernamePattern(this.usernamePattern, fields.creator, fields.reporter)) {
+      return false;
+    }
+    if (!this.matchesKeyPattern(this.keyPattern, node.data?.key)) {
+      return false;
+    }
+    if (!this.matchesKeyNumberRange(this.fromNumber, this.toNumber, node.data?.key)) {
+      return false;
     }
     if (!this.matchesAny(this.summaryContains, fields.summary)) {
       return false;
@@ -432,6 +453,74 @@ export class IssuesList implements OnInit {
     return true;
   }
 
+  /** Whether the created date's year falls within [fromYear, toYear] (inclusive); unparsable/missing dates pass through. */
+  private matchesYearRange(created: string | undefined): boolean {
+    if (created == null) {
+      return true;
+    }
+    const year = parseInt(created.substring(0, 4), 10);
+    if (isNaN(year)) {
+      return true;
+    }
+    return year >= this.fromYear && year <= this.toYear;
+  }
+
+  /** Matches the given regex (full match) against the creator, falling back to reporter then "unknown", mirroring the server-side filter. */
+  private matchesUsernamePattern(patternText: string, creator: string | undefined, reporter: string | undefined): boolean {
+    const name = (creator && creator.trim()) ? creator : ((reporter && reporter.trim()) ? reporter : 'unknown');
+    return this.matchesRegex(patternText, name);
+  }
+
+  private matchesKeyPattern(patternText: string, key: string | undefined): boolean {
+    return this.matchesRegex(patternText, key);
+  }
+
+  /** Whether the numeric suffix of the key (eg "123" in "PROJ-123") falls within [fromNumber, toNumber] (inclusive, either bound optional). */
+  private matchesKeyNumberRange(fromNumber: number | null, toNumber: number | null, key: string | undefined): boolean {
+    if (fromNumber == null && toNumber == null) {
+      return true;
+    }
+    const number = this.issueNumberOf(key);
+    if (number == null) {
+      return false;
+    }
+    if (fromNumber != null && number < fromNumber) {
+      return false;
+    }
+    if (toNumber != null && number > toNumber) {
+      return false;
+    }
+    return true;
+  }
+
+  private issueNumberOf(key: string | undefined): number | undefined {
+    if (!key) {
+      return undefined;
+    }
+    const dashIdx = key.lastIndexOf('-');
+    if (dashIdx < 0 || dashIdx === key.length - 1) {
+      return undefined;
+    }
+    const n = Number(key.substring(dashIdx + 1));
+    return Number.isFinite(n) ? n : undefined;
+  }
+
+  /** Full-match regex test; a blank pattern always matches, and an invalid regex is treated as no filter. */
+  private matchesRegex(patternText: string, value: string | undefined): boolean {
+    const text = (patternText ?? '').trim();
+    if (!text) {
+      return true;
+    }
+    if (value == null) {
+      return false;
+    }
+    try {
+      return new RegExp(`^(?:${text})$`).test(value);
+    } catch {
+      return true;
+    }
+  }
+
   private matchesAny(filterValue: string, ...values: (string | undefined)[]): boolean {
     const terms = this.parseCsvList(filterValue);
     if (terms.length === 0) {
@@ -498,7 +587,8 @@ export class IssuesList implements OnInit {
   }
 
   search() {
-    this.issuesDataService.search(this.fromYear, this.toYear, this.usernamePattern);
+    this.issuesDataService.search(this.fromYear, this.toYear, this.usernamePattern,
+      this.fromNumber, this.toNumber, this.keyPattern);
   }
 
 }
