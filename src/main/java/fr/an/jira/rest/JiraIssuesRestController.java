@@ -1,6 +1,7 @@
 package fr.an.jira.rest;
 
 import fr.an.jira.rest.dtos.JiraIssueDTO;
+import fr.an.jira.rest.dtos.JiraIssueQueryCriteriaDTO;
 import fr.an.jira.rest.dtos.UserJiraIssueStatsDTO;
 import fr.an.jira.service.JiraIssueService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -55,7 +56,8 @@ public class JiraIssuesRestController {
         return found != null ? ResponseEntity.ok(found) : ResponseEntity.notFound().build();
     }
 
-    @Operation(summary = "List issues created between fromYear and toYear (inclusive), optionally filtered by creator username, issue number range, and/or key pattern")
+    @Operation(summary = "List issues created between fromYear and toYear (inclusive), optionally filtered by creator username, issue number range, "
+            + "key pattern, and/or the Main/Analysis/Development Work/Personal Interest filter criteria of the issues-list page")
     @GetMapping("/annotated-issues")
     public Collection<JiraIssueDTO> queryAnnotatedIssues(
             @RequestParam(name="fromYear", defaultValue = "2020") int fromYear,
@@ -63,11 +65,74 @@ public class JiraIssuesRestController {
             @RequestParam(name="usernamePattern", required = false) String usernamePattern,
             @RequestParam(name="fromNumber", required = false) Integer fromNumber,
             @RequestParam(name="toNumber", required = false) Integer toNumber,
-            @RequestParam(name="keyPattern", required = false) String keyPattern
+            @RequestParam(name="keyPattern", required = false) String keyPattern,
+
+            @RequestParam(name="summaryContains", required = false) String summaryContains,
+            @RequestParam(name="descriptionContains", required = false) String descriptionContains,
+            @RequestParam(name="authorContains", required = false) String authorContains,
+            @RequestParam(name="commentsContains", required = false) String commentsContains,
+            @RequestParam(name="commentAuthorContains", required = false) String commentAuthorContains,
+            @RequestParam(name="excludedTypes", required = false) String excludedTypes,
+            @RequestParam(name="excludedResolutions", required = false) String excludedResolutions,
+            @RequestParam(name="excludedStatuses", required = false) String excludedStatuses,
+            @RequestParam(name="excludedPriorities", required = false) String excludedPriorities,
+            @RequestParam(name="labelsContains", required = false) String labelsContains,
+            @RequestParam(name="pullRequestAvailableLabel", required = false) String pullRequestAvailableLabel,
+
+            @RequestParam(name="analysisSummaryContains", required = false) String analysisSummaryContains,
+            @RequestParam(name="analysisUserExtraPromptsContains", required = false) String analysisUserExtraPromptsContains,
+            @RequestParam(name="analysisSummaryUpdatedFrom", required = false) String analysisSummaryUpdatedFrom,
+            @RequestParam(name="analysisSummaryUpdatedTo", required = false) String analysisSummaryUpdatedTo,
+            @RequestParam(name="analysisSummaryMinTokensK", required = false) Integer analysisSummaryMinTokensK,
+            @RequestParam(name="analysisSummaryMaxTokensK", required = false) Integer analysisSummaryMaxTokensK,
+            @RequestParam(name="analysisAvailability", required = false) String analysisAvailability,
+
+            @RequestParam(name="developmentWorkDescribedContains", required = false) String developmentWorkDescribedContains,
+            @RequestParam(name="developmentWorkUserExtraPromptsContains", required = false) String developmentWorkUserExtraPromptsContains,
+            @RequestParam(name="developmentWorkUpdatedFrom", required = false) String developmentWorkUpdatedFrom,
+            @RequestParam(name="developmentWorkUpdatedTo", required = false) String developmentWorkUpdatedTo,
+            @RequestParam(name="developmentWorkMinTokensK", required = false) Integer developmentWorkMinTokensK,
+            @RequestParam(name="developmentWorkMaxTokensK", required = false) Integer developmentWorkMaxTokensK,
+            @RequestParam(name="developmentWorkAvailability", required = false) String developmentWorkAvailability,
+
+            @RequestParam(name="personalInterrestCommentContains", required = false) String personalInterrestCommentContains,
+            @RequestParam(name="personalInterrestMinPriority", required = false) Integer personalInterrestMinPriority,
+            @RequestParam(name="personalInterrestMaxPriority", required = false) Integer personalInterrestMaxPriority,
+            @RequestParam(name="personalInterrestAvailability", required = false) String personalInterrestAvailability
     ) {
-        log.info("http GET {}/annotated-issues?fromYear={}&toYear={}&usernamePattern={}&fromNumber={}&toNumber={}&keyPattern={}",
+        log.info("http GET {}/annotated-issues?fromYear={}&toYear={}&usernamePattern={}&fromNumber={}&toNumber={}&keyPattern={}&...",
                 BASE_URL, fromYear, toYear, usernamePattern, fromNumber, toNumber, keyPattern);
-        return delegate.queryAnnotatedIssues(fromYear, toYear, usernamePattern, fromNumber, toNumber, keyPattern);
+        JiraIssueQueryCriteriaDTO criteria = new JiraIssueQueryCriteriaDTO();
+        criteria.setSummaryContains(summaryContains);
+        criteria.setDescriptionContains(descriptionContains);
+        criteria.setAuthorContains(authorContains);
+        criteria.setCommentsContains(commentsContains);
+        criteria.setCommentAuthorContains(commentAuthorContains);
+        criteria.setExcludedTypes(excludedTypes);
+        criteria.setExcludedResolutions(excludedResolutions);
+        criteria.setExcludedStatuses(excludedStatuses);
+        criteria.setExcludedPriorities(excludedPriorities);
+        criteria.setLabelsContains(labelsContains);
+        criteria.setPullRequestAvailableLabel(pullRequestAvailableLabel);
+        criteria.setAnalysisSummaryContains(analysisSummaryContains);
+        criteria.setAnalysisUserExtraPromptsContains(analysisUserExtraPromptsContains);
+        criteria.setAnalysisSummaryUpdatedFrom(analysisSummaryUpdatedFrom);
+        criteria.setAnalysisSummaryUpdatedTo(analysisSummaryUpdatedTo);
+        criteria.setAnalysisSummaryMinTokensK(analysisSummaryMinTokensK);
+        criteria.setAnalysisSummaryMaxTokensK(analysisSummaryMaxTokensK);
+        criteria.setAnalysisAvailability(analysisAvailability);
+        criteria.setDevelopmentWorkDescribedContains(developmentWorkDescribedContains);
+        criteria.setDevelopmentWorkUserExtraPromptsContains(developmentWorkUserExtraPromptsContains);
+        criteria.setDevelopmentWorkUpdatedFrom(developmentWorkUpdatedFrom);
+        criteria.setDevelopmentWorkUpdatedTo(developmentWorkUpdatedTo);
+        criteria.setDevelopmentWorkMinTokensK(developmentWorkMinTokensK);
+        criteria.setDevelopmentWorkMaxTokensK(developmentWorkMaxTokensK);
+        criteria.setDevelopmentWorkAvailability(developmentWorkAvailability);
+        criteria.setPersonalInterrestCommentContains(personalInterrestCommentContains);
+        criteria.setPersonalInterrestMinPriority(personalInterrestMinPriority);
+        criteria.setPersonalInterrestMaxPriority(personalInterrestMaxPriority);
+        criteria.setPersonalInterrestAvailability(personalInterrestAvailability);
+        return delegate.queryAnnotatedIssues(fromYear, toYear, usernamePattern, fromNumber, toNumber, keyPattern, criteria);
     }
 
 }

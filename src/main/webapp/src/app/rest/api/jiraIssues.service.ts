@@ -283,7 +283,7 @@ export class JiraIssuesService extends BaseService {
     }
 
     /**
-     * List issues created between fromYear and toYear (inclusive), optionally filtered by creator username, issue number range, and/or key pattern
+     * List issues created between fromYear and toYear (inclusive), optionally filtered by creator username, issue number range, key pattern, and/or the Main/Analysis/Development Work/Personal Interest filter criteria of the issues-list page
      * @endpoint get /api/v1/jira-issues/annotated-issues
      * @param fromYear 
      * @param toYear 
@@ -291,14 +291,43 @@ export class JiraIssuesService extends BaseService {
      * @param fromNumber 
      * @param toNumber 
      * @param keyPattern 
+     * @param summaryContains 
+     * @param descriptionContains 
+     * @param authorContains 
+     * @param commentsContains 
+     * @param commentAuthorContains 
+     * @param excludedTypes 
+     * @param excludedResolutions 
+     * @param excludedStatuses 
+     * @param excludedPriorities 
+     * @param labelsContains 
+     * @param pullRequestAvailableLabel 
+     * @param analysisSummaryContains 
+     * @param analysisUserExtraPromptsContains 
+     * @param analysisSummaryUpdatedFrom 
+     * @param analysisSummaryUpdatedTo 
+     * @param analysisSummaryMinTokensK 
+     * @param analysisSummaryMaxTokensK 
+     * @param analysisAvailability 
+     * @param developmentWorkDescribedContains 
+     * @param developmentWorkUserExtraPromptsContains 
+     * @param developmentWorkUpdatedFrom 
+     * @param developmentWorkUpdatedTo 
+     * @param developmentWorkMinTokensK 
+     * @param developmentWorkMaxTokensK 
+     * @param developmentWorkAvailability 
+     * @param personalInterrestCommentContains 
+     * @param personalInterrestMinPriority 
+     * @param personalInterrestMaxPriority 
+     * @param personalInterrestAvailability 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      * @param options additional options
      */
-    public queryAnnotatedIssues(fromYear?: number, toYear?: number, usernamePattern?: string, fromNumber?: number, toNumber?: number, keyPattern?: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<JiraIssueDTO>>;
-    public queryAnnotatedIssues(fromYear?: number, toYear?: number, usernamePattern?: string, fromNumber?: number, toNumber?: number, keyPattern?: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<JiraIssueDTO>>>;
-    public queryAnnotatedIssues(fromYear?: number, toYear?: number, usernamePattern?: string, fromNumber?: number, toNumber?: number, keyPattern?: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<Array<JiraIssueDTO>>>;
-    public queryAnnotatedIssues(fromYear?: number, toYear?: number, usernamePattern?: string, fromNumber?: number, toNumber?: number, keyPattern?: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+    public queryAnnotatedIssues(fromYear?: number, toYear?: number, usernamePattern?: string, fromNumber?: number, toNumber?: number, keyPattern?: string, summaryContains?: string, descriptionContains?: string, authorContains?: string, commentsContains?: string, commentAuthorContains?: string, excludedTypes?: string, excludedResolutions?: string, excludedStatuses?: string, excludedPriorities?: string, labelsContains?: string, pullRequestAvailableLabel?: string, analysisSummaryContains?: string, analysisUserExtraPromptsContains?: string, analysisSummaryUpdatedFrom?: string, analysisSummaryUpdatedTo?: string, analysisSummaryMinTokensK?: number, analysisSummaryMaxTokensK?: number, analysisAvailability?: string, developmentWorkDescribedContains?: string, developmentWorkUserExtraPromptsContains?: string, developmentWorkUpdatedFrom?: string, developmentWorkUpdatedTo?: string, developmentWorkMinTokensK?: number, developmentWorkMaxTokensK?: number, developmentWorkAvailability?: string, personalInterrestCommentContains?: string, personalInterrestMinPriority?: number, personalInterrestMaxPriority?: number, personalInterrestAvailability?: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<JiraIssueDTO>>;
+    public queryAnnotatedIssues(fromYear?: number, toYear?: number, usernamePattern?: string, fromNumber?: number, toNumber?: number, keyPattern?: string, summaryContains?: string, descriptionContains?: string, authorContains?: string, commentsContains?: string, commentAuthorContains?: string, excludedTypes?: string, excludedResolutions?: string, excludedStatuses?: string, excludedPriorities?: string, labelsContains?: string, pullRequestAvailableLabel?: string, analysisSummaryContains?: string, analysisUserExtraPromptsContains?: string, analysisSummaryUpdatedFrom?: string, analysisSummaryUpdatedTo?: string, analysisSummaryMinTokensK?: number, analysisSummaryMaxTokensK?: number, analysisAvailability?: string, developmentWorkDescribedContains?: string, developmentWorkUserExtraPromptsContains?: string, developmentWorkUpdatedFrom?: string, developmentWorkUpdatedTo?: string, developmentWorkMinTokensK?: number, developmentWorkMaxTokensK?: number, developmentWorkAvailability?: string, personalInterrestCommentContains?: string, personalInterrestMinPriority?: number, personalInterrestMaxPriority?: number, personalInterrestAvailability?: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<JiraIssueDTO>>>;
+    public queryAnnotatedIssues(fromYear?: number, toYear?: number, usernamePattern?: string, fromNumber?: number, toNumber?: number, keyPattern?: string, summaryContains?: string, descriptionContains?: string, authorContains?: string, commentsContains?: string, commentAuthorContains?: string, excludedTypes?: string, excludedResolutions?: string, excludedStatuses?: string, excludedPriorities?: string, labelsContains?: string, pullRequestAvailableLabel?: string, analysisSummaryContains?: string, analysisUserExtraPromptsContains?: string, analysisSummaryUpdatedFrom?: string, analysisSummaryUpdatedTo?: string, analysisSummaryMinTokensK?: number, analysisSummaryMaxTokensK?: number, analysisAvailability?: string, developmentWorkDescribedContains?: string, developmentWorkUserExtraPromptsContains?: string, developmentWorkUpdatedFrom?: string, developmentWorkUpdatedTo?: string, developmentWorkMinTokensK?: number, developmentWorkMaxTokensK?: number, developmentWorkAvailability?: string, personalInterrestCommentContains?: string, personalInterrestMinPriority?: number, personalInterrestMaxPriority?: number, personalInterrestAvailability?: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<Array<JiraIssueDTO>>>;
+    public queryAnnotatedIssues(fromYear?: number, toYear?: number, usernamePattern?: string, fromNumber?: number, toNumber?: number, keyPattern?: string, summaryContains?: string, descriptionContains?: string, authorContains?: string, commentsContains?: string, commentAuthorContains?: string, excludedTypes?: string, excludedResolutions?: string, excludedStatuses?: string, excludedPriorities?: string, labelsContains?: string, pullRequestAvailableLabel?: string, analysisSummaryContains?: string, analysisUserExtraPromptsContains?: string, analysisSummaryUpdatedFrom?: string, analysisSummaryUpdatedTo?: string, analysisSummaryMinTokensK?: number, analysisSummaryMaxTokensK?: number, analysisAvailability?: string, developmentWorkDescribedContains?: string, developmentWorkUserExtraPromptsContains?: string, developmentWorkUpdatedFrom?: string, developmentWorkUpdatedTo?: string, developmentWorkMinTokensK?: number, developmentWorkMaxTokensK?: number, developmentWorkAvailability?: string, personalInterrestCommentContains?: string, personalInterrestMinPriority?: number, personalInterrestMaxPriority?: number, personalInterrestAvailability?: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
 
         let localVarQueryParameters = new OpenApiHttpParams(this.encoder);
 
@@ -351,6 +380,267 @@ export class JiraIssuesService extends BaseService {
             localVarQueryParameters,
             'keyPattern',
             <any>keyPattern,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'summaryContains',
+            <any>summaryContains,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'descriptionContains',
+            <any>descriptionContains,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'authorContains',
+            <any>authorContains,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'commentsContains',
+            <any>commentsContains,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'commentAuthorContains',
+            <any>commentAuthorContains,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'excludedTypes',
+            <any>excludedTypes,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'excludedResolutions',
+            <any>excludedResolutions,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'excludedStatuses',
+            <any>excludedStatuses,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'excludedPriorities',
+            <any>excludedPriorities,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'labelsContains',
+            <any>labelsContains,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'pullRequestAvailableLabel',
+            <any>pullRequestAvailableLabel,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'analysisSummaryContains',
+            <any>analysisSummaryContains,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'analysisUserExtraPromptsContains',
+            <any>analysisUserExtraPromptsContains,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'analysisSummaryUpdatedFrom',
+            <any>analysisSummaryUpdatedFrom,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'analysisSummaryUpdatedTo',
+            <any>analysisSummaryUpdatedTo,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'analysisSummaryMinTokensK',
+            <any>analysisSummaryMinTokensK,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'analysisSummaryMaxTokensK',
+            <any>analysisSummaryMaxTokensK,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'analysisAvailability',
+            <any>analysisAvailability,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'developmentWorkDescribedContains',
+            <any>developmentWorkDescribedContains,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'developmentWorkUserExtraPromptsContains',
+            <any>developmentWorkUserExtraPromptsContains,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'developmentWorkUpdatedFrom',
+            <any>developmentWorkUpdatedFrom,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'developmentWorkUpdatedTo',
+            <any>developmentWorkUpdatedTo,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'developmentWorkMinTokensK',
+            <any>developmentWorkMinTokensK,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'developmentWorkMaxTokensK',
+            <any>developmentWorkMaxTokensK,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'developmentWorkAvailability',
+            <any>developmentWorkAvailability,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'personalInterrestCommentContains',
+            <any>personalInterrestCommentContains,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'personalInterrestMinPriority',
+            <any>personalInterrestMinPriority,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'personalInterrestMaxPriority',
+            <any>personalInterrestMaxPriority,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'personalInterrestAvailability',
+            <any>personalInterrestAvailability,
             QueryParamStyle.Form,
             true,
         );

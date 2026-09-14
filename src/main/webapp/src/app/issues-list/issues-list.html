@@ -6,30 +6,16 @@
   </div>
   <div #dataFetchingCollapse="ngbCollapse" [(ngbCollapse)]="isDataFetchingCollapsed">
     <div class="d-flex gap-2 align-items-end">
-      <div>
-        <label class="form-label">From year</label>
-        <input class="form-control" type="number" [(ngModel)]="fromYear" (ngModelChange)="onFilterInputsChanged()" />
-      </div>
-      <div>
-        <label class="form-label">To year</label>
-        <input class="form-control" type="number" [(ngModel)]="toYear" (ngModelChange)="onFilterInputsChanged()" />
-      </div>
-      <div>
-        <label class="form-label">Username pattern</label>
-        <input class="form-control" type="text" [(ngModel)]="usernamePattern" (ngModelChange)="onFilterInputsChanged()" placeholder="regex, optional" />
-      </div>
-      <div>
-        <label class="form-label">From number</label>
-        <input class="form-control" type="number" [(ngModel)]="fromNumber" (ngModelChange)="onFilterInputsChanged()" />
-      </div>
-      <div>
-        <label class="form-label">To number</label>
-        <input class="form-control" type="number" [(ngModel)]="toNumber" (ngModelChange)="onFilterInputsChanged()" />
-      </div>
-      <div>
-        <label class="form-label">Key pattern</label>
-        <input class="form-control" type="text" [(ngModel)]="keyPattern" (ngModelChange)="onFilterInputsChanged()" placeholder="regex, optional" />
-      </div>
+      <app-number-range-filter fromLabel="From year" toLabel="To year" width="9ch"
+        [from]="fromYear" (fromChange)="fromYear = $event ?? fromYear; onFilterInputsChanged()"
+        [to]="toYear" (toChange)="toYear = $event ?? toYear; onFilterInputsChanged()" />
+      <app-text-contains-filter label="Username pattern" placeholder="regex, optional"
+        [value]="usernamePattern" (valueChange)="usernamePattern = $event; onFilterInputsChanged()" />
+      <app-number-range-filter fromLabel="From number" toLabel="To number" width="9ch"
+        [from]="fromNumber" (fromChange)="fromNumber = $event; onFilterInputsChanged()"
+        [to]="toNumber" (toChange)="toNumber = $event; onFilterInputsChanged()" />
+      <app-text-contains-filter label="Key pattern" placeholder="regex, optional"
+        [value]="keyPattern" (valueChange)="keyPattern = $event; onFilterInputsChanged()" />
       <button class="btn btn-primary" type="button" (click)="search()">Search</button>
     </div>
   </div>
@@ -41,131 +27,29 @@
   </div>
   <div #mainCriteriaCollapse="ngbCollapse" [(ngbCollapse)]="isMainCriteriaCollapsed">
     <div class="d-flex gap-2 align-items-end flex-wrap">
-      <div>
-        <label class="form-label">Summary contains</label>
-        <input class="form-control" type="text" [(ngModel)]="summaryContains" (ngModelChange)="onFilterInputsChanged()" placeholder="comma separated" />
-      </div>
-      <div>
-        <label class="form-label">Description contains</label>
-        <input class="form-control" type="text" [(ngModel)]="descriptionContains" (ngModelChange)="onFilterInputsChanged()" placeholder="comma separated" />
-      </div>
-      <div>
-        <label class="form-label">Author contains</label>
-        <input class="form-control" type="text" [(ngModel)]="authorContains" (ngModelChange)="onFilterInputsChanged()" placeholder="creator or reporter" />
-      </div>
-      <div>
-        <label class="form-label">Comments contains</label>
-        <input class="form-control" type="text" [(ngModel)]="commentsContains" (ngModelChange)="onFilterInputsChanged()" placeholder="comma separated" />
-      </div>
-      <div>
-        <label class="form-label">Comment author contains</label>
-        <input class="form-control" type="text" [(ngModel)]="commentAuthorContains" (ngModelChange)="onFilterInputsChanged()" placeholder="comma separated" />
-      </div>
+      <app-text-contains-filter label="Summary contains"
+        [value]="summaryContains" (valueChange)="summaryContains = $event; onFilterInputsChanged()" />
+      <app-text-contains-filter label="Description contains"
+        [value]="descriptionContains" (valueChange)="descriptionContains = $event; onFilterInputsChanged()" />
+      <app-text-contains-filter label="Author contains" placeholder="creator or reporter"
+        [value]="authorContains" (valueChange)="authorContains = $event; onFilterInputsChanged()" />
+      <app-text-contains-filter label="Comments contains"
+        [value]="commentsContains" (valueChange)="commentsContains = $event; onFilterInputsChanged()" />
+      <app-text-contains-filter label="Comment author contains"
+        [value]="commentAuthorContains" (valueChange)="commentAuthorContains = $event; onFilterInputsChanged()" />
+      <app-text-contains-filter label="Labels contains"
+        [value]="labelsContains" (valueChange)="labelsContains = $event; onFilterInputsChanged()" />
+      <app-availability-filter label="Pull Request Available" name="pullRequestAvailableLabel"
+        [value]="pullRequestAvailableLabel" (valueChange)="pullRequestAvailableLabel = $event; onFilterInputsChanged()" />
 
-      <div ngbDropdown autoClose="outside">
-        <label class="form-label d-block">Type</label>
-        <button class="btn btn-outline-secondary dropdown-toggle" type="button" ngbDropdownToggle>
-          Type
-          @if (excludedTypes.size > 0) {
-            <span class="badge text-bg-secondary">{{ excludedTypes.size }} excluded</span>
-          }
-        </button>
-        <div ngbDropdownMenu>
-          <button
-            ngbDropdownItem
-            type="button"
-            (click)="toggleAllTypes()">
-            {{ areAllTypesSelected() ? 'Unselect all' : 'Select all' }}
-          </button>
-          <div class="dropdown-divider"></div>
-          @for (type of typeOptions; track type) {
-            <button
-              ngbDropdownItem
-              class="d-flex align-items-center gap-2"
-              [class.text-decoration-line-through]="isTypeExcluded(type)"
-              [class.text-muted]="isTypeExcluded(type)"
-              type="button"
-              (click)="toggleTypeFilter(type)">
-              <input type="checkbox" [checked]="!isTypeExcluded(type)" (click)="$event.preventDefault()" />
-              {{ type }}
-            </button>
-          }
-        </div>
-      </div>
-      <div ngbDropdown autoClose="outside">
-        <label class="form-label d-block">Resolution</label>
-        <button class="btn btn-outline-secondary dropdown-toggle" type="button" ngbDropdownToggle>
-          Resolution
-          @if (excludedResolutions.size > 0) {
-            <span class="badge text-bg-secondary">{{ excludedResolutions.size }} excluded</span>
-          }
-        </button>
-        <div ngbDropdownMenu>
-          <button
-            ngbDropdownItem
-            type="button"
-            (click)="toggleAllResolutions()">
-            {{ areAllResolutionsSelected() ? 'Unselect all' : 'Select all' }}
-          </button>
-          <div class="dropdown-divider"></div>
-          @for (resolution of resolutionOptions; track resolution.value) {
-            <button
-              ngbDropdownItem
-              class="d-flex align-items-center gap-2"
-              [class.text-decoration-line-through]="isResolutionExcluded(resolution.value)"
-              [class.text-muted]="isResolutionExcluded(resolution.value)"
-              type="button"
-              (click)="toggleResolutionFilter(resolution.value)">
-              <input type="checkbox" [checked]="!isResolutionExcluded(resolution.value)" (click)="$event.preventDefault()" />
-              {{ resolution.label }}
-            </button>
-          }
-        </div>
-      </div>
-      <div>
-        <label class="form-label d-block">Status</label>
-        <div class="btn-group" role="group">
-          @for (status of statusOptions; track status) {
-            <button
-              class="btn"
-              [class.btn-outline-secondary]="!isStatusExcluded(status)"
-              [class.btn-secondary]="isStatusExcluded(status)"
-              [class.text-decoration-line-through]="isStatusExcluded(status)"
-              type="button"
-              (click)="toggleStatusFilter(status)">{{ status }}</button>
-          }
-        </div>
-      </div>
-      <div ngbDropdown autoClose="outside">
-        <label class="form-label d-block">Priority</label>
-        <button class="btn btn-outline-secondary dropdown-toggle" type="button" ngbDropdownToggle>
-          Priority
-          @if (excludedPriorities.size > 0) {
-            <span class="badge text-bg-secondary">{{ excludedPriorities.size }} excluded</span>
-          }
-        </button>
-        <div ngbDropdownMenu>
-          <button
-            ngbDropdownItem
-            type="button"
-            (click)="toggleAllPriorities()">
-            {{ areAllPrioritiesSelected() ? 'Unselect all' : 'Select all' }}
-          </button>
-          <div class="dropdown-divider"></div>
-          @for (priority of priorityOptions; track priority) {
-            <button
-              ngbDropdownItem
-              class="d-flex align-items-center gap-2"
-              [class.text-decoration-line-through]="isPriorityExcluded(priority)"
-              [class.text-muted]="isPriorityExcluded(priority)"
-              type="button"
-              (click)="togglePriorityFilter(priority)">
-              <input type="checkbox" [checked]="!isPriorityExcluded(priority)" (click)="$event.preventDefault()" />
-              {{ priority }}
-            </button>
-          }
-        </div>
-      </div>
+      <app-exclude-dropdown-filter label="Type" [options]="typeFilterOptions"
+        [excluded]="excludedTypes" (excludedChange)="onExcludedTypesChange($event)" />
+      <app-exclude-dropdown-filter label="Resolution" [options]="resolutionOptions"
+        [excluded]="excludedResolutions" (excludedChange)="onExcludedResolutionsChange($event)" />
+      <app-exclude-buttongroup-filter label="Status" [options]="statusOptions"
+        [excluded]="excludedStatuses" (excludedChange)="onExcludedStatusesChange($event)" />
+      <app-exclude-dropdown-filter label="Priority" [options]="priorityFilterOptions"
+        [excluded]="excludedPriorities" (excludedChange)="onExcludedPrioritiesChange($event)" />
     </div>
   </div>
 </div>
@@ -176,46 +60,18 @@
   </div>
   <div #analysisCriteriaCollapse="ngbCollapse" [(ngbCollapse)]="isAnalysisCriteriaCollapsed">
     <div class="d-flex gap-2 align-items-end flex-wrap">
-      <div>
-        <label class="form-label">Analysis summary contains</label>
-        <input class="form-control" type="text" [(ngModel)]="analysisSummaryContains" (ngModelChange)="onFilterInputsChanged()" placeholder="comma separated" />
-      </div>
-      <div>
-        <label class="form-label">Analysis extra prompts contains</label>
-        <input class="form-control" type="text" [(ngModel)]="analysisUserExtraPromptsContains" (ngModelChange)="onFilterInputsChanged()" placeholder="comma separated" />
-      </div>
-      <div>
-        <label class="form-label">Updated from</label>
-        <input class="form-control" type="date" [(ngModel)]="analysisSummaryUpdatedFrom" (ngModelChange)="onFilterInputsChanged()" />
-      </div>
-      <div>
-        <label class="form-label">Updated to</label>
-        <input class="form-control" type="date" [(ngModel)]="analysisSummaryUpdatedTo" (ngModelChange)="onFilterInputsChanged()" />
-      </div>
-      <div>
-        <label class="form-label">Tokens (k) from</label>
-        <input class="form-control" type="number" [(ngModel)]="analysisSummaryMinTokensK" (ngModelChange)="onFilterInputsChanged()" />
-      </div>
-      <div>
-        <label class="form-label">Tokens (k) to</label>
-        <input class="form-control" type="number" [(ngModel)]="analysisSummaryMaxTokensK" (ngModelChange)="onFilterInputsChanged()" />
-      </div>
-      <div>
-        <label class="form-label d-block">Available</label>
-        <div class="btn-group" role="group">
-          <input type="radio" class="btn-check" name="analysisAvailability" id="analysisAvailabilityNo" autocomplete="off"
-            [(ngModel)]="analysisAvailability" (ngModelChange)="onFilterInputsChanged()" value="no" />
-          <label class="btn btn-outline-secondary" for="analysisAvailabilityNo">✗</label>
-
-          <input type="radio" class="btn-check" name="analysisAvailability" id="analysisAvailabilityAny" autocomplete="off"
-            [(ngModel)]="analysisAvailability" (ngModelChange)="onFilterInputsChanged()" value="any" />
-          <label class="btn btn-outline-secondary" for="analysisAvailabilityAny">Any</label>
-
-          <input type="radio" class="btn-check" name="analysisAvailability" id="analysisAvailabilityYes" autocomplete="off"
-            [(ngModel)]="analysisAvailability" (ngModelChange)="onFilterInputsChanged()" value="yes" />
-          <label class="btn btn-outline-secondary" for="analysisAvailabilityYes">✓</label>
-        </div>
-      </div>
+      <app-text-contains-filter label="Analysis summary contains"
+        [value]="analysisSummaryContains" (valueChange)="analysisSummaryContains = $event; onFilterInputsChanged()" />
+      <app-text-contains-filter label="Analysis extra prompts contains"
+        [value]="analysisUserExtraPromptsContains" (valueChange)="analysisUserExtraPromptsContains = $event; onFilterInputsChanged()" />
+      <app-date-range-filter
+        [from]="analysisSummaryUpdatedFrom" (fromChange)="analysisSummaryUpdatedFrom = $event; onFilterInputsChanged()"
+        [to]="analysisSummaryUpdatedTo" (toChange)="analysisSummaryUpdatedTo = $event; onFilterInputsChanged()" />
+      <app-number-range-filter fromLabel="Tokens (k) from" toLabel="Tokens (k) to"
+        [from]="analysisSummaryMinTokensK" (fromChange)="analysisSummaryMinTokensK = $event; onFilterInputsChanged()"
+        [to]="analysisSummaryMaxTokensK" (toChange)="analysisSummaryMaxTokensK = $event; onFilterInputsChanged()" />
+      <app-availability-filter name="analysisAvailability"
+        [value]="analysisAvailability" (valueChange)="analysisAvailability = $event; onFilterInputsChanged()" />
     </div>
   </div>
 </div>
@@ -226,46 +82,18 @@
   </div>
   <div #developmentWorkCriteriaCollapse="ngbCollapse" [(ngbCollapse)]="isDevelopmentWorkCriteriaCollapsed">
     <div class="d-flex gap-2 align-items-end flex-wrap">
-      <div>
-        <label class="form-label">Development work contains</label>
-        <input class="form-control" type="text" [(ngModel)]="developmentWorkDescribedContains" (ngModelChange)="onFilterInputsChanged()" placeholder="comma separated" />
-      </div>
-      <div>
-        <label class="form-label">Development extra prompts contains</label>
-        <input class="form-control" type="text" [(ngModel)]="developmentWorkUserExtraPromptsContains" (ngModelChange)="onFilterInputsChanged()" placeholder="comma separated" />
-      </div>
-      <div>
-        <label class="form-label">Updated from</label>
-        <input class="form-control" type="date" [(ngModel)]="developmentWorkUpdatedFrom" (ngModelChange)="onFilterInputsChanged()" />
-      </div>
-      <div>
-        <label class="form-label">Updated to</label>
-        <input class="form-control" type="date" [(ngModel)]="developmentWorkUpdatedTo" (ngModelChange)="onFilterInputsChanged()" />
-      </div>
-      <div>
-        <label class="form-label">Tokens (k) from</label>
-        <input class="form-control" type="number" [(ngModel)]="developmentWorkMinTokensK" (ngModelChange)="onFilterInputsChanged()" />
-      </div>
-      <div>
-        <label class="form-label">Tokens (k) to</label>
-        <input class="form-control" type="number" [(ngModel)]="developmentWorkMaxTokensK" (ngModelChange)="onFilterInputsChanged()" />
-      </div>
-      <div>
-        <label class="form-label d-block">Available</label>
-        <div class="btn-group" role="group">
-          <input type="radio" class="btn-check" name="developmentWorkAvailability" id="developmentWorkAvailabilityNo" autocomplete="off"
-            [(ngModel)]="developmentWorkAvailability" (ngModelChange)="onFilterInputsChanged()" value="no" />
-          <label class="btn btn-outline-secondary" for="developmentWorkAvailabilityNo">✗</label>
-
-          <input type="radio" class="btn-check" name="developmentWorkAvailability" id="developmentWorkAvailabilityAny" autocomplete="off"
-            [(ngModel)]="developmentWorkAvailability" (ngModelChange)="onFilterInputsChanged()" value="any" />
-          <label class="btn btn-outline-secondary" for="developmentWorkAvailabilityAny">Any</label>
-
-          <input type="radio" class="btn-check" name="developmentWorkAvailability" id="developmentWorkAvailabilityYes" autocomplete="off"
-            [(ngModel)]="developmentWorkAvailability" (ngModelChange)="onFilterInputsChanged()" value="yes" />
-          <label class="btn btn-outline-secondary" for="developmentWorkAvailabilityYes">✓</label>
-        </div>
-      </div>
+      <app-text-contains-filter label="Development work contains"
+        [value]="developmentWorkDescribedContains" (valueChange)="developmentWorkDescribedContains = $event; onFilterInputsChanged()" />
+      <app-text-contains-filter label="Development extra prompts contains"
+        [value]="developmentWorkUserExtraPromptsContains" (valueChange)="developmentWorkUserExtraPromptsContains = $event; onFilterInputsChanged()" />
+      <app-date-range-filter
+        [from]="developmentWorkUpdatedFrom" (fromChange)="developmentWorkUpdatedFrom = $event; onFilterInputsChanged()"
+        [to]="developmentWorkUpdatedTo" (toChange)="developmentWorkUpdatedTo = $event; onFilterInputsChanged()" />
+      <app-number-range-filter fromLabel="Tokens (k) from" toLabel="Tokens (k) to"
+        [from]="developmentWorkMinTokensK" (fromChange)="developmentWorkMinTokensK = $event; onFilterInputsChanged()"
+        [to]="developmentWorkMaxTokensK" (toChange)="developmentWorkMaxTokensK = $event; onFilterInputsChanged()" />
+      <app-availability-filter name="developmentWorkAvailability"
+        [value]="developmentWorkAvailability" (valueChange)="developmentWorkAvailability = $event; onFilterInputsChanged()" />
     </div>
   </div>
 </div>
@@ -276,34 +104,13 @@
   </div>
   <div #personalInterestCriteriaCollapse="ngbCollapse" [(ngbCollapse)]="isPersonalInterestCriteriaCollapsed">
     <div class="d-flex gap-2 align-items-end flex-wrap">
-      <div>
-        <label class="form-label">Personal interest comment contains</label>
-        <input class="form-control" type="text" [(ngModel)]="personalInterrestCommentContains" (ngModelChange)="onFilterInputsChanged()" placeholder="comma separated" />
-      </div>
-      <div>
-        <label class="form-label">Priority from</label>
-        <input class="form-control" type="number" min="0" max="10" [(ngModel)]="personalInterrestMinPriority" (ngModelChange)="onFilterInputsChanged()" />
-      </div>
-      <div>
-        <label class="form-label">Priority to</label>
-        <input class="form-control" type="number" min="0" max="10" [(ngModel)]="personalInterrestMaxPriority" (ngModelChange)="onFilterInputsChanged()" />
-      </div>
-      <div>
-        <label class="form-label d-block">Available</label>
-        <div class="btn-group" role="group">
-          <input type="radio" class="btn-check" name="personalInterrestAvailability" id="personalInterrestAvailabilityNo" autocomplete="off"
-            [(ngModel)]="personalInterrestAvailability" (ngModelChange)="onFilterInputsChanged()" value="no" />
-          <label class="btn btn-outline-secondary" for="personalInterrestAvailabilityNo">✗</label>
-
-          <input type="radio" class="btn-check" name="personalInterrestAvailability" id="personalInterrestAvailabilityAny" autocomplete="off"
-            [(ngModel)]="personalInterrestAvailability" (ngModelChange)="onFilterInputsChanged()" value="any" />
-          <label class="btn btn-outline-secondary" for="personalInterrestAvailabilityAny">Any</label>
-
-          <input type="radio" class="btn-check" name="personalInterrestAvailability" id="personalInterrestAvailabilityYes" autocomplete="off"
-            [(ngModel)]="personalInterrestAvailability" (ngModelChange)="onFilterInputsChanged()" value="yes" />
-          <label class="btn btn-outline-secondary" for="personalInterrestAvailabilityYes">✓</label>
-        </div>
-      </div>
+      <app-text-contains-filter label="Personal interest comment contains"
+        [value]="personalInterrestCommentContains" (valueChange)="personalInterrestCommentContains = $event; onFilterInputsChanged()" />
+      <app-number-range-filter fromLabel="Priority from" toLabel="Priority to" [min]="0" [max]="10"
+        [from]="personalInterrestMinPriority" (fromChange)="personalInterrestMinPriority = $event; onFilterInputsChanged()"
+        [to]="personalInterrestMaxPriority" (toChange)="personalInterrestMaxPriority = $event; onFilterInputsChanged()" />
+      <app-availability-filter name="personalInterrestAvailability"
+        [value]="personalInterrestAvailability" (valueChange)="personalInterrestAvailability = $event; onFilterInputsChanged()" />
     </div>
   </div>
 </div>

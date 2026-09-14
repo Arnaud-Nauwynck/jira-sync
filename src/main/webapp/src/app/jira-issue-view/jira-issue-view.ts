@@ -22,4 +22,12 @@ export class JiraIssueView {
   statusLozengeClass(status: string | undefined): string {
     return STATUS_LOZENGE_CLASS[(status ?? '').toLowerCase()] ?? 'lozenge-default';
   }
+
+  /** Fix versions come from the server as raw Jira "Version" objects (eg { name, released, ... }), not plain strings. */
+  fixVersionNames(fixVersions: any[] | undefined): string {
+    return (fixVersions ?? [])
+      .map((v) => (v != null && typeof v === 'object') ? (v.name ?? '') : String(v ?? ''))
+      .filter((name) => name.length > 0)
+      .join(', ');
+  }
 }

@@ -3,19 +3,27 @@ import { Router } from '@angular/router';
 import { AgGridAngular } from 'ag-grid-angular';
 import type { CellClickedEvent, ColDef, GridApi, GridReadyEvent, IRowNode } from 'ag-grid-community';
 import { FormsModule } from '@angular/forms';
-import { NgbCollapseModule, NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgbCollapseModule } from '@ng-bootstrap/ng-bootstrap';
 import { JiraIssueDTO } from '../rest/model/jiraIssueDTO';
 import { IssuesDataService } from './issues-data.service';
 import { IssueView } from '../issue-view/issue-view';
+import { TextContainsFilter } from './filters/text-contains-filter';
+import { NumberRangeFilter } from './filters/number-range-filter';
+import { DateRangeFilter } from './filters/date-range-filter';
+import { AvailabilityFilter, AvailabilityFilterComponent } from './filters/availability-filter';
+import { ExcludeDropdownFilter, ExcludeFilterOption } from './filters/exclude-dropdown-filter';
+import { ExcludeButtonGroupFilter } from './filters/exclude-buttongroup-filter';
 
 const OTHER_RESOLUTIONS = '(others)';
 const OTHER_TYPES = '(others)';
-
-/** Tri-state availability filter: 'no' = not present, 'yes' = present, 'any' = no filtering. */
-export type AvailabilityFilter = 'no' | 'any' | 'yes';
+const PULL_REQUEST_AVAILABLE_LABEL = 'pull-request-available';
 
 @Component({
-  imports: [AgGridAngular, FormsModule, NgbDropdownModule, NgbCollapseModule, IssueView],
+  imports: [
+    AgGridAngular, FormsModule, NgbCollapseModule, IssueView,
+    TextContainsFilter, NumberRangeFilter, DateRangeFilter, AvailabilityFilterComponent,
+    ExcludeDropdownFilter, ExcludeButtonGroupFilter,
+  ],
   selector: 'app-issues-list',
   templateUrl: './issues-list.html',
 })
@@ -42,6 +50,8 @@ export class IssuesList implements OnInit {
   authorContains = '';
   commentsContains = '';
   commentAuthorContains = '';
+  labelsContains = '';
+  pullRequestAvailableLabel: AvailabilityFilter = 'any';
 
   // Analysis criteria panel: collapsible, collapsed by default.
   isAnalysisCriteriaCollapsed = true;
@@ -70,25 +80,27 @@ export class IssuesList implements OnInit {
   personalInterrestMaxPriority: number | null = null;
   personalInterrestAvailability: AvailabilityFilter = 'any';
 
-  // Status enum filter: clicking a status button excludes that status from the results.
+  // Status enum filter: excluded statuses are removed from the results.
   statusOptions = ['Open', 'In Progress', 'Reopened', 'Resolved', 'Closed'];
   excludedStatuses = new Set<string>();
 
-  // Priority enum filter: clicking a priority button excludes that priority from the results.
+  // Priority enum filter: excluded priorities are removed from the results.
   priorityOptions = ['Critical', 'Blocker', 'Major', 'Minor', 'Trivial'];
+  priorityFilterOptions: ExcludeFilterOption[] = this.priorityOptions.map((p) => ({ label: p, value: p }));
   excludedPriorities = new Set<string>();
 
-  // Type enum filter: clicking a type button excludes that issue type from the results.
+  // Type enum filter: excluded types are removed from the results.
   typeOptions = ['Bug', 'Improvement', 'New Feature', 'Story', 'Epic', 'Sub-task', 'Task', 'Umbrella', 'Question',
     'Wish', 'Test', 'Documentation', 'IT Help', 'Brainstorming', 'Dependency upgrade', 'Request',
     'Planned Work', 'Github Integration', 'RTC', 'Blog - New Blog Request',
     OTHER_TYPES
   ];
+  typeFilterOptions: ExcludeFilterOption[] = this.typeOptions.map((t) => ({ label: t, value: t }));
   private readonly knownTypeValues = new Set(this.typeOptions.filter((t) => t !== OTHER_TYPES));
   excludedTypes = new Set<string>();
 
-  // Resolution enum filter: clicking a resolution button excludes that resolution from the results.
-  resolutionOptions = [
+  // Resolution enum filter: excluded resolutions are removed from the results.
+  resolutionOptions: ExcludeFilterOption[] = [
     { label: 'Done', value: 'Done' },
     { label: 'Fixed', value: 'Fixed' },
     { label: 'Invalid', value: 'Invalid' },
@@ -129,6 +141,15 @@ export class IssuesList implements OnInit {
     { headerName: 'Status', field: 'fields.status', width: 80 },
     { headerName: 'Priority', field: 'fields.priority', width: 80  },
     { headerName: 'Resolution', field: 'fields.resolution', width: 95  },
+    { headerName: 'Components', width: 150,
+      valueGetter: (params) => (params.data?.fields?.components ?? []).join(', '),
+    },
+    { headerName: 'Labels', width: 150,
+      valueGetter: (params) => (params.data?.fields?.labels ?? []).join(', '),
+    },
+    { headerName: 'PR Available', width: 110, cellDataType: 'boolean',
+      valueGetter: (params) => (params.data?.fields?.labels ?? []).includes(PULL_REQUEST_AVAILABLE_LABEL),
+    },
     { headerName: 'Summary', field: 'fields.summary', width: 400},
     { headerName: 'Description', field: 'fields.description', width: 200},
     { headerName: 'Project', hide: true, field: 'fields.project', },
@@ -216,68 +237,23 @@ export class IssuesList implements OnInit {
     this.gridApi?.onFilterChanged();
   }
 
-  toggleStatusFilter(status: string) {
-    if (this.excludedStatuses.has(status)) {
-      this.excludedStatuses.delete(status);
-    } else {
-      this.excludedStatuses.add(status);
-    }
+  onExcludedTypesChange(excluded: Set<string>) {
+    this.excludedTypes = excluded;
     this.onFilterInputsChanged();
   }
 
-  isStatusExcluded(status: string): boolean {
-    return this.excludedStatuses.has(status);
-  }
-
-  togglePriorityFilter(priority: string) {
-    if (this.excludedPriorities.has(priority)) {
-      this.excludedPriorities.delete(priority);
-    } else {
-      this.excludedPriorities.add(priority);
-    }
+  onExcludedResolutionsChange(excluded: Set<string>) {
+    this.excludedResolutions = excluded;
     this.onFilterInputsChanged();
   }
 
-  isPriorityExcluded(priority: string): boolean {
-    return this.excludedPriorities.has(priority);
-  }
-
-  areAllPrioritiesSelected(): boolean {
-    return this.excludedPriorities.size === 0;
-  }
-
-  toggleAllPriorities() {
-    if (this.areAllPrioritiesSelected()) {
-      this.priorityOptions.forEach((p) => this.excludedPriorities.add(p));
-    } else {
-      this.excludedPriorities.clear();
-    }
+  onExcludedStatusesChange(excluded: Set<string>) {
+    this.excludedStatuses = excluded;
     this.onFilterInputsChanged();
   }
 
-  toggleTypeFilter(type: string) {
-    if (this.excludedTypes.has(type)) {
-      this.excludedTypes.delete(type);
-    } else {
-      this.excludedTypes.add(type);
-    }
-    this.onFilterInputsChanged();
-  }
-
-  isTypeExcluded(type: string): boolean {
-    return this.excludedTypes.has(type);
-  }
-
-  areAllTypesSelected(): boolean {
-    return this.excludedTypes.size === 0;
-  }
-
-  toggleAllTypes() {
-    if (this.areAllTypesSelected()) {
-      this.typeOptions.forEach((t) => this.excludedTypes.add(t));
-    } else {
-      this.excludedTypes.clear();
-    }
+  onExcludedPrioritiesChange(excluded: Set<string>) {
+    this.excludedPriorities = excluded;
     this.onFilterInputsChanged();
   }
 
@@ -285,32 +261,6 @@ export class IssuesList implements OnInit {
   private typeFilterKey(type: string | undefined): string {
     const value = type ?? '';
     return this.knownTypeValues.has(value) ? value : OTHER_TYPES;
-  }
-
-  toggleResolutionFilter(resolution: string) {
-    if (this.excludedResolutions.has(resolution)) {
-      this.excludedResolutions.delete(resolution);
-    } else {
-      this.excludedResolutions.add(resolution);
-    }
-    this.onFilterInputsChanged();
-  }
-
-  isResolutionExcluded(resolution: string): boolean {
-    return this.excludedResolutions.has(resolution);
-  }
-
-  areAllResolutionsSelected(): boolean {
-    return this.excludedResolutions.size === 0;
-  }
-
-  toggleAllResolutions() {
-    if (this.areAllResolutionsSelected()) {
-      this.resolutionOptions.forEach((o) => this.excludedResolutions.add(o.value));
-    } else {
-      this.excludedResolutions.clear();
-    }
-    this.onFilterInputsChanged();
   }
 
   /** Maps a resolution value to itself if it is a known enum option, or to the "(others)" bucket otherwise. */
@@ -335,6 +285,8 @@ export class IssuesList implements OnInit {
       || this.excludedPriorities.size > 0
       || this.excludedTypes.size > 0
       || this.parseCsvList(this.commentAuthorContains).length > 0
+      || this.parseCsvList(this.labelsContains).length > 0
+      || this.pullRequestAvailableLabel !== 'any'
       || this.parseCsvList(this.analysisSummaryContains).length > 0
       || this.analysisSummaryUpdatedFrom.length > 0
       || this.analysisSummaryUpdatedTo.length > 0
@@ -391,6 +343,13 @@ export class IssuesList implements OnInit {
       return false;
     }
     if (this.excludedTypes.has(this.typeFilterKey(fields.issuetype))) {
+      return false;
+    }
+    const labels = fields.labels ?? [];
+    if (!this.matchesAny(this.labelsContains, ...labels)) {
+      return false;
+    }
+    if (!this.matchesAvailability(this.pullRequestAvailableLabel, labels.includes(PULL_REQUEST_AVAILABLE_LABEL))) {
       return false;
     }
     const comments = fields.comments ?? [];
@@ -587,8 +546,43 @@ export class IssuesList implements OnInit {
   }
 
   search() {
-    this.issuesDataService.search(this.fromYear, this.toYear, this.usernamePattern,
-      this.fromNumber, this.toNumber, this.keyPattern);
+    this.issuesDataService.search({
+      fromYear: this.fromYear,
+      toYear: this.toYear,
+      usernamePattern: this.usernamePattern,
+      fromNumber: this.fromNumber,
+      toNumber: this.toNumber,
+      keyPattern: this.keyPattern,
+      summaryContains: this.summaryContains,
+      descriptionContains: this.descriptionContains,
+      authorContains: this.authorContains,
+      commentsContains: this.commentsContains,
+      commentAuthorContains: this.commentAuthorContains,
+      excludedTypes: this.excludedTypes,
+      excludedResolutions: this.excludedResolutions,
+      excludedStatuses: this.excludedStatuses,
+      excludedPriorities: this.excludedPriorities,
+      labelsContains: this.labelsContains,
+      pullRequestAvailableLabel: this.pullRequestAvailableLabel,
+      analysisSummaryContains: this.analysisSummaryContains,
+      analysisUserExtraPromptsContains: this.analysisUserExtraPromptsContains,
+      analysisSummaryUpdatedFrom: this.analysisSummaryUpdatedFrom,
+      analysisSummaryUpdatedTo: this.analysisSummaryUpdatedTo,
+      analysisSummaryMinTokensK: this.analysisSummaryMinTokensK,
+      analysisSummaryMaxTokensK: this.analysisSummaryMaxTokensK,
+      analysisAvailability: this.analysisAvailability,
+      developmentWorkDescribedContains: this.developmentWorkDescribedContains,
+      developmentWorkUserExtraPromptsContains: this.developmentWorkUserExtraPromptsContains,
+      developmentWorkUpdatedFrom: this.developmentWorkUpdatedFrom,
+      developmentWorkUpdatedTo: this.developmentWorkUpdatedTo,
+      developmentWorkMinTokensK: this.developmentWorkMinTokensK,
+      developmentWorkMaxTokensK: this.developmentWorkMaxTokensK,
+      developmentWorkAvailability: this.developmentWorkAvailability,
+      personalInterrestCommentContains: this.personalInterrestCommentContains,
+      personalInterrestMinPriority: this.personalInterrestMinPriority,
+      personalInterrestMaxPriority: this.personalInterrestMaxPriority,
+      personalInterrestAvailability: this.personalInterrestAvailability,
+    });
   }
 
 }

@@ -155,7 +155,7 @@
             @if (data.fields?.fixVersions?.length) {
               <div class="property-item">
                 <span class="name">Fix Version/s</span>
-                <span class="value">{{ data.fields?.fixVersions?.join(', ') }}</span>
+                <span class="value">{{ fixVersionNames(data.fields?.fixVersions) }}</span>
               </div>
             }
             @if (data.fields?.components?.length) {
