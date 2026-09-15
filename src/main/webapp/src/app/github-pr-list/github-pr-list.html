@@ -8,11 +8,11 @@
     <div class="d-flex gap-2 align-items-end">
       <div>
         <label class="form-label">From year</label>
-        <input class="form-control" style="width: 9ch;" type="number" [(ngModel)]="fromYear" (ngModelChange)="onFilterInputsChanged()" />
+        <input class="form-control narrow-number-input" type="number" [(ngModel)]="fromYear" (ngModelChange)="onFilterInputsChanged()" />
       </div>
       <div>
         <label class="form-label">To year</label>
-        <input class="form-control" style="width: 9ch;" type="number" [(ngModel)]="toYear" (ngModelChange)="onFilterInputsChanged()" />
+        <input class="form-control narrow-number-input" type="number" [(ngModel)]="toYear" (ngModelChange)="onFilterInputsChanged()" />
       </div>
       <div>
         <label class="form-label">Author login pattern</label>
@@ -20,11 +20,11 @@
       </div>
       <div>
         <label class="form-label">From PR</label>
-        <input class="form-control" style="width: 9ch;" type="number" [(ngModel)]="fromPullRequestNumber" (ngModelChange)="onFilterInputsChanged()" />
+        <input class="form-control narrow-number-input" type="number" [(ngModel)]="fromPullRequestNumber" (ngModelChange)="onFilterInputsChanged()" />
       </div>
       <div>
         <label class="form-label">To PR</label>
-        <input class="form-control" style="width: 9ch;" type="number" [(ngModel)]="toPullRequestNumber" (ngModelChange)="onFilterInputsChanged()" />
+        <input class="form-control narrow-number-input" type="number" [(ngModel)]="toPullRequestNumber" (ngModelChange)="onFilterInputsChanged()" />
       </div>
       <div>
         <label class="form-label">PR number pattern</label>

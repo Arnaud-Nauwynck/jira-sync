@@ -1,1 +1,6 @@
 /* You can add global styles to this file, and also import other style files */
+
+/* Narrow fixed-width numeric filter inputs (year, issue/PR number, count filters) */
+.narrow-number-input {
+  width: 9ch;
+}
