@@ -43,10 +43,10 @@ public class MailingListSyncRestController {
             mailingListSyncRunner.syncAll();
 
             int millis = (int) (System.currentTimeMillis() - startTime);
-            log.info("... done http POST /run-sync-all, took {} ms", millis);
+            log.info("... done http POST " + BASE_URL + "/run-sync-all, took {} ms", millis);
         } catch (Exception ex) {
             int millis = (int) (System.currentTimeMillis() - startTime);
-            log.error("... Failed http POST /run-sync-all, took {} ms, rethrowing {}", millis, ex.getMessage());
+            log.error("... Failed http POST " + BASE_URL + "/run-sync-all, took {} ms, rethrowing {}", millis, ex.getMessage());
             throw new RuntimeException(ex);
         }
     }
