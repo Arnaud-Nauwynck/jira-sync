@@ -2,10 +2,14 @@ package fr.an.jira.github.service;
 
 import fr.an.jira.github.repository.GitHubPullRequestRepository;
 import fr.an.jira.github.rest.dtos.GitHubPullRequestDTO;
+import fr.an.jira.github.rest.dtos.UserGitHubPullRequestStatsDTO;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 @Component
@@ -53,5 +57,22 @@ public class GitHubPullRequestService {
     private static String authorOf(GitHubPullRequestDTO pr) {
         String login = pr.authorLogin;
         return login != null && !login.isBlank() ? login : UNKNOWN_USER;
+    }
+
+    /** Count PRs created per author, for PRs created between fromYear and toYear (inclusive), optionally filtered by author login. */
+    public Collection<UserGitHubPullRequestStatsDTO> queryUserPullRequestStats(
+            int fromYear, int toYear, String usernamePatternText) {
+        Map<String, UserGitHubPullRequestStatsDTO> tmp = new LinkedHashMap<>();
+        Pattern usernamePattern = (usernamePatternText != null && !usernamePatternText.isBlank())
+                ? Pattern.compile(usernamePatternText) : null;
+        repository.scanPullRequests(fromYear, toYear, (year, pr) -> {
+            String user = authorOf(pr);
+            if (usernamePattern != null && !usernamePattern.matcher(user).matches()) {
+                return;
+            }
+            UserGitHubPullRequestStatsDTO statPerUser = tmp.computeIfAbsent(user, UserGitHubPullRequestStatsDTO::new);
+            statPerUser.add(year, pr);
+        });
+        return tmp.values();
     }
 }

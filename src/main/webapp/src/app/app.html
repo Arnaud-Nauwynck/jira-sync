@@ -25,8 +25,15 @@
         <li class="nav-item">
           <a class="nav-link" routerLink="/mailing-list" ngbDropdownItem>Mailing List</a>
         </li>
-        <li class="nav-item">
-          <a class="nav-link" routerLink="/user-issue-stats" ngbDropdownItem>User Stats</a>
+        <li class="nav-item" ngbDropdown>
+          <a class="nav-link dropdown-toggle" href="#" role="button" ngbDropdownToggle>
+            Statistics
+          </a>
+          <ul class="dropdown-menu" ngbDropdownMenu>
+            <li><a class="dropdown-item" routerLink="/user-issue-stats" ngbDropdownItem>User Stats</a></li>
+            <li><a class="dropdown-item" routerLink="/user-pr-stats" ngbDropdownItem>Github PR Stats</a></li>
+            <li><a class="dropdown-item" routerLink="/user-mail-message-stats" ngbDropdownItem>MailingList Stats</a></li>
+          </ul>
         </li>
         <li class="nav-item" ngbDropdown>
           <a class="nav-link dropdown-toggle" href="#" role="button" ngbDropdownToggle>

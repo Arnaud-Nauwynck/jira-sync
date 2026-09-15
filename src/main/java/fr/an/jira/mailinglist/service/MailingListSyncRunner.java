@@ -19,6 +19,7 @@ import java.io.ByteArrayInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.YearMonth;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -81,6 +82,7 @@ public class MailingListSyncRunner {
             byte[] mboxBytes = apiClient.fetchMbox(yearMonth);
             List<byte[]> rawMessages = MboxMessageSplitter.splitMessages(mboxBytes);
 
+            List<MailMessageDTO> partitionedItems = new ArrayList<>(rawMessages.size());
             for (byte[] raw : rawMessages) {
                 try {
                     Message mimeMessage = Message.Builder.of()
@@ -92,12 +94,15 @@ public class MailingListSyncRunner {
                         log.warn("  {} : skipping a message with no Message-ID", yearMonth);
                         continue;
                     }
-                    repository.save(dto);
+                    partitionedItems.add(dto);
                     messageChangeCount++;
                 } catch (Exception e) {
                     log.warn("  {} : failed to parse a message, skipping: {}", yearMonth, e.toString());
                 }
             }
+
+            repository.savePartitionData(yearMonth, partitionedItems);
+
             log.info("synced {} : {} messages", yearMonth, rawMessages.size());
             sleep(syncDelayMs);
         }

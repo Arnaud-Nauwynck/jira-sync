@@ -2,14 +2,20 @@ package fr.an.jira.mailinglist.service;
 
 import fr.an.jira.mailinglist.repository.MailMessageRepository;
 import fr.an.jira.mailinglist.rest.dtos.MailMessageDTO;
+import fr.an.jira.mailinglist.rest.dtos.UserMailMessageStatsDTO;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 @Component
 public class MailMessageService {
+
+    private static final String UNKNOWN_USER = "unknown";
 
     private final MailMessageRepository repository;
 
@@ -49,5 +55,33 @@ public class MailMessageService {
 
     private static boolean matches(Pattern pattern, String value) {
         return pattern == null || (value != null && pattern.matcher(value).find());
+    }
+
+    /**
+     * Counts messages per sender (the raw {@code From} header), for messages archived between
+     * fromYear and toYear (inclusive), optionally filtered by a regex matched (full match) against
+     * the From header.
+     */
+    public Collection<UserMailMessageStatsDTO> queryUserMessageStats(
+            int fromYear, int toYear, String fromPatternText
+    ) {
+        Map<String, UserMailMessageStatsDTO> tmp = new LinkedHashMap<>();
+        Pattern fromPattern = compileOrNull(fromPatternText);
+        String fromMonth = fromYear + "-01";
+        String toMonth = toYear + "-12";
+        repository.scanMessages(fromMonth, toMonth, (month, msg) -> {
+            String user = senderOf(msg);
+            if (fromPattern != null && !fromPattern.matcher(user).matches()) {
+                return;
+            }
+            UserMailMessageStatsDTO statPerUser = tmp.computeIfAbsent(user, UserMailMessageStatsDTO::new);
+            statPerUser.add(month, msg);
+        });
+        return tmp.values();
+    }
+
+    private static String senderOf(MailMessageDTO msg) {
+        String from = msg.from;
+        return from != null && !from.isBlank() ? from : UNKNOWN_USER;
     }
 }

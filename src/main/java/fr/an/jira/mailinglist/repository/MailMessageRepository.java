@@ -91,16 +91,35 @@ public class MailMessageRepository {
      * Maps the message to its persisted form and creates or updates it, recording a "create" or
      * "update" change in its partition.
      */
+    public void savePartitionData(String partition, List<MailMessageDTO> partitionData) {
+        if (partitionData.isEmpty()) {
+            return;
+        }
+        Map<String, MailMessageDTO> cachedPartition = cachedPartitionData(partition);
+        List<MailMessageChangeRecord> chgRecords = new ArrayList<>(partitionData.size());
+        for (MailMessageDTO msg : partitionData) {
+            String messageId = requireMessageId(msg);
+            MailMessageDTO previous = cachedPartition.get(messageId);
+            chgRecords.add((previous == null)
+                    ? new CreateMailMessageChangeRecord(msg)
+                    : new UpdateMailMessageChangeRecord(msg));
+        }
+        appendChanges(partition, chgRecords);
+        for (MailMessageDTO msg : partitionData) {
+            cachedPartition.put(msg.messageId, msg);
+        }
+    }
+
+    /** should be used only for incremental synchronization within month, otherwise see savePartitionData(partition, partitionData) */
     public void save(MailMessageDTO msg) {
         String messageId = requireMessageId(msg);
-        String month = partitionMonthOf(msg);
-        Map<String, MailMessageDTO> cachedPartition = cachedPartitionData(month);
-
+        String partition = partitionMonthOf(msg);
+        Map<String, MailMessageDTO> cachedPartition = cachedPartitionData(partition);
         MailMessageDTO previous = cachedPartition.get(messageId);
         MailMessageChangeRecord chgRecord = (previous == null)
                 ? new CreateMailMessageChangeRecord(msg)
                 : new UpdateMailMessageChangeRecord(msg);
-        appendChange(month, chgRecord);
+        appendChange(partition, chgRecord);
         cachedPartition.put(messageId, msg);
     }
 
@@ -334,13 +353,20 @@ public class MailMessageRepository {
     }
 
     private void appendChange(String month, MailMessageChangeRecord chgRecord) {
-        String line = mapper.writeValueAsString(chgRecord);
+        appendChanges(month, List.of(chgRecord));
+    }
+
+    private void appendChanges(String month, Collection<MailMessageChangeRecord> chgRecords) {
+        StringBuilder sb = new StringBuilder();
+        for (MailMessageChangeRecord chgRecord : chgRecords) {
+            sb.append(mapper.writeValueAsString(chgRecord)).append("\n");
+        }
         try {
             Files.createDirectories(partitionDir(month));
-            Files.writeString(changesFile(month), line + "\n",
+            Files.writeString(changesFile(month), sb.toString(),
                     StandardOpenOption.CREATE, StandardOpenOption.APPEND);
         } catch (IOException e) {
-            throw new UncheckedIOException("failed to append change for " + chgRecord.messageId() + " in " + partitionDirName(month), e);
+            throw new UncheckedIOException("failed to append changes in " + partitionDirName(month), e);
         }
     }
 

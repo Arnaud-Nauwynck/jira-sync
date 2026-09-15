@@ -1,6 +1,7 @@
 package fr.an.jira.github.rest;
 
 import fr.an.jira.github.rest.dtos.GitHubPullRequestDTO;
+import fr.an.jira.github.rest.dtos.UserGitHubPullRequestStatsDTO;
 import fr.an.jira.github.service.GitHubPullRequestService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -51,6 +52,18 @@ public class GitHubPullRequestsRestController {
                 BASE_URL, fromYear, toYear, usernamePattern, fromPullRequestNumber, toPullRequestNumber, pullRequestNumberPattern);
         return delegate.queryPullRequests(fromYear, toYear, usernamePattern,
                 fromPullRequestNumber, toPullRequestNumber, pullRequestNumberPattern);
+    }
+
+    @Operation(summary = "Count pull requests created per author, for PRs created between fromYear and toYear (inclusive), optionally filtered by author login")
+    @GetMapping("/user-pull-request-stats")
+    public Collection<UserGitHubPullRequestStatsDTO> queryUserPullRequestStats(
+            @RequestParam(name = "fromYear", defaultValue = "2020") int fromYear,
+            @RequestParam(name = "toYear", defaultValue = "2050") int toYear,
+            @RequestParam(name = "usernamePattern", required = false) String usernamePattern
+    ) {
+        log.info("http GET {}/user-pull-request-stats?fromYear={}&toYear={}&usernamePattern={}",
+                BASE_URL, fromYear, toYear, usernamePattern);
+        return delegate.queryUserPullRequestStats(fromYear, toYear, usernamePattern);
     }
 
 }
