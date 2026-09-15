@@ -4,6 +4,7 @@ import fr.an.projectanalysis.jira.client.JiraApiClient;
 import fr.an.projectanalysis.jira.client.dtos.SourceJiraIssueDTO;
 import fr.an.projectanalysis.jira.configuration.JiraSyncProperties;
 import fr.an.projectanalysis.jira.repository.JiraIssueRepository;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,9 +30,8 @@ import java.util.ArrayList;
  *   tracked in a local "sync-state.json" file
  */
 @Component
+@Slf4j
 public class JiraSyncRunner {
-
-    private static final Logger log = LoggerFactory.getLogger(JiraSyncRunner.class);
 
     private final JiraSyncProperties props;
 

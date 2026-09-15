@@ -1,6 +1,9 @@
 package fr.an.projectanalysis.jira.client;
 
 import fr.an.projectanalysis.jira.configuration.JiraSyncProperties;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -19,6 +22,7 @@ import java.time.Duration;
  * - adds the configured Authorization header, if any
  */
 @Component
+@Slf4j
 public class JiraApiClient {
 
     private final JiraSyncProperties props;
@@ -52,7 +56,7 @@ public class JiraApiClient {
             if (sc == 200) return mapper.readTree(resp.body());
             if ((sc == 429 || sc >= 500) && attempt <= 5) {
                 long backoff = retryAfterMs(resp, attempt);
-                System.err.printf("HTTP %d on %s, retry %d in %dms%n", sc, pathAndQuery, attempt, backoff);
+                log.warn("HTTP {} on {}, retry {} in {}ms", sc, pathAndQuery, attempt, backoff);
                 sleep(backoff);
                 continue;
             }

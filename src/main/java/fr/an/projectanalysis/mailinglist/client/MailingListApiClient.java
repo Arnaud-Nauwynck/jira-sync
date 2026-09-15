@@ -3,6 +3,7 @@ package fr.an.projectanalysis.mailinglist.client;
 import fr.an.projectanalysis.mailinglist.client.dtos.SourceMailMessageDTO;
 import fr.an.projectanalysis.mailinglist.configuration.MailingListSyncProperties;
 import fr.an.projectanalysis.mailinglist.mapper.MimeMessageToSourceMailMessageMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.stream.MimeConfig;
 import org.slf4j.Logger;
@@ -29,9 +30,8 @@ import java.util.List;
  * - adds the configured Authorization header, if any (the archive is public; usually left unset)
  */
 @Component
+@Slf4j
 public class MailingListApiClient {
-
-    private static final Logger log = LoggerFactory.getLogger(MailingListApiClient.class);
 
     private final MailingListSyncProperties props;
 
@@ -90,7 +90,7 @@ public class MailingListApiClient {
             if (sc == 404) return new byte[0];
             if ((sc == 429 || sc >= 500) && attempt <= 5) {
                 long backoff = retryAfterMs(resp, attempt);
-                System.err.printf("HTTP %d on %s, retry %d in %dms%n", sc, pathAndQuery, attempt, backoff);
+                log.warn("HTTP {} on {}, retry {} in {}ms", sc, pathAndQuery, attempt, backoff);
                 sleep(backoff);
                 continue;
             }

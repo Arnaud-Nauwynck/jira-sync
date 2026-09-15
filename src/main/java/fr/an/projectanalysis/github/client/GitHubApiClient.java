@@ -1,6 +1,9 @@
 package fr.an.projectanalysis.github.client;
 
 import fr.an.projectanalysis.github.configuration.GitHubSyncProperties;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -19,6 +22,7 @@ import java.time.Instant;
  * - adds the configured Authorization header, if any
  */
 @Component
+@Slf4j
 public class GitHubApiClient {
 
     private final GitHubSyncProperties props;
@@ -59,13 +63,13 @@ public class GitHubApiClient {
 
             if (sc == 403 && isPrimaryRateLimitExhausted(resp) && attempt <= 5) {
                 long backoff = primaryRateLimitResetMs(resp);
-                System.err.printf("GitHub primary rate limit exhausted on %s, retry %d in %dms%n", pathAndQuery, attempt, backoff);
+                log.warn("GitHub primary rate limit exhausted on {}, retry {} in {}ms", pathAndQuery, attempt, backoff);
                 sleep(backoff);
                 continue;
             }
             if ((sc == 403 || sc == 429 || sc >= 500) && attempt <= 5) {
                 long backoff = retryAfterMs(resp, attempt);
-                System.err.printf("HTTP %d on %s, retry %d in %dms%n", sc, pathAndQuery, attempt, backoff);
+                log.warn("HTTP {} on {}, retry {} in {}ms", sc, pathAndQuery, attempt, backoff);
                 sleep(backoff);
                 continue;
             }

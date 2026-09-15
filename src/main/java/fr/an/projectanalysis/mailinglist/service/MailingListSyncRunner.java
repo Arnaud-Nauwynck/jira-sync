@@ -4,6 +4,7 @@ import fr.an.projectanalysis.mailinglist.client.MailingListApiClient;
 import fr.an.projectanalysis.mailinglist.client.dtos.SourceMailMessageDTO;
 import fr.an.projectanalysis.mailinglist.configuration.MailingListSyncProperties;
 import fr.an.projectanalysis.mailinglist.repository.MailMessageRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -26,9 +27,8 @@ import java.util.List;
  *   re-fetched, tracked in a local "mailing-list-sync-state.json" file
  */
 @Component
+@Slf4j
 public class MailingListSyncRunner {
-
-    private static final Logger log = LoggerFactory.getLogger(MailingListSyncRunner.class);
 
     private final MailingListSyncProperties props;
 

@@ -1,5 +1,6 @@
 export * from './annotatedJiraLinkedIssueFieldsDTO';
 export * from './gitHubIssueCommentDTO';
+export * from './gitHubIssueEventDTO';
 export * from './gitHubPullRequestAnnotationDTO';
 export * from './gitHubPullRequestDTO';
 export * from './gitHubPullRequestExtraFieldsDTO';

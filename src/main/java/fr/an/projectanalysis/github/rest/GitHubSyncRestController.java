@@ -58,6 +58,13 @@ public class GitHubSyncRestController extends AbstractRestController {
         withLog("POST", "/complete-missing-review-comments", "", gitHubPrSyncRunner::completeMissingReviewComments);
     }
 
+    @Operation(summary = "Backfill missing pull-request events for PRs already synced locally")
+    @PostMapping("/complete-missing-events")
+    public void completeMissingEvents() {
+        withLog("POST", "/complete-missing-events", "", gitHubPrSyncRunner::completeMissingIssueEvents);
+    }
+
+
     @Operation(summary = "Get the current GitHub API rate limit status (proxies GET https://api.github.com/rate_limit)")
     @GetMapping("/rate-limit")
     public GitHubRateLimitDTO getRateLimit() {

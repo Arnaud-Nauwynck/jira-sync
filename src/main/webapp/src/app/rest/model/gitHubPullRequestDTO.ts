@@ -8,6 +8,7 @@
  * Do not edit the class manually.
  */
 import { GitHubPullRequestReviewCommentDTO } from './gitHubPullRequestReviewCommentDTO';
+import { GitHubIssueEventDTO } from './gitHubIssueEventDTO';
 import { GitHubIssueCommentDTO } from './gitHubIssueCommentDTO';
 import { GitHubPullRequestExtraFieldsDTO } from './gitHubPullRequestExtraFieldsDTO';
 
@@ -44,6 +45,7 @@ export interface GitHubPullRequestDTO {
     additions?: number;
     deletions?: number;
     changedFiles?: number;
+    issueEventsData?: Array<GitHubIssueEventDTO>;
     htmlUrl?: string;
     annotated?: GitHubPullRequestExtraFieldsDTO;
 }

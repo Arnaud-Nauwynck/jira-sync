@@ -2,11 +2,13 @@ package fr.an.projectanalysis.github.service;
 
 import fr.an.projectanalysis.github.client.GitHubApiClient;
 import fr.an.projectanalysis.github.client.dtos.SourceGitHubIssueCommentDTO;
+import fr.an.projectanalysis.github.client.dtos.SourceGitHubIssueEventDTO;
 import fr.an.projectanalysis.github.client.dtos.SourceGitHubPullRequestDTO;
 import fr.an.projectanalysis.github.configuration.GitHubSyncProperties;
 import fr.an.projectanalysis.github.mapper.SourceGitHubToAnnotatedPullRequestMapper;
 import fr.an.projectanalysis.github.repository.GitHubPullRequestRepository;
 import fr.an.projectanalysis.github.rest.dtos.GitHubPullRequestDTO;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -30,9 +32,8 @@ import java.util.*;
  * - the last successful run's start time is tracked in a local "pulls-sync-state.json" file
  */
 @Component
+@Slf4j
 public class GitHubPullRequestSyncRunner {
-
-    private static final Logger log = LoggerFactory.getLogger(GitHubPullRequestSyncRunner.class);
 
     private final GitHubSyncProperties props;
 
@@ -261,11 +262,61 @@ public class GitHubPullRequestSyncRunner {
         log.info("done completeMissingComments, completed {} PRs, took {} ms", completedCount, millis);
     }
 
+    /**
+     * Backfills {@code issueEventsData} on PRs already persisted locally that are missing it (e.g.
+     * synced before issue-event fetching was implemented). Walks every partition's PRs and, for
+     * each with no data fetched yet, fetches them via {@link #fetchIssueEvents} and resaves the PR.
+     * Unlike comments/review-comments, GitHub does not report an issue-events count on the PR
+     * detail response, so "missing" here just means {@code issueEventsData == null}.
+     */
+    public void completeMissingIssueEvents() {
+        long startMillis = System.currentTimeMillis();
+        int completedCount = 0;
+        for (int year : prRepository.findAllPartitionYears()) {
+            List<GitHubPullRequestDTO> prs = prRepository.findByPartitionYear(year, pr -> pr.issueEventsData == null);
+            if (prs.isEmpty()) {
+                continue;
+            }
+            log.info("completeMissingIssueEvents for year:" + year + ", found " + prs.size() + " to complete");
+
+            for (GitHubPullRequestDTO pr : prs) {
+                try {
+                    List<SourceGitHubIssueEventDTO> issueEvents = fetchIssueEvents(pr.number);
+                    prRepository.putIssueEvents(pr.number, SourceGitHubToAnnotatedPullRequestMapper.mapIssueEvents(issueEvents));
+                } catch(Exception ex) {
+                    log.warn("Failed completeMissingIssueEvents in fetchIssueEvents, for #{} ... ignore, no rethrow!", pr.number, ex);
+                    sleep(syncDelayMs);
+                    // ignore, no rethrow!
+                }
+
+                completedCount++;
+                // sleep(syncGetByIdDelayMs);
+                if (completedCount % 100 == 0) {
+                    log.info("completeMissingIssueEvents progress for partition year {}: [{}/{}] PRs completed so far", year, completedCount, prs.size());
+                }
+            }
+        }
+        if (completedCount > 0) {
+            prRepository.compactAll();
+        }
+        int millis = (int) (System.currentTimeMillis() - startMillis);
+        log.info("done completeMissingIssueEvents, completed {} PRs, took {} ms", completedCount, millis);
+    }
+
     private SourceGitHubPullRequestDTO fetchGithubPullRequestDetails(int number) throws Exception {
         SourceGitHubPullRequestDTO pr = apiClient.callHttpGet(baseRepoApiUrl + "/pulls/" + number, SourceGitHubPullRequestDTO.class);
+        if (pr.comments != null && pr.comments > 0) {
+            pr.commentsData = fetchIssueComments(number, pr.comments);
+        }
         if (pr.reviewComments != null && pr.reviewComments > 0) {
             pr.reviewCommentsData = fetchPullRequestReviewComments(number, pr.reviewComments);
         }
+        if (pr.commits != null && pr.commits > 0) {
+            // TODO
+            // pr.reviewCommentsData = fetchPullRequestCommits(number, pr.reviewComments);
+        }
+        // TODO
+        // pr.eventsData = fetchPullRequestEvents(number, pr.reviewComments);
         return pr;
     }
 
@@ -288,7 +339,7 @@ public class GitHubPullRequestSyncRunner {
                 break;
             }
             page++;
-            // sleep(syncGetByIdDelayMs);
+            sleep(syncGetByIdDelayMs);
         }
         if ((1 + reviewCommentsCount) == result.size()) {
             log.warn("Unexpected mismatch for Github PR #{}, expecting {} review comments, missing 1", number, reviewCommentsCount);
@@ -317,12 +368,31 @@ public class GitHubPullRequestSyncRunner {
                 break;
             }
             page++;
-            // sleep(syncGetByIdDelayMs);
+            sleep(syncGetByIdDelayMs);
         }
         if ((1 + commentsCount) == result.size()) {
             log.warn("Unexpected mismatch for Github PR #{}, expecting {} comments, missing 1", number, commentsCount);
         } else if (commentsCount != result.size()) {
             log.warn("Unexpected mismatch for Github PR #{}, expecting {} comments, got {}", number, commentsCount, result.size());
+        }
+        return result;
+    }
+
+    /** Pages through /issues/{number}/events (issue/timeline events), until an empty page. */
+    private List<SourceGitHubIssueEventDTO> fetchIssueEvents(int number) throws Exception {
+        List<SourceGitHubIssueEventDTO> result = new ArrayList<>();
+        int page = 1;
+        while (true) {
+            JsonNode events = apiClient.callHttpGet(baseRepoApiUrl + "/issues/" + number + "/events"
+                    + "?per_page=100&page=" + page);
+            if (!events.isArray() || events.isEmpty()) {
+                break;
+            }
+            for (JsonNode n : events) {
+                result.add(mapper.treeToValue(n, SourceGitHubIssueEventDTO.class));
+            }
+            page++;
+            sleep(syncGetByIdDelayMs);
         }
         return result;
     }

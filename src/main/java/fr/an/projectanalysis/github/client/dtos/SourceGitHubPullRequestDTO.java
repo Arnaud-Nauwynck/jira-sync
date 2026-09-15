@@ -75,6 +75,9 @@ public class SourceGitHubPullRequestDTO {
     /** when count 'reviewComments' is set, populated separately by GitHubPullRequestSyncRunner via GET .../pulls/{number}/comments, not part of the detail response. */
     public List<SourceGitHubReviewCommentDTO> reviewCommentsData;
 
+    /** populated separately by GitHubPullRequestSyncRunner via GET .../issues/{number}/events, not part of the detail response. */
+    public List<SourceGitHubIssueEventDTO> issueEventsData;
+
     @JsonIgnoreProperties(ignoreUnknown = true)
     @Data
     public static class SourceGitHubUserDTO {

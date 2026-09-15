@@ -52,6 +52,9 @@ public class GitHubPullRequestDTO {
     public Integer deletions;
     public Integer changedFiles;
 
+    /** loaded on demand, once, via GET .../issues/{number}/events */
+    public List<GitHubIssueEventDTO> issueEventsData;
+
     /** TODO remove:  useless, redundant with "https://github.com/{orga}/{repo}/pull/{number}" */
     public String htmlUrl;
 

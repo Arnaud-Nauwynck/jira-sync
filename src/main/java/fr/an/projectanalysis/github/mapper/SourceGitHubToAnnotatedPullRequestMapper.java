@@ -1,8 +1,10 @@
 package fr.an.projectanalysis.github.mapper;
 
 import fr.an.projectanalysis.github.client.dtos.SourceGitHubIssueCommentDTO;
+import fr.an.projectanalysis.github.client.dtos.SourceGitHubIssueEventDTO;
 import fr.an.projectanalysis.github.client.dtos.SourceGitHubPullRequestDTO;
 import fr.an.projectanalysis.github.rest.dtos.GitHubIssueCommentDTO;
+import fr.an.projectanalysis.github.rest.dtos.GitHubIssueEventDTO;
 import fr.an.projectanalysis.github.rest.dtos.GitHubPullRequestDTO;
 import fr.an.projectanalysis.github.rest.dtos.GitHubPullRequestReviewCommentDTO;
 
@@ -55,6 +57,7 @@ public class SourceGitHubToAnnotatedPullRequestMapper {
         dest.changedFiles = src.changedFiles;
         dest.reviewCommentsData = mapReviewComments(src.reviewCommentsData);
         dest.commentsData = mapComments(src.commentsData);
+        dest.issueEventsData = mapIssueEvents(src.issueEventsData);
         return dest;
     }
 
@@ -74,11 +77,23 @@ public class SourceGitHubToAnnotatedPullRequestMapper {
                         .collect(Collectors.toList());
     }
 
+    /** Maps the raw issue-event list to its flattened form; also used to backfill PRs missing this data. */
+    public static List<GitHubIssueEventDTO> mapIssueEvents(List<SourceGitHubIssueEventDTO> src) {
+        return src == null ? null
+                : src.stream()
+                        .map(SourceGitHubToAnnotatedPullRequestMapper::issueEvent)
+                        .collect(Collectors.toList());
+    }
+
     private static String login(SourceGitHubPullRequestDTO.SourceGitHubUserDTO user) {
         return user != null ? user.login : null;
     }
 
     private static String login(SourceGitHubIssueCommentDTO.SourceGitHubUserDTO user) {
+        return user != null ? user.login : null;
+    }
+
+    private static String login(SourceGitHubIssueEventDTO.SourceGitHubUserDTO user) {
         return user != null ? user.login : null;
     }
 
@@ -123,6 +138,43 @@ public class SourceGitHubToAnnotatedPullRequestMapper {
         d.createdAt = c.createdAt;
         d.updatedAt = c.updatedAt;
         d.authorAssociation = c.authorAssociation;
+        return d;
+    }
+
+    private static GitHubIssueEventDTO issueEvent(SourceGitHubIssueEventDTO e) {
+        GitHubIssueEventDTO d = new GitHubIssueEventDTO();
+        d.id = e.id;
+        d.url = e.url;
+        d.actorLogin = login(e.actor);
+        d.event = e.event;
+        d.commitId = e.commitId;
+        d.commitUrl = e.commitUrl;
+        d.createdAt = e.createdAt;
+        if (e.label != null) {
+            d.labelName = e.label.name;
+            d.labelColor = e.label.color;
+        }
+        d.assigneeLogin = login(e.assignee);
+        d.assignerLogin = login(e.assigner);
+        d.milestoneTitle = e.milestone != null ? e.milestone.title : null;
+        if (e.rename != null) {
+            d.renameFrom = e.rename.from;
+            d.renameTo = e.rename.to;
+        }
+        d.reviewRequesterLogin = login(e.reviewRequester);
+        d.requestedTeamName = e.requestedTeam != null ? e.requestedTeam.name : null;
+        d.requestedReviewerLogin = login(e.requestedReviewer);
+        if (e.dismissedReview != null) {
+            d.dismissedReviewState = e.dismissedReview.state;
+            d.dismissedReviewDismissalMessage = e.dismissedReview.dismissalMessage;
+        }
+        d.lockReason = e.lockReason;
+        d.issueTypeName = e.issueType != null ? e.issueType.name : null;
+        d.prevIssueTypeName = e.prevIssueType != null ? e.prevIssueType.name : null;
+        d.subIssueNumber = e.subIssue != null ? e.subIssue.number : null;
+        d.parentIssueNumber = e.parentIssue != null ? e.parentIssue.number : null;
+        d.blockedByNumber = e.blockedBy != null ? e.blockedBy.number : null;
+        d.blockingNumber = e.blocking != null ? e.blocking.number : null;
         return d;
     }
 }
