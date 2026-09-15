@@ -1,7 +1,9 @@
 package fr.an.projectanalysis.github.service;
 
 import fr.an.projectanalysis.github.repository.GitHubPullRequestRepository;
+import fr.an.projectanalysis.github.rest.dtos.GitHubPullRequestAnnotationDTO;
 import fr.an.projectanalysis.github.rest.dtos.GitHubPullRequestDTO;
+import fr.an.projectanalysis.github.rest.dtos.GitHubPullRequestExtraFieldsDTO;
 import fr.an.projectanalysis.github.rest.dtos.UserGitHubPullRequestStatsDTO;
 import org.springframework.stereotype.Component;
 
@@ -74,5 +76,33 @@ public class GitHubPullRequestService {
             statPerUser.add(year, pr);
         });
         return tmp.values();
+    }
+
+    /** Lists the annotations of PRs created between fromYear and toYear (inclusive), skipping un-annotated ones. */
+    public List<GitHubPullRequestAnnotationDTO> listPullRequestAnnotations(int fromYear, int toYear) {
+        List<GitHubPullRequestAnnotationDTO> res = new ArrayList<>();
+        repository.scanPullRequests(fromYear, toYear, (year, pr) -> {
+            GitHubPullRequestExtraFieldsDTO annotated = pr.annotated;
+            if (annotated != null) {
+                res.add(new GitHubPullRequestAnnotationDTO(pr.number, annotated));
+            }
+        });
+        return res;
+    }
+
+    public void putAnnotation(int number, GitHubPullRequestExtraFieldsDTO annotated) {
+        repository.putAnnotation(number, annotated);
+    }
+
+    public void putPersonalInterrestComment(int number, String personalInterrestComment, Integer personalInterrestPriority10) {
+        GitHubPullRequestDTO pr = repository.getByNumber(number);
+        GitHubPullRequestExtraFieldsDTO annotated = pr.annotatedOrCreate();
+        annotated.personalInterrestComment = personalInterrestComment;
+        annotated.personalInterrestPriority10 = personalInterrestPriority10;
+        repository.putAnnotation(number, annotated);
+    }
+
+    public void removeAnnotation(int number) {
+        repository.removeAnnotation(number);
     }
 }

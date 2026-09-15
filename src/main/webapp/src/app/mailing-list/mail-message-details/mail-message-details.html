@@ -1,0 +1,7 @@
+@if (message(); as data) {
+  <app-mail-message-view [message]="data" />
+} @else if (notFound()) {
+  <p>Message not found.</p>
+} @else {
+  <p>Loading...</p>
+}

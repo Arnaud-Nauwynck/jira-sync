@@ -1,0 +1,71 @@
+<style>
+  .module {
+    border: 1px solid #dfe1e6;
+    border-radius: 3px;
+    margin-bottom: 16px;
+  }
+  .module-header {
+    background: #f4f5f7;
+    padding: 8px 12px;
+    font-weight: 600;
+    font-size: 13px;
+    border-bottom: 1px solid #dfe1e6;
+    border-radius: 3px 3px 0 0;
+  }
+  .module-content {
+    padding: 12px;
+  }
+  .side-dl {
+    display: grid;
+    grid-template-columns: 100px 1fr;
+    gap: 6px 10px;
+    margin: 0;
+  }
+  .side-dl dt {
+    font-size: 12px;
+    color: #6b778c;
+  }
+  .side-dl dd {
+    margin: 0;
+    font-size: 14px;
+  }
+  .body-text {
+    white-space: pre-wrap;
+    font-size: 14px;
+  }
+</style>
+
+@if (message; as msg) {
+  <div class="module">
+    <div class="module-header">Headers</div>
+    <div class="module-content">
+      <dl class="side-dl">
+        <dt>Subject</dt>
+        <dd>{{ msg.subject }}</dd>
+        <dt>From</dt>
+        <dd>{{ msg.from }}</dd>
+        <dt>To</dt>
+        <dd>{{ (msg.to ?? []).join(', ') }}</dd>
+        @if (msg.cc && msg.cc.length > 0) {
+          <dt>Cc</dt>
+          <dd>{{ msg.cc.join(', ') }}</dd>
+        }
+        <dt>Date</dt>
+        <dd>{{ msg.date }}</dd>
+        @if (msg.inReplyTo) {
+          <dt>In-Reply-To</dt>
+          <dd>{{ msg.inReplyTo }}</dd>
+        }
+        <dt>Message-ID</dt>
+        <dd>{{ msg.messageId }}</dd>
+      </dl>
+    </div>
+  </div>
+
+  <div class="module">
+    <div class="module-header">Body</div>
+    <div class="module-content">
+      <pre class="body-text">{{ msg.bodyText }}</pre>
+    </div>
+  </div>
+}

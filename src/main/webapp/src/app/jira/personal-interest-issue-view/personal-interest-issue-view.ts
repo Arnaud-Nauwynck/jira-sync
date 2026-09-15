@@ -1,7 +1,7 @@
-import { Component, Input } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { Component, Input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { JiraIssueDTO } from '../../rest/model/jiraIssueDTO';
+import { JiraIssuesService } from '../../rest';
 
 @Component({
   imports: [FormsModule],
@@ -11,21 +11,21 @@ import { JiraIssueDTO } from '../../rest/model/jiraIssueDTO';
 export class PersonalInterestIssueView {
   @Input() issue?: JiraIssueDTO;
 
-  editing = false;
-  saving = false;
+  editing = signal(false);
+  saving = signal(false);
   draftComment = '';
   draftPriority10 = 0;
 
-  constructor(private http: HttpClient) {}
+  constructor(private jiraIssuesService: JiraIssuesService) {}
 
   toggleEdit() {
-    if (this.editing) {
-      this.editing = false;
+    if (this.editing()) {
+      this.editing.set(false);
       return;
     }
     this.draftComment = this.issue?.annotated?.personalInterrestComment ?? '';
     this.draftPriority10 = this.issue?.annotated?.personalInterrestPriority10 ?? 0;
-    this.editing = true;
+    this.editing.set(true);
   }
 
   save() {
@@ -33,15 +33,15 @@ export class PersonalInterestIssueView {
     if (!key) {
       return;
     }
-    this.saving = true;
-    this.http.put(`api/v1/jira-issue-annotations/personnal-interrest`, {
+    this.saving.set(true);
+    this.jiraIssuesService.putPersonalInterrestComment1({
       key,
       personalInterrestComment: this.draftComment,
       personalInterrestPriority10: this.draftPriority10,
     }).subscribe({
       next: () => {
-        this.saving = false;
-        this.editing = false;
+        this.saving.set(false);
+        this.editing.set(false);
         if (this.issue) {
           this.issue.annotated = {
             ...this.issue.annotated,
@@ -51,8 +51,8 @@ export class PersonalInterestIssueView {
         }
       },
       error: (ex) => {
-        this.saving = false;
-        console.error('... Failed call http PUT api/v1/jira-issue-annotations/personnal-interrest', ex);
+        this.saving.set(false);
+        console.error('... Failed call putPersonalInterrestComment', ex);
       },
     });
   }

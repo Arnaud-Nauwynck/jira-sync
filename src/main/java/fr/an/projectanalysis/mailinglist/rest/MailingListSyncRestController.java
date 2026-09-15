@@ -4,9 +4,9 @@ import fr.an.projectanalysis.mailinglist.rest.dtos.MailingListSyncStatusDTO;
 import fr.an.projectanalysis.mailinglist.rest.dtos.UserMailMessageStatsDTO;
 import fr.an.projectanalysis.mailinglist.service.MailMessageService;
 import fr.an.projectanalysis.mailinglist.service.MailingListSyncRunner;
+import fr.an.projectanalysis.util.AbstractRestController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,8 +19,7 @@ import java.util.Collection;
 @RestController
 @RequestMapping(path = "/api/v1/mailing-list-sync", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "MailingListSync")
-@Slf4j
-public class MailingListSyncRestController {
+public class MailingListSyncRestController extends AbstractRestController {
 
     private static final String BASE_URL = "/api/v1/mailing-list-sync";
 
@@ -28,6 +27,7 @@ public class MailingListSyncRestController {
     private final MailMessageService mailMessageService;
 
     public MailingListSyncRestController(MailingListSyncRunner mailingListSyncRunner, MailMessageService mailMessageService) {
+        super(BASE_URL);
         this.mailingListSyncRunner = mailingListSyncRunner;
         this.mailMessageService = mailMessageService;
     }
@@ -35,10 +35,11 @@ public class MailingListSyncRestController {
     @Operation(summary = "Get info about the last successful mailing-list sync run")
     @GetMapping("/last-sync")
     public MailingListSyncStatusDTO getLastSync() {
-        log.info("http GET " + BASE_URL + "/last-sync");
-        MailingListSyncStatusDTO dto = new MailingListSyncStatusDTO();
-        dto.lastClosedMonth = mailingListSyncRunner.loadLastClosedMonth();
-        return dto;
+        return withLog("GET", "/last-sync", "", () -> {
+            MailingListSyncStatusDTO dto = new MailingListSyncStatusDTO();
+            dto.lastClosedMonth = mailingListSyncRunner.loadLastClosedMonth();
+            return dto;
+        });
     }
 
     @Operation(summary = "Count mailing-list messages per sender, for messages archived between fromYear and toYear (inclusive), optionally filtered by a regex matched against the From header")
@@ -48,25 +49,14 @@ public class MailingListSyncRestController {
             @RequestParam(name = "toYear", defaultValue = "2050") int toYear,
             @RequestParam(name = "fromPattern", required = false) String fromPattern
     ) {
-        log.info("http GET {}/user-mail-message-stats?fromYear={}&toYear={}&fromPattern={}",
-                BASE_URL, fromYear, toYear, fromPattern);
-        return mailMessageService.queryUserMessageStats(fromYear, toYear, fromPattern);
+        String paramsText = "fromYear=" + fromYear + "&toYear=" + toYear + "&fromPattern=" + fromPattern;
+        return withLog("GET", "/user-mail-message-stats", paramsText,
+                () -> mailMessageService.queryUserMessageStats(fromYear, toYear, fromPattern));
     }
 
     @Operation(summary = "Run the mailing-list synchronization for the configured list/domain")
     @PostMapping("/run-sync-all")
     public void runSyncAll() {
-        log.info("http POST " + BASE_URL + "/run-sync-all");
-        long startTime = System.currentTimeMillis();
-        try {
-            mailingListSyncRunner.syncAll();
-
-            int millis = (int) (System.currentTimeMillis() - startTime);
-            log.info("... done http POST " + BASE_URL + "/run-sync-all, took {} ms", millis);
-        } catch (Exception ex) {
-            int millis = (int) (System.currentTimeMillis() - startTime);
-            log.error("... Failed http POST " + BASE_URL + "/run-sync-all, took {} ms, rethrowing {}", millis, ex.getMessage());
-            throw new RuntimeException(ex);
-        }
+        withLog("POST", "/run-sync-all", "", mailingListSyncRunner::syncAll);
     }
 }

@@ -1,0 +1,66 @@
+<style>
+  .module {
+    border: 1px solid #dfe1e6;
+    border-radius: 3px;
+    margin-bottom: 16px;
+  }
+  .module-header {
+    background: #f4f5f7;
+    padding: 8px 12px;
+    font-weight: 600;
+    font-size: 13px;
+    border-bottom: 1px solid #dfe1e6;
+    border-radius: 3px 3px 0 0;
+  }
+  .module-content {
+    padding: 12px;
+  }
+  .description {
+    white-space: pre-wrap;
+    font-size: 14px;
+  }
+  .side-dl dt {
+    font-size: 12px;
+    color: #6b778c;
+    margin-top: 8px;
+  }
+  .side-dl dt:first-child {
+    margin-top: 0;
+  }
+  .side-dl dd {
+    margin: 0;
+    font-size: 14px;
+  }
+  .field-label {
+    display: block;
+    font-size: 12px;
+    color: #6b778c;
+  }
+</style>
+
+<div class="module">
+  <div class="module-header">Analysis Summary</div>
+  <div class="module-content">
+    @if (annotated?.analysisSummary) {
+      <div class="description">{{ annotated?.analysisSummary }}</div>
+      <dl class="side-dl mt-2">
+        <dt>Last updated</dt>
+        <dd>{{ annotated?.analysisSummaryLastUpdateTime }}</dd>
+        <dt>Tokens consumed</dt>
+        <dd>{{ annotated?.analysisSummaryTokensConsumed || 0 }}</dd>
+      </dl>
+      @if (annotated?.analysisUserExtraPrompts?.length) {
+        <div class="mt-2">
+          <span class="field-label">Extra prompts</span>
+          <ul>
+            @for (prompt of annotated?.analysisUserExtraPrompts; track prompt) {
+              <li>{{ prompt }}</li>
+            }
+          </ul>
+        </div>
+      }
+    } @else {
+      <p>No analysis available.</p>
+    }
+  </div>
+</div>

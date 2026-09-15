@@ -3,9 +3,9 @@ package fr.an.projectanalysis.jira.rest;
 import fr.an.projectanalysis.jira.rest.dtos.JiraIssueAnnotationDTO;
 import fr.an.projectanalysis.jira.rest.dtos.PersonalInterrestCommentDTO;
 import fr.an.projectanalysis.jira.service.JiraIssueService;
+import fr.an.projectanalysis.util.AbstractRestController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,14 +14,14 @@ import java.util.List;
 @RestController
 @RequestMapping(path="/api/v1/jira-issue-annotations", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "JiraIssues")
-@Slf4j
-public class JiraIssueAnnotationRestController {
+public class JiraIssueAnnotationRestController extends AbstractRestController {
 
     private static final String BASE_URL = "/api/v1/jira-issue-annotation";
 
     private final JiraIssueService delegate;
 
     public JiraIssueAnnotationRestController(JiraIssueService delegate) {
+        super(BASE_URL);
         this.delegate = delegate;
     }
 
@@ -32,29 +32,27 @@ public class JiraIssueAnnotationRestController {
             @RequestParam(name="fromYear", defaultValue = "2020") int fromYear,
             @RequestParam(name="toYear", defaultValue = "2050") int toYear
             ) {
-        log.info("http GET {}?fromYear={}&toYear={}", BASE_URL, fromYear, toYear);
-        return delegate.listIssueAnnotations(fromYear, toYear);
+        return withLog("GET", "/", "fromYear=" + fromYear + "&toYear=" + toYear,
+                () -> delegate.listIssueAnnotations(fromYear, toYear));
     }
 
     @Operation(summary = "Put annotation for issue")
     @PutMapping()
     public void putAnnotation(@RequestBody JiraIssueAnnotationDTO req) {
-        log.info("http POST {} (key={})", BASE_URL, req.key);
-        delegate.putAnnotation(req.key, req.annotated);
+        withLog("PUT", "", "key=" + req.key, () -> delegate.putAnnotation(req.key, req.annotated));
     }
 
     @Operation(summary = "Put personal interest comment for issue")
     @PutMapping("/personnal-interrest")
     public void putPersonalInterrestComment(@RequestBody PersonalInterrestCommentDTO req) {
-        log.info("http PUT {}/personnal-interrest (key={})", BASE_URL, req.key);
-        delegate.putPersonalInterrestComment(req.key, req.personalInterrestComment, req.personalInterrestPriority10);
+        withLog("PUT", "/personnal-interrest", "key=" + req.key,
+                () -> delegate.putPersonalInterrestComment(req.key, req.personalInterrestComment, req.personalInterrestPriority10));
     }
 
     @Operation(summary = "Delete annotation for issue")
     @DeleteMapping("/{key}")
     public void putAnnotation(@PathVariable(name="key") String key) {
-        log.info("http DELETE {} (key={})", BASE_URL, key);
-        delegate.removeAnnotation(key);
+        withLog("DELETE", "/" + key, "", () -> delegate.removeAnnotation(key));
     }
 
 

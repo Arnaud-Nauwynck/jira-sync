@@ -1,0 +1,268 @@
+<style>
+  .pr-nav-tabs .badge {
+    font-weight: 400;
+  }
+  .pr-comment {
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+  }
+  .pr-comment-header {
+    background: #f6f8fa;
+    border-bottom: 1px solid #d0d7de;
+    border-radius: 6px 6px 0 0;
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+  .pr-comment-body {
+    padding: 12px;
+    white-space: pre-wrap;
+  }
+  .pr-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #d0d7de;
+    font-size: 12px;
+  }
+  .pr-ref {
+    background: #eaeef2;
+    padding: 1px 6px;
+    border-radius: 6px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12px;
+  }
+  .pr-sidebar-section {
+    border-bottom: 1px solid #d0d7de;
+    padding: 12px 0;
+  }
+  .pr-sidebar-section:first-child {
+    padding-top: 0;
+  }
+  .pr-sidebar-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #1f2328;
+    margin-bottom: 6px;
+  }
+  .pr-empty {
+    color: #59636e;
+    font-size: 13px;
+  }
+  .pr-commits-date {
+    font-size: 12px;
+    font-weight: 600;
+    color: #59636e;
+    margin-bottom: 8px;
+  }
+  .pr-commit-row {
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    padding: 12px;
+  }
+  .pr-commit-message {
+    font-weight: 600;
+    font-size: 14px;
+  }
+  .pr-checks-header {
+    border-bottom: 1px solid #d0d7de;
+    padding-bottom: 12px;
+    margin-bottom: 0;
+  }
+  .pr-check-status-icon {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    border: 2px solid #8c959f;
+    border-radius: 50%;
+  }
+  .pr-checks-empty {
+    background: #f6f8fa;
+    border: 1px solid #d0d7de;
+    border-top: none;
+    border-radius: 0 0 6px 6px;
+    padding: 48px 16px;
+    text-align: center;
+  }
+  .pr-files-empty {
+    background: #f6f8fa;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    padding: 48px 16px;
+    text-align: center;
+  }
+  .pr-additions {
+    color: #1a7f37;
+    font-weight: 600;
+    margin-right: 8px;
+  }
+  .pr-deletions {
+    color: #cf222e;
+    font-weight: 600;
+    margin-right: 8px;
+  }
+  .pr-more-comments {
+    border: 1px dashed #d0d7de;
+    border-radius: 6px;
+    padding: 16px;
+    text-align: center;
+  }
+</style>
+
+@if (pullRequest; as pr) {
+  <ul ngbNav #nav="ngbNav" [(activeId)]="active" class="nav-tabs pr-nav-tabs">
+    <li [ngbNavItem]="1">
+      <button ngbNavLink>Conversation <span class="badge rounded-pill text-bg-secondary">{{ pr.comments ?? 0 }}</span></button>
+      <ng-template ngbNavContent>
+        <div class="row mt-3">
+          <div class="col-lg-9">
+            <div class="pr-comment mb-3">
+              <div class="pr-comment-header d-flex align-items-center gap-2">
+                <span class="pr-avatar">👤</span>
+                <strong>{{ pr.authorLogin }}</strong> commented
+                @if (pr.createdAt) { <span class="text-secondary">on {{ pr.createdAt }}</span> }
+              </div>
+              <div class="pr-comment-body">{{ pr.body || '(no description provided)' }}</div>
+            </div>
+
+            @if ((pr.comments ?? 0) > 0) {
+              <div class="pr-more-comments">
+                <p class="pr-empty mb-1">
+                  {{ pr.comments }} more comment{{ pr.comments === 1 ? '' : 's' }} on this conversation.
+                  Individual comment content is not synced locally.
+                </p>
+                @if (pr.htmlUrl) {
+                  <a [href]="pr.htmlUrl" target="_blank" rel="noopener">View full conversation on GitHub</a>
+                }
+              </div>
+            }
+          </div>
+          <div class="col-lg-3">
+            <div class="pr-sidebar-section">
+              <div class="pr-sidebar-title">Reviewers</div>
+              @if ((pr.requestedReviewerLogins ?? []).length > 0) {
+                <ul class="list-unstyled mb-0">
+                  @for (r of pr.requestedReviewerLogins; track r) {
+                    <li>{{ r }}</li>
+                  }
+                </ul>
+              } @else {
+                <span class="pr-empty">No reviews</span>
+              }
+            </div>
+            <div class="pr-sidebar-section">
+              <div class="pr-sidebar-title">Assignees</div>
+              @if ((pr.assigneeLogins ?? []).length > 0) {
+                <ul class="list-unstyled mb-0">
+                  @for (a of pr.assigneeLogins; track a) {
+                    <li>{{ a }}</li>
+                  }
+                </ul>
+              } @else {
+                <span class="pr-empty">No one assigned</span>
+              }
+            </div>
+            <div class="pr-sidebar-section">
+              <div class="pr-sidebar-title">Labels</div>
+              @if ((pr.labelNames ?? []).length > 0) {
+                <div class="d-flex flex-wrap gap-1">
+                  @for (l of pr.labelNames; track l) {
+                    <span class="badge text-bg-light border">{{ l }}</span>
+                  }
+                </div>
+              } @else {
+                <span class="pr-empty">None yet</span>
+              }
+            </div>
+            <div class="pr-sidebar-section">
+              <div class="pr-sidebar-title">Milestone</div>
+              <span [class.pr-empty]="!pr.milestoneTitle">{{ pr.milestoneTitle || 'No milestone' }}</span>
+            </div>
+            <div class="pr-sidebar-section">
+              <div class="pr-sidebar-title">Merged by</div>
+              <span [class.pr-empty]="!pr.mergedByLogin">{{ pr.mergedByLogin || 'Not merged' }}</span>
+            </div>
+          </div>
+        </div>
+      </ng-template>
+    </li>
+    <li [ngbNavItem]="2">
+      <button ngbNavLink>Commits <span class="badge rounded-pill text-bg-secondary">{{ pr.commits ?? 0 }}</span></button>
+      <ng-template ngbNavContent>
+        <div class="mt-3">
+          @if ((pr.commits ?? 0) === 1) {
+            @if (pr.createdAt) {
+              <div class="pr-commits-date">Commits on {{ pr.createdAt }}</div>
+            }
+            <div class="pr-commit-row d-flex align-items-center justify-content-between gap-2">
+              <div class="d-flex align-items-center gap-2">
+                <span class="pr-avatar">👤</span>
+                <div>
+                  <div class="pr-commit-message">{{ pr.title }}</div>
+                  <div class="pr-empty">
+                    {{ pr.authorLogin }} committed
+                    @if (pr.createdAt) { on {{ pr.createdAt }} }
+                  </div>
+                </div>
+              </div>
+              @if (pr.headSha; as sha) {
+                @if (commitUrl(pr, sha); as url) {
+                  <a [href]="url" target="_blank" rel="noopener" class="pr-ref text-decoration-none">{{ sha.slice(0, 7) }}</a>
+                } @else {
+                  <code class="pr-ref">{{ sha.slice(0, 7) }}</code>
+                }
+              }
+            </div>
+          } @else {
+            <p class="pr-empty">
+              This pull request has {{ pr.commits ?? 0 }} commits.
+              Individual commit history is not synced locally
+              @if (pr.htmlUrl) { &mdash; see <a [href]="pr.htmlUrl" target="_blank" rel="noopener">commits on GitHub</a>. }
+            </p>
+          }
+        </div>
+      </ng-template>
+    </li>
+    <li [ngbNavItem]="3">
+      <button ngbNavLink>Checks</button>
+      <ng-template ngbNavContent>
+        <div class="mt-3">
+          <div class="pr-checks-header d-flex align-items-center gap-2">
+            <span class="pr-check-status-icon"></span>
+            <strong>{{ pr.title }}</strong>
+            @if (pr.headSha; as sha) {
+              <code class="pr-ref">{{ sha.slice(0, 7) }}</code>
+            }
+          </div>
+          <div class="pr-checks-empty">
+            <p class="pr-empty mb-1">Check run data is not synced locally.</p>
+            @if (pr.htmlUrl) {
+              <a [href]="pr.htmlUrl + '/checks'" target="_blank" rel="noopener">View checks on GitHub</a>
+            }
+          </div>
+        </div>
+      </ng-template>
+    </li>
+    <li [ngbNavItem]="4">
+      <button ngbNavLink>Files changed <span class="badge rounded-pill text-bg-secondary">{{ pr.changedFiles ?? 0 }}</span></button>
+      <ng-template ngbNavContent>
+        <div class="mt-3">
+          <div class="mb-3">
+            <span class="pr-additions">+{{ pr.additions ?? 0 }}</span>
+            <span class="pr-deletions">-{{ pr.deletions ?? 0 }}</span>
+            <span class="pr-empty">across {{ pr.changedFiles ?? 0 }} file{{ (pr.changedFiles ?? 0) === 1 ? '' : 's' }}</span>
+          </div>
+          <div class="pr-files-empty">
+            <p class="pr-empty mb-1">File-level diffs are not synced locally.</p>
+            @if (pr.htmlUrl) {
+              <a [href]="pr.htmlUrl + '/files'" target="_blank" rel="noopener">View files changed on GitHub</a>
+            }
+          </div>
+        </div>
+      </ng-template>
+    </li>
+  </ul>
+  <div [ngbNavOutlet]="nav" class="mt-3"></div>
+}

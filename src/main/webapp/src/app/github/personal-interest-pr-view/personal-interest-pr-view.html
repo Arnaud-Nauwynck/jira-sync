@@ -1,0 +1,32 @@
+<div class="personal-interest-module theme-github">
+  <div class="personal-interest-module-header">
+    Personal Interest
+    <button type="button" class="btn btn-sm btn-secondary" (click)="toggleEdit()" [disabled]="saving()">
+      {{ editing() ? 'Cancel' : 'Edit' }}
+    </button>
+  </div>
+  <div class="personal-interest-module-content">
+    @if (editing()) {
+      <textarea class="personal-interest-textarea" [(ngModel)]="draftComment"></textarea>
+      <div class="personal-interest-priority-field">
+        <label for="personalInterrestPriority10">Priority (0-10)</label>
+        <input id="personalInterrestPriority10" type="number" class="form-control form-control-sm" min="0" max="10" [(ngModel)]="draftPriority10" />
+      </div>
+      <div class="personal-interest-actions">
+        <button type="button" class="btn btn-sm btn-primary" (click)="save()" [disabled]="saving()">
+          {{ saving() ? 'Saving...' : 'Save' }}
+        </button>
+      </div>
+    } @else {
+      @if (pullRequest?.annotated?.personalInterrestComment) {
+        <div class="personal-interest-description">{{ pullRequest?.annotated?.personalInterrestComment }}</div>
+      } @else {
+        <p>No personal interest comment available.</p>
+      }
+      <dl class="personal-interest-side-dl mt-2">
+        <dt>Priority</dt>
+        <dd>{{ pullRequest?.annotated?.personalInterrestPriority10 || 0 }} / 10</dd>
+      </dl>
+    }
+  </div>
+</div>

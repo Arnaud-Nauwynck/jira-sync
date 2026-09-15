@@ -57,6 +57,67 @@
   </div>
 </div>
 
+<div class="mb-2">
+  <div class="small text-secondary mb-1" style="cursor: pointer;" (click)="analysisCriteriaCollapse.toggle()" [attr.aria-expanded]="!isAnalysisCriteriaCollapsed">
+    {{ isAnalysisCriteriaCollapsed ? '▸' : '▾' }} Analysis Criteria
+  </div>
+  <div #analysisCriteriaCollapse="ngbCollapse" [(ngbCollapse)]="isAnalysisCriteriaCollapsed">
+    <div class="d-flex gap-2 align-items-end flex-wrap">
+      <app-text-contains-filter label="Analysis summary contains"
+        [value]="analysisSummaryContains" (valueChange)="analysisSummaryContains = $event; onFilterInputsChanged()" />
+      <app-text-contains-filter label="Analysis extra prompts contains"
+        [value]="analysisUserExtraPromptsContains" (valueChange)="analysisUserExtraPromptsContains = $event; onFilterInputsChanged()" />
+      <app-date-range-filter
+        [from]="analysisSummaryUpdatedFrom" (fromChange)="analysisSummaryUpdatedFrom = $event; onFilterInputsChanged()"
+        [to]="analysisSummaryUpdatedTo" (toChange)="analysisSummaryUpdatedTo = $event; onFilterInputsChanged()" />
+      <app-number-range-filter fromLabel="Tokens (k) from" toLabel="Tokens (k) to"
+        [from]="analysisSummaryMinTokensK" (fromChange)="analysisSummaryMinTokensK = $event; onFilterInputsChanged()"
+        [to]="analysisSummaryMaxTokensK" (toChange)="analysisSummaryMaxTokensK = $event; onFilterInputsChanged()" />
+      <app-availability-filter name="analysisAvailability"
+        [value]="analysisAvailability" (valueChange)="analysisAvailability = $event; onFilterInputsChanged()" />
+    </div>
+  </div>
+</div>
+
+<div class="mb-2">
+  <div class="small text-secondary mb-1" style="cursor: pointer;" (click)="developmentWorkCriteriaCollapse.toggle()" [attr.aria-expanded]="!isDevelopmentWorkCriteriaCollapsed">
+    {{ isDevelopmentWorkCriteriaCollapsed ? '▸' : '▾' }} Development Work Criteria
+  </div>
+  <div #developmentWorkCriteriaCollapse="ngbCollapse" [(ngbCollapse)]="isDevelopmentWorkCriteriaCollapsed">
+    <div class="d-flex gap-2 align-items-end flex-wrap">
+      <app-text-contains-filter label="Development work contains"
+        [value]="developmentWorkDescribedContains" (valueChange)="developmentWorkDescribedContains = $event; onFilterInputsChanged()" />
+      <app-text-contains-filter label="Development extra prompts contains"
+        [value]="developmentWorkUserExtraPromptsContains" (valueChange)="developmentWorkUserExtraPromptsContains = $event; onFilterInputsChanged()" />
+      <app-date-range-filter
+        [from]="developmentWorkUpdatedFrom" (fromChange)="developmentWorkUpdatedFrom = $event; onFilterInputsChanged()"
+        [to]="developmentWorkUpdatedTo" (toChange)="developmentWorkUpdatedTo = $event; onFilterInputsChanged()" />
+      <app-number-range-filter fromLabel="Tokens (k) from" toLabel="Tokens (k) to"
+        [from]="developmentWorkMinTokensK" (fromChange)="developmentWorkMinTokensK = $event; onFilterInputsChanged()"
+        [to]="developmentWorkMaxTokensK" (toChange)="developmentWorkMaxTokensK = $event; onFilterInputsChanged()" />
+      <app-availability-filter name="developmentWorkAvailability"
+        [value]="developmentWorkAvailability" (valueChange)="developmentWorkAvailability = $event; onFilterInputsChanged()" />
+    </div>
+  </div>
+</div>
+
+<div class="mb-3">
+  <div class="small text-secondary mb-1" style="cursor: pointer;" (click)="personalInterestCriteriaCollapse.toggle()" [attr.aria-expanded]="!isPersonalInterestCriteriaCollapsed">
+    {{ isPersonalInterestCriteriaCollapsed ? '▸' : '▾' }} Personal Interest Criteria
+  </div>
+  <div #personalInterestCriteriaCollapse="ngbCollapse" [(ngbCollapse)]="isPersonalInterestCriteriaCollapsed">
+    <div class="d-flex gap-2 align-items-end flex-wrap">
+      <app-text-contains-filter label="Personal interest comment contains"
+        [value]="personalInterrestCommentContains" (valueChange)="personalInterrestCommentContains = $event; onFilterInputsChanged()" />
+      <app-number-range-filter fromLabel="Priority from" toLabel="Priority to" [min]="0" [max]="10"
+        [from]="personalInterrestMinPriority" (fromChange)="personalInterrestMinPriority = $event; onFilterInputsChanged()"
+        [to]="personalInterrestMaxPriority" (toChange)="personalInterrestMaxPriority = $event; onFilterInputsChanged()" />
+      <app-availability-filter name="personalInterrestAvailability"
+        [value]="personalInterrestAvailability" (valueChange)="personalInterrestAvailability = $event; onFilterInputsChanged()" />
+    </div>
+  </div>
+</div>
+
 <ag-grid-angular
   style="width: 100%; height: 500px;"
   [rowData]="messagesDataService.messages()"
@@ -68,16 +129,9 @@
 @if (selectedMessage(); as msg) {
   <div class="border rounded mt-3 p-3">
     <div class="d-flex justify-content-end gap-2 mb-2">
+      <button class="btn btn-sm btn-outline-secondary" type="button" (click)="openDetailAsRoute()">Show as page</button>
       <button class="btn btn-sm btn-outline-secondary" type="button" (click)="closeDetail()">Close</button>
     </div>
-    <div><strong>Subject:</strong> {{ msg.subject }}</div>
-    <div><strong>From:</strong> {{ msg.from }}</div>
-    <div><strong>To:</strong> {{ (msg.to ?? []).join(', ') }}</div>
-    @if (msg.cc && msg.cc.length > 0) {
-      <div><strong>Cc:</strong> {{ msg.cc.join(', ') }}</div>
-    }
-    <div><strong>Date:</strong> {{ msg.date }}</div>
-    <hr />
-    <pre style="white-space: pre-wrap;">{{ msg.bodyText }}</pre>
+    <app-mail-message-view [message]="msg" />
   </div>
 }

@@ -2,9 +2,9 @@ package fr.an.projectanalysis.mailinglist.rest;
 
 import fr.an.projectanalysis.mailinglist.rest.dtos.MailMessageDTO;
 import fr.an.projectanalysis.mailinglist.service.MailMessageService;
+import fr.an.projectanalysis.util.AbstractRestController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,23 +17,24 @@ import java.util.Collection;
 @RestController
 @RequestMapping(path = "/api/v1/mailing-list-messages", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "MailMessages")
-@Slf4j
-public class MailMessagesRestController {
+public class MailMessagesRestController extends AbstractRestController {
 
     private static final String BASE_URL = "/api/v1/mailing-list-messages";
 
     private final MailMessageService delegate;
 
     public MailMessagesRestController(MailMessageService delegate) {
+        super(BASE_URL);
         this.delegate = delegate;
     }
 
     @Operation(summary = "Find a single locally-synced mailing-list message by its Message-ID")
     @GetMapping("/message")
     public ResponseEntity<MailMessageDTO> findMessageByMessageId(@RequestParam("messageId") String messageId) {
-        log.info("http GET {}/message?messageId={}", BASE_URL, messageId);
-        MailMessageDTO found = delegate.findByMessageId(messageId);
-        return found != null ? ResponseEntity.ok(found) : ResponseEntity.notFound().build();
+        return withLog("GET", "/message", "messageId=" + messageId, () -> {
+            MailMessageDTO found = delegate.findByMessageId(messageId);
+            return found != null ? ResponseEntity.ok(found) : ResponseEntity.notFound().build();
+        });
     }
 
     @Operation(summary = "List mailing-list messages archived between fromMonth and toMonth (both 'yyyy-MM', inclusive), optionally filtered by regexes matched against the From header, the Subject, and/or the body text")
@@ -45,9 +46,10 @@ public class MailMessagesRestController {
             @RequestParam(name = "subjectPattern", required = false) String subjectPattern,
             @RequestParam(name = "bodyPattern", required = false) String bodyPattern
     ) {
-        log.info("http GET {}/messages?fromMonth={}&toMonth={}&fromPattern={}&subjectPattern={}&bodyPattern={}",
-                BASE_URL, fromMonth, toMonth, fromPattern, subjectPattern, bodyPattern);
-        return delegate.queryMessages(fromMonth, toMonth, fromPattern, subjectPattern, bodyPattern);
+        String paramsText = "fromMonth=" + fromMonth + "&toMonth=" + toMonth + "&fromPattern=" + fromPattern
+                + "&subjectPattern=" + subjectPattern + "&bodyPattern=" + bodyPattern;
+        return withLog("GET", "/messages", paramsText,
+                () -> delegate.queryMessages(fromMonth, toMonth, fromPattern, subjectPattern, bodyPattern));
     }
 
 }

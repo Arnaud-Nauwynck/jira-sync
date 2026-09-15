@@ -17,6 +17,11 @@ public class MailMessageExtraFieldsDTO {
     public int analysisSummaryTokensConsumed;
     public List<String> analysisUserExtraPrompts;
 
+    public String developmentWorkDescribed;
+    public LocalDateTime developmentWorkLastUpdateTime;
+    public int developmentWorkTokensConsumed;
+    public List<String> developmentWorkUserExtraPrompts;
+
     public String personalInterrestComment;
     public Integer personalInterrestPriority10;
 }

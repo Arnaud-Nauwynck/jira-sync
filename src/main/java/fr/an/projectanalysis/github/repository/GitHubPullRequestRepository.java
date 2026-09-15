@@ -7,6 +7,7 @@ import fr.an.projectanalysis.github.client.dtos.SourceGitHubPullRequestDTO;
 import fr.an.projectanalysis.github.configuration.GitHubSyncProperties;
 import fr.an.projectanalysis.github.mapper.SourceGitHubToAnnotatedPullRequestMapper;
 import fr.an.projectanalysis.github.rest.dtos.GitHubPullRequestDTO;
+import fr.an.projectanalysis.github.rest.dtos.GitHubPullRequestExtraFieldsDTO;
 import jakarta.annotation.Nonnull;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -50,10 +51,11 @@ import java.util.zip.ZipOutputStream;
  * Partitions are identified by their year as an {@code int}; PRs with a missing/unparsable
  * "created" date fall into the {@link #UNKNOWN_YEAR} partition ("created_year=unknown").
  * <p>
- * Mirrors {@code fr.an.jira.repository.JiraIssueRepository}'s on-disk format, simplified: only
- * create/update changes are recorded (no dedicated annotation change record), but the previously
- * persisted {@code annotated} data (see {@link GitHubPullRequestDTO#annotated}) is still carried
- * over onto the newly mapped PR on every update, so a local annotation survives a re-sync.
+ * Mirrors {@code fr.an.jira.repository.JiraIssueRepository}'s on-disk format, keyed by PR number
+ * instead of issue key; on every "create"/"update" change, the previously persisted
+ * {@code annotated} data (see {@link GitHubPullRequestDTO#annotated}) is carried over onto the
+ * newly mapped PR, so a local annotation survives a re-sync. {@link #putAnnotation} and
+ * {@link #removeAnnotation} record dedicated "updateAnnotation"/"removeAnnotation" changes.
  */
 @Component
 @Slf4j
@@ -221,6 +223,20 @@ public class GitHubPullRequestRepository {
         }
     }
 
+    public void putAnnotation(int number, GitHubPullRequestExtraFieldsDTO annotated) {
+        GitHubPullRequestDTO pr = getByNumber(number); // points to cached partition data... updating => update cache!
+        pr.annotated = annotated;
+        int year = partitionYearOf(pr);
+        appendChange(year, new UpdateAnnotationPullRequestChangeRecord(number, annotated));
+    }
+
+    public void removeAnnotation(int number) {
+        GitHubPullRequestDTO pr = getByNumber(number); // points to cached partition data... updating => update cache!
+        pr.annotated = null;
+        int year = partitionYearOf(pr);
+        appendChange(year, new RemoveAnnotationPullRequestChangeRecord(number));
+    }
+
     /** Folds the pending changes log into a fresh compacted snapshot, then clears the changes log. */
     public void compact(int year) {
         writeSnapshot(year, cachedPartitionData(year).values());
@@ -316,13 +332,17 @@ public class GitHubPullRequestRepository {
 
     public enum PullRequestChangeType {
         create,
-        update
+        update,
+        updateAnnotation,
+        removeAnnotation
     }
 
     @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "change")
     @JsonSubTypes({
             @JsonSubTypes.Type(value = CreatePullRequestChangeRecord.class, name = "create"),
-            @JsonSubTypes.Type(value = UpdatePullRequestChangeRecord.class, name = "update")
+            @JsonSubTypes.Type(value = UpdatePullRequestChangeRecord.class, name = "update"),
+            @JsonSubTypes.Type(value = UpdateAnnotationPullRequestChangeRecord.class, name = "updateAnnotation"),
+            @JsonSubTypes.Type(value = RemoveAnnotationPullRequestChangeRecord.class, name = "removeAnnotation")
     })
     public static abstract class PullRequestChangeRecord {
         public abstract PullRequestChangeType getChange();
@@ -351,6 +371,29 @@ public class GitHubPullRequestRepository {
         public int number() { return data.number; }
     }
 
+    @AllArgsConstructor
+    public static class UpdateAnnotationPullRequestChangeRecord extends PullRequestChangeRecord {
+        public int number;
+        public GitHubPullRequestExtraFieldsDTO annotated;
+
+        @Override
+        public PullRequestChangeType getChange() { return PullRequestChangeType.updateAnnotation; }
+
+        @Override
+        public int number() { return number; }
+    }
+
+    @AllArgsConstructor
+    public static class RemoveAnnotationPullRequestChangeRecord extends PullRequestChangeRecord {
+        public int number;
+
+        @Override
+        public PullRequestChangeType getChange() { return PullRequestChangeType.removeAnnotation; }
+
+        @Override
+        public int number() { return number; }
+    }
+
     private void replayChanges(int year, Map<Integer, GitHubPullRequestDTO> prByNumber) {
         Path file = changesFile(year);
         if (!Files.exists(file)) {
@@ -364,6 +407,16 @@ public class GitHubPullRequestRepository {
                     prByNumber.put(chg.data.number, chg.data);
                 } else if (rec instanceof UpdatePullRequestChangeRecord chg) {
                     prByNumber.put(chg.data.number, chg.data);
+                } else if (rec instanceof UpdateAnnotationPullRequestChangeRecord chg) {
+                    GitHubPullRequestDTO prev = prByNumber.get(chg.number);
+                    if (prev != null) {
+                        prev.annotated = chg.annotated;
+                    } // else should not occur, ignore anyway
+                } else if (rec instanceof RemoveAnnotationPullRequestChangeRecord chg) {
+                    GitHubPullRequestDTO prev = prByNumber.get(chg.number);
+                    if (prev != null) {
+                        prev.annotated = null;
+                    } // else should not occur, ignore anyway
                 } else {
                     log.warn("unexpected change type " + rec.getChange() + " in file '" + file + "' ... ignore");
                 }

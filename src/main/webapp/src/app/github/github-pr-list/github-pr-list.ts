@@ -1,4 +1,5 @@
 import { Component, OnInit, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { AgGridAngular } from 'ag-grid-angular';
 import type { CellClickedEvent, ColDef, GridApi, GridReadyEvent, IRowNode } from 'ag-grid-community';
 import { FormsModule } from '@angular/forms';
@@ -6,12 +7,19 @@ import { NgbCollapseModule, NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap
 import { GitHubPullRequestDTO } from '../../rest';
 import { GithubPullRequestsDataService } from './github-pull-requests-data.service';
 import { GithubPrView } from '../github-pr-view/github-pr-view';
+import { TextContainsFilter } from '../../jira/issues-list/filters/text-contains-filter';
+import { NumberRangeFilter } from '../../jira/issues-list/filters/number-range-filter';
+import { DateRangeFilter } from '../../jira/issues-list/filters/date-range-filter';
+import { AvailabilityFilterComponent } from '../../jira/issues-list/filters/availability-filter';
 
 /** Tri-state availability/boolean filter: 'no' = false, 'yes' = true, 'any' = no filtering. */
 export type AvailabilityFilter = 'no' | 'any' | 'yes';
 
 @Component({
-  imports: [AgGridAngular, FormsModule, NgbDropdownModule, NgbCollapseModule, GithubPrView],
+  imports: [
+    AgGridAngular, FormsModule, NgbDropdownModule, NgbCollapseModule, GithubPrView,
+    TextContainsFilter, NumberRangeFilter, DateRangeFilter, AvailabilityFilterComponent,
+  ],
   selector: 'app-github-pr-list',
   templateUrl: './github-pr-list.html',
 })
@@ -45,6 +53,33 @@ export class GithubPRList implements OnInit {
 
   draftAvailability: AvailabilityFilter = 'any';
   mergedAvailability: AvailabilityFilter = 'any';
+
+  // Analysis criteria panel: collapsible, collapsed by default.
+  isAnalysisCriteriaCollapsed = true;
+  analysisSummaryContains = '';
+  analysisSummaryUpdatedFrom = '';
+  analysisSummaryUpdatedTo = '';
+  analysisSummaryMinTokensK: number | null = null;
+  analysisSummaryMaxTokensK: number | null = null;
+  analysisUserExtraPromptsContains = '';
+  analysisAvailability: AvailabilityFilter = 'any';
+
+  // Development work criteria panel: collapsible, collapsed by default.
+  isDevelopmentWorkCriteriaCollapsed = true;
+  developmentWorkDescribedContains = '';
+  developmentWorkUpdatedFrom = '';
+  developmentWorkUpdatedTo = '';
+  developmentWorkMinTokensK: number | null = null;
+  developmentWorkMaxTokensK: number | null = null;
+  developmentWorkUserExtraPromptsContains = '';
+  developmentWorkAvailability: AvailabilityFilter = 'any';
+
+  // Personal interest criteria panel: collapsible, collapsed by default.
+  isPersonalInterestCriteriaCollapsed = true;
+  personalInterrestCommentContains = '';
+  personalInterrestMinPriority: number | null = null;
+  personalInterrestMaxPriority: number | null = null;
+  personalInterrestAvailability: AvailabilityFilter = 'any';
 
   // Column Definitions: Defines the columns to be displayed.
   colDefs: ColDef<GitHubPullRequestDTO>[] = [
@@ -91,7 +126,7 @@ export class GithubPRList implements OnInit {
 
   private gridApi?: GridApi<GitHubPullRequestDTO>;
 
-  constructor(readonly pullRequestsDataService: GithubPullRequestsDataService) {}
+  constructor(readonly pullRequestsDataService: GithubPullRequestsDataService, private router: Router) {}
 
   ngOnInit() {
     this.search();
@@ -107,6 +142,13 @@ export class GithubPRList implements OnInit {
 
   closeDetail() {
     this.selectedPullRequest.set(undefined);
+  }
+
+  openDetailAsRoute() {
+    const number = this.selectedPullRequest()?.number;
+    if (number != null) {
+      this.router.navigate(['/github-pull-request', number]);
+    }
   }
 
   toggleStateFilter(state: string) {
@@ -136,7 +178,25 @@ export class GithubPRList implements OnInit {
       || this.parseCsvList(this.baseRefContains).length > 0
       || this.excludedStates.size > 0
       || this.draftAvailability !== 'any'
-      || this.mergedAvailability !== 'any';
+      || this.mergedAvailability !== 'any'
+      || this.parseCsvList(this.analysisSummaryContains).length > 0
+      || this.analysisSummaryUpdatedFrom.length > 0
+      || this.analysisSummaryUpdatedTo.length > 0
+      || this.analysisSummaryMinTokensK != null
+      || this.analysisSummaryMaxTokensK != null
+      || this.parseCsvList(this.analysisUserExtraPromptsContains).length > 0
+      || this.analysisAvailability !== 'any'
+      || this.parseCsvList(this.developmentWorkDescribedContains).length > 0
+      || this.developmentWorkUpdatedFrom.length > 0
+      || this.developmentWorkUpdatedTo.length > 0
+      || this.developmentWorkMinTokensK != null
+      || this.developmentWorkMaxTokensK != null
+      || this.parseCsvList(this.developmentWorkUserExtraPromptsContains).length > 0
+      || this.developmentWorkAvailability !== 'any'
+      || this.parseCsvList(this.personalInterrestCommentContains).length > 0
+      || this.personalInterrestMinPriority != null
+      || this.personalInterrestMaxPriority != null
+      || this.personalInterrestAvailability !== 'any';
   };
 
   doesExternalFilterPass = (node: IRowNode<GitHubPullRequestDTO>): boolean => {
@@ -178,6 +238,46 @@ export class GithubPRList implements OnInit {
       return false;
     }
     if (!this.matchesAvailability(this.mergedAvailability, !!pr.merged)) {
+      return false;
+    }
+    const annotated = pr.annotated;
+    if (!this.matchesAvailability(this.analysisAvailability, !!annotated?.analysisSummary)) {
+      return false;
+    }
+    if (!this.matchesAny(this.analysisSummaryContains, annotated?.analysisSummary)) {
+      return false;
+    }
+    if (!this.matchesDateRange(this.analysisSummaryUpdatedFrom, this.analysisSummaryUpdatedTo, annotated?.analysisSummaryLastUpdateTime)) {
+      return false;
+    }
+    if (!this.matchesTokensRangeK(this.analysisSummaryMinTokensK, this.analysisSummaryMaxTokensK, annotated?.analysisSummaryTokensConsumed)) {
+      return false;
+    }
+    if (!this.matchesAny(this.analysisUserExtraPromptsContains, ...(annotated?.analysisUserExtraPrompts ?? []))) {
+      return false;
+    }
+    if (!this.matchesAvailability(this.developmentWorkAvailability, !!annotated?.developmentWorkDescribed)) {
+      return false;
+    }
+    if (!this.matchesAny(this.developmentWorkDescribedContains, annotated?.developmentWorkDescribed)) {
+      return false;
+    }
+    if (!this.matchesDateRange(this.developmentWorkUpdatedFrom, this.developmentWorkUpdatedTo, annotated?.developmentWorkLastUpdateTime)) {
+      return false;
+    }
+    if (!this.matchesTokensRangeK(this.developmentWorkMinTokensK, this.developmentWorkMaxTokensK, annotated?.developmentWorkTokensConsumed)) {
+      return false;
+    }
+    if (!this.matchesAny(this.developmentWorkUserExtraPromptsContains, ...(annotated?.developmentWorkUserExtraPrompts ?? []))) {
+      return false;
+    }
+    if (!this.matchesAvailability(this.personalInterrestAvailability, !!annotated?.personalInterrestComment)) {
+      return false;
+    }
+    if (!this.matchesAny(this.personalInterrestCommentContains, annotated?.personalInterrestComment)) {
+      return false;
+    }
+    if (!this.matchesNumberRange(this.personalInterrestMinPriority, this.personalInterrestMaxPriority, annotated?.personalInterrestPriority10)) {
       return false;
     }
     return true;
@@ -255,6 +355,55 @@ export class GithubPRList implements OnInit {
     }
     return values.some((value) =>
       value != null && terms.some((term) => value.toLowerCase().includes(term.toLowerCase())));
+  }
+
+  private matchesDateRange(from: string, to: string, value: string | undefined): boolean {
+    if (!from && !to) {
+      return true;
+    }
+    if (value == null) {
+      return false;
+    }
+    if (from && value < from) {
+      return false;
+    }
+    if (to && value > `${to}T23:59:59`) {
+      return false;
+    }
+    return true;
+  }
+
+  private matchesNumberRange(min: number | null, max: number | null, value: number | undefined): boolean {
+    if (min == null && max == null) {
+      return true;
+    }
+    if (value == null) {
+      return false;
+    }
+    if (min != null && value < min) {
+      return false;
+    }
+    if (max != null && value > max) {
+      return false;
+    }
+    return true;
+  }
+
+  /** min/max are expressed in kilo-tokens (thousands); value is the raw token count. */
+  private matchesTokensRangeK(minK: number | null, maxK: number | null, value: number | undefined): boolean {
+    if (minK == null && maxK == null) {
+      return true;
+    }
+    if (value == null) {
+      return false;
+    }
+    if (minK != null && value < minK * 1000) {
+      return false;
+    }
+    if (maxK != null && value > maxK * 1000) {
+      return false;
+    }
+    return true;
   }
 
   private parseCsvList(value: string): string[] {

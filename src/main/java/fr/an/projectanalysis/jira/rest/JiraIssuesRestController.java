@@ -4,9 +4,9 @@ import fr.an.projectanalysis.jira.rest.dtos.JiraIssueDTO;
 import fr.an.projectanalysis.jira.rest.dtos.JiraIssueQueryCriteriaDTO;
 import fr.an.projectanalysis.jira.rest.dtos.UserJiraIssueStatsDTO;
 import fr.an.projectanalysis.jira.service.JiraIssueService;
+import fr.an.projectanalysis.util.AbstractRestController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,14 +20,14 @@ import java.util.Collection;
 @RestController
 @RequestMapping(path="/api/v1/jira-issues", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "JiraIssues")
-@Slf4j
-public class JiraIssuesRestController {
+public class JiraIssuesRestController extends AbstractRestController {
 
     private static final String BASE_URL = "/api/v1/jira-issues";
 
     private final JiraIssueService delegate;
 
     public JiraIssuesRestController(JiraIssueService delegate) {
+        super(BASE_URL);
         this.delegate = delegate;
     }
 
@@ -42,18 +42,20 @@ public class JiraIssuesRestController {
             @RequestParam(name="commentPattern", required = false) String commentPattern,
             @RequestParam(name="commentAuthorPattern", required = false) String commentAuthorPattern
     ) {
-        log.info("http GET {}/user-issue-create-stats?fromYear={}&toYear={}&usernamePattern={}&summaryPattern={}&descriptionPattern={}&commentPattern={}&commentAuthorPattern={}",
-                BASE_URL, fromYear, toYear, usernamePattern, summaryPattern, descriptionPattern, commentPattern, commentAuthorPattern);
-        return delegate.queryUserIssueStats(fromYear, toYear, usernamePattern,
-                summaryPattern, descriptionPattern, commentPattern, commentAuthorPattern);
+        String paramsText = "fromYear=" + fromYear + "&toYear=" + toYear + "&usernamePattern=" + usernamePattern
+                + "&summaryPattern=" + summaryPattern + "&descriptionPattern=" + descriptionPattern
+                + "&commentPattern=" + commentPattern + "&commentAuthorPattern=" + commentAuthorPattern;
+        return withLog("GET", "/user-issue-create-stats", paramsText, () -> delegate.queryUserIssueStats(fromYear, toYear, usernamePattern,
+                summaryPattern, descriptionPattern, commentPattern, commentAuthorPattern));
     }
 
     @Operation(summary = "Find a single issue by its key")
     @GetMapping("/by-key/{key}")
     public ResponseEntity<JiraIssueDTO> findIssueByKey(@PathVariable("key") String key) {
-        log.info("http GET {}/by-key/{}", BASE_URL, key);
-        JiraIssueDTO found = delegate.findAnnotatedIssueByKey(key);
-        return found != null ? ResponseEntity.ok(found) : ResponseEntity.notFound().build();
+        return withLog("GET", "/by-key/" + key, "", () -> {
+            JiraIssueDTO found = delegate.findAnnotatedIssueByKey(key);
+            return found != null ? ResponseEntity.ok(found) : ResponseEntity.notFound().build();
+        });
     }
 
     @Operation(summary = "List issues created between fromYear and toYear (inclusive), optionally filtered by creator username, issue number range, "
@@ -101,40 +103,42 @@ public class JiraIssuesRestController {
             @RequestParam(name="personalInterrestMaxPriority", required = false) Integer personalInterrestMaxPriority,
             @RequestParam(name="personalInterrestAvailability", required = false) String personalInterrestAvailability
     ) {
-        log.info("http GET {}/by-query?fromYear={}&toYear={}&usernamePattern={}&fromNumber={}&toNumber={}&keyPattern={}&...",
-                BASE_URL, fromYear, toYear, usernamePattern, fromNumber, toNumber, keyPattern);
-        JiraIssueQueryCriteriaDTO criteria = new JiraIssueQueryCriteriaDTO();
-        criteria.setSummaryContains(summaryContains);
-        criteria.setDescriptionContains(descriptionContains);
-        criteria.setAuthorContains(authorContains);
-        criteria.setCommentsContains(commentsContains);
-        criteria.setCommentAuthorContains(commentAuthorContains);
-        criteria.setExcludedTypes(excludedTypes);
-        criteria.setExcludedResolutions(excludedResolutions);
-        criteria.setExcludedStatuses(excludedStatuses);
-        criteria.setExcludedPriorities(excludedPriorities);
-        criteria.setLabelsContains(labelsContains);
-        criteria.setPullRequestAvailableLabel(pullRequestAvailableLabel);
-        criteria.setComponentsContains(componentsContains);
-        criteria.setAnalysisSummaryContains(analysisSummaryContains);
-        criteria.setAnalysisUserExtraPromptsContains(analysisUserExtraPromptsContains);
-        criteria.setAnalysisSummaryUpdatedFrom(analysisSummaryUpdatedFrom);
-        criteria.setAnalysisSummaryUpdatedTo(analysisSummaryUpdatedTo);
-        criteria.setAnalysisSummaryMinTokensK(analysisSummaryMinTokensK);
-        criteria.setAnalysisSummaryMaxTokensK(analysisSummaryMaxTokensK);
-        criteria.setAnalysisAvailability(analysisAvailability);
-        criteria.setDevelopmentWorkDescribedContains(developmentWorkDescribedContains);
-        criteria.setDevelopmentWorkUserExtraPromptsContains(developmentWorkUserExtraPromptsContains);
-        criteria.setDevelopmentWorkUpdatedFrom(developmentWorkUpdatedFrom);
-        criteria.setDevelopmentWorkUpdatedTo(developmentWorkUpdatedTo);
-        criteria.setDevelopmentWorkMinTokensK(developmentWorkMinTokensK);
-        criteria.setDevelopmentWorkMaxTokensK(developmentWorkMaxTokensK);
-        criteria.setDevelopmentWorkAvailability(developmentWorkAvailability);
-        criteria.setPersonalInterrestCommentContains(personalInterrestCommentContains);
-        criteria.setPersonalInterrestMinPriority(personalInterrestMinPriority);
-        criteria.setPersonalInterrestMaxPriority(personalInterrestMaxPriority);
-        criteria.setPersonalInterrestAvailability(personalInterrestAvailability);
-        return delegate.queryAnnotatedIssues(fromYear, toYear, usernamePattern, fromNumber, toNumber, keyPattern, criteria);
+        String paramsText = "fromYear=" + fromYear + "&toYear=" + toYear + "&usernamePattern=" + usernamePattern
+                + "&fromNumber=" + fromNumber + "&toNumber=" + toNumber + "&keyPattern=" + keyPattern + "&...";
+        return withLog("GET", "/by-query", paramsText, () -> {
+            JiraIssueQueryCriteriaDTO criteria = new JiraIssueQueryCriteriaDTO();
+            criteria.setSummaryContains(summaryContains);
+            criteria.setDescriptionContains(descriptionContains);
+            criteria.setAuthorContains(authorContains);
+            criteria.setCommentsContains(commentsContains);
+            criteria.setCommentAuthorContains(commentAuthorContains);
+            criteria.setExcludedTypes(excludedTypes);
+            criteria.setExcludedResolutions(excludedResolutions);
+            criteria.setExcludedStatuses(excludedStatuses);
+            criteria.setExcludedPriorities(excludedPriorities);
+            criteria.setLabelsContains(labelsContains);
+            criteria.setPullRequestAvailableLabel(pullRequestAvailableLabel);
+            criteria.setComponentsContains(componentsContains);
+            criteria.setAnalysisSummaryContains(analysisSummaryContains);
+            criteria.setAnalysisUserExtraPromptsContains(analysisUserExtraPromptsContains);
+            criteria.setAnalysisSummaryUpdatedFrom(analysisSummaryUpdatedFrom);
+            criteria.setAnalysisSummaryUpdatedTo(analysisSummaryUpdatedTo);
+            criteria.setAnalysisSummaryMinTokensK(analysisSummaryMinTokensK);
+            criteria.setAnalysisSummaryMaxTokensK(analysisSummaryMaxTokensK);
+            criteria.setAnalysisAvailability(analysisAvailability);
+            criteria.setDevelopmentWorkDescribedContains(developmentWorkDescribedContains);
+            criteria.setDevelopmentWorkUserExtraPromptsContains(developmentWorkUserExtraPromptsContains);
+            criteria.setDevelopmentWorkUpdatedFrom(developmentWorkUpdatedFrom);
+            criteria.setDevelopmentWorkUpdatedTo(developmentWorkUpdatedTo);
+            criteria.setDevelopmentWorkMinTokensK(developmentWorkMinTokensK);
+            criteria.setDevelopmentWorkMaxTokensK(developmentWorkMaxTokensK);
+            criteria.setDevelopmentWorkAvailability(developmentWorkAvailability);
+            criteria.setPersonalInterrestCommentContains(personalInterrestCommentContains);
+            criteria.setPersonalInterrestMinPriority(personalInterrestMinPriority);
+            criteria.setPersonalInterrestMaxPriority(personalInterrestMaxPriority);
+            criteria.setPersonalInterrestAvailability(personalInterrestAvailability);
+            return delegate.queryAnnotatedIssues(fromYear, toYear, usernamePattern, fromNumber, toNumber, keyPattern, criteria);
+        });
     }
 
 }

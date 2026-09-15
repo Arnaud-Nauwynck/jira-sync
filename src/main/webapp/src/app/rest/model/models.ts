@@ -1,4 +1,5 @@
 export * from './annotatedJiraLinkedIssueFieldsDTO';
+export * from './gitHubPullRequestAnnotationDTO';
 export * from './gitHubPullRequestDTO';
 export * from './gitHubPullRequestExtraFieldsDTO';
 export * from './gitHubSyncStatusDTO';
@@ -20,6 +21,7 @@ export * from './mailMessageExtraFieldsDTO';
 export * from './mailingListSyncStatusDTO';
 export * from './personalInterrestCommentDTO';
 export * from './personalInterrestMailCommentDTO';
+export * from './personalInterrestPrCommentDTO';
 export * from './userGitHubPullRequestStatsDTO';
 export * from './userIssueCreatePerYearStatsDTO';
 export * from './userJiraIssueStatsDTO';
