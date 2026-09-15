@@ -46,6 +46,12 @@ public class GitHubSyncRestController extends AbstractRestController {
         withLog("POST", "/run-sync-all", "", gitHubPrSyncRunner::syncAll);
     }
 
+    @Operation(summary = "Backfill missing pull-request issue comments for PRs already synced locally")
+    @PostMapping("/complete-missing-comments")
+    public void completeMissingComments() {
+        withLog("POST", "/complete-missing-comments", "", gitHubPrSyncRunner::completeMissingComments);
+    }
+
     @Operation(summary = "Backfill missing pull-request review comments for PRs already synced locally")
     @PostMapping("/complete-missing-review-comments")
     public void completeMissingReviewComments() {

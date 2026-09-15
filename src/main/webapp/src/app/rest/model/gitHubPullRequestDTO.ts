@@ -8,6 +8,7 @@
  * Do not edit the class manually.
  */
 import { GitHubPullRequestReviewCommentDTO } from './gitHubPullRequestReviewCommentDTO';
+import { GitHubIssueCommentDTO } from './gitHubIssueCommentDTO';
 import { GitHubPullRequestExtraFieldsDTO } from './gitHubPullRequestExtraFieldsDTO';
 
 
@@ -36,8 +37,9 @@ export interface GitHubPullRequestDTO {
     mergeableState?: string;
     mergedByLogin?: string;
     comments?: number;
-    reviewCommentsData?: Array<GitHubPullRequestReviewCommentDTO>;
+    commentsData?: Array<GitHubIssueCommentDTO>;
     reviewComments?: number;
+    reviewCommentsData?: Array<GitHubPullRequestReviewCommentDTO>;
     commits?: number;
     additions?: number;
     deletions?: number;

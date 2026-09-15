@@ -1,6 +1,8 @@
 package fr.an.projectanalysis.github.mapper;
 
+import fr.an.projectanalysis.github.client.dtos.SourceGitHubIssueCommentDTO;
 import fr.an.projectanalysis.github.client.dtos.SourceGitHubPullRequestDTO;
+import fr.an.projectanalysis.github.rest.dtos.GitHubIssueCommentDTO;
 import fr.an.projectanalysis.github.rest.dtos.GitHubPullRequestDTO;
 import fr.an.projectanalysis.github.rest.dtos.GitHubPullRequestReviewCommentDTO;
 
@@ -52,6 +54,7 @@ public class SourceGitHubToAnnotatedPullRequestMapper {
         dest.deletions = src.deletions;
         dest.changedFiles = src.changedFiles;
         dest.reviewCommentsData = mapReviewComments(src.reviewCommentsData);
+        dest.commentsData = mapComments(src.commentsData);
         return dest;
     }
 
@@ -63,7 +66,19 @@ public class SourceGitHubToAnnotatedPullRequestMapper {
                         .collect(Collectors.toList());
     }
 
+    /** Maps the raw issue-comment list to its flattened form; also used to backfill PRs missing this data. */
+    public static List<GitHubIssueCommentDTO> mapComments(List<SourceGitHubIssueCommentDTO> src) {
+        return src == null ? null
+                : src.stream()
+                        .map(SourceGitHubToAnnotatedPullRequestMapper::comment)
+                        .collect(Collectors.toList());
+    }
+
     private static String login(SourceGitHubPullRequestDTO.SourceGitHubUserDTO user) {
+        return user != null ? user.login : null;
+    }
+
+    private static String login(SourceGitHubIssueCommentDTO.SourceGitHubUserDTO user) {
         return user != null ? user.login : null;
     }
 
@@ -95,6 +110,19 @@ public class SourceGitHubToAnnotatedPullRequestMapper {
         d.originalStartLine = c.originalStartLine;
         d.startSide = c.startSide;
         d.subjectType = c.subjectType;
+        return d;
+    }
+
+    private static GitHubIssueCommentDTO comment(SourceGitHubIssueCommentDTO c) {
+        GitHubIssueCommentDTO d = new GitHubIssueCommentDTO();
+        d.id = c.id;
+        d.url = c.url;
+        d.body = c.body;
+        d.htmlUrl = c.htmlUrl;
+        d.authorLogin = login(c.user);
+        d.createdAt = c.createdAt;
+        d.updatedAt = c.updatedAt;
+        d.authorAssociation = c.authorAssociation;
         return d;
     }
 }

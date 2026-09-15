@@ -145,6 +145,17 @@
               <div class="pr-comment-body">{{ pr.body || '(no description provided)' }}</div>
             </div>
 
+            @for (c of sortedComments(pr); track c.id) {
+              <div class="pr-comment mb-3">
+                <div class="pr-comment-header d-flex align-items-center gap-2">
+                  <span class="pr-avatar">👤</span>
+                  <strong>{{ c.authorLogin }}</strong> commented
+                  @if (c.createdAt) { <span class="text-secondary">on {{ c.createdAt }}</span> }
+                </div>
+                <div class="pr-comment-body">{{ c.body }}</div>
+              </div>
+            }
+
             @for (rc of sortedReviewComments(pr); track rc.id) {
               <div class="pr-comment mb-3">
                 @if (rc.path) {
@@ -162,16 +173,18 @@
               </div>
             }
 
-            @if ((pr.comments ?? 0) > 0) {
-              <div class="pr-more-comments">
-                <p class="pr-empty mb-1">
-                  {{ pr.comments }} more comment{{ pr.comments === 1 ? '' : 's' }} on this conversation.
-                  Individual comment content is not synced locally.
-                </p>
-                @if (pr.htmlUrl) {
-                  <a [href]="pr.htmlUrl" target="_blank" rel="noopener">View full conversation on GitHub</a>
-                }
-              </div>
+            @if ((pr.comments ?? 0) - (pr.commentsData?.length ?? 0); as missingCount) {
+              @if (missingCount > 0) {
+                <div class="pr-more-comments">
+                  <p class="pr-empty mb-1">
+                    {{ missingCount }} more comment{{ missingCount === 1 ? '' : 's' }} on this conversation.
+                    Individual comment content is not synced locally.
+                  </p>
+                  @if (pr.htmlUrl) {
+                    <a [href]="pr.htmlUrl" target="_blank" rel="noopener">View full conversation on GitHub</a>
+                  }
+                </div>
+              }
             }
           </div>
           <div class="col-lg-3">

@@ -1,6 +1,7 @@
 package fr.an.projectanalysis.github.service;
 
 import fr.an.projectanalysis.github.client.GitHubApiClient;
+import fr.an.projectanalysis.github.client.dtos.SourceGitHubIssueCommentDTO;
 import fr.an.projectanalysis.github.client.dtos.SourceGitHubPullRequestDTO;
 import fr.an.projectanalysis.github.configuration.GitHubSyncProperties;
 import fr.an.projectanalysis.github.mapper.SourceGitHubToAnnotatedPullRequestMapper;
@@ -41,6 +42,8 @@ public class GitHubPullRequestSyncRunner {
 
     private final GitHubApiClient apiClient;
 
+    private final String baseRepoApiUrl;
+
     private final Path syncStateFile;
 
     private long syncGetByIdDelayMs;
@@ -57,6 +60,7 @@ public class GitHubPullRequestSyncRunner {
         this.syncGetByIdDelayMs = props.getSyncGetByIdDelayMs();
         this.syncDelayMs = props.getDelayMs();
         this.ignorePRNumbers = (props.getIgnorePRNumbers() != null)? new HashSet<>(props.getIgnorePRNumbers()) : null;
+        this.baseRepoApiUrl = "/repos/" + props.getOrg() + "/" + props.getRepo();
     }
 
     /** Full or incremental sync of all pull requests (open, closed, merged) for the configured org/repo. */
@@ -140,7 +144,7 @@ public class GitHubPullRequestSyncRunner {
 
     /** The highest PR number currently known for the configured org/repo, or 0 if it has none. */
     private int fetchMaxPrNumber() throws Exception {
-        JsonNode prs = apiClient.callHttpGet("/repos/" + props.getOrg() + "/" + props.getRepo() + "/pulls"
+        JsonNode prs = apiClient.callHttpGet(baseRepoApiUrl + "/pulls"
                 + "?state=all&sort=created&direction=desc&per_page=1&page=1");
         if (!prs.isArray() || prs.isEmpty()) {
             return 0;
@@ -178,7 +182,7 @@ public class GitHubPullRequestSyncRunner {
      * and, for each with review comments ({@code reviewComments > 0}) but no data fetched yet,
      * fetches them via {@link #fetchPullRequestReviewComments} and resaves the PR.
      */
-    public void completeMissingReviewComments() throws Exception {
+    public void completeMissingReviewComments() {
         long startMillis = System.currentTimeMillis();
         int completedCount = 0;
         for (int year : prRepository.findAllPartitionYears()) {
@@ -191,9 +195,16 @@ public class GitHubPullRequestSyncRunner {
             log.info("completeMissingReviewComments for year:" + year + ", found " + prs.size() + " to complete");
 
             for (GitHubPullRequestDTO pr : prs) {
-                List<SourceGitHubPullRequestDTO.SourceGitHubReviewCommentDTO> reviewComments =
-                        fetchPullRequestReviewComments(pr.number, pr.reviewComments);
-                prRepository.putReviewComments(pr.number, SourceGitHubToAnnotatedPullRequestMapper.mapReviewComments(reviewComments));
+                try {
+                    List<SourceGitHubPullRequestDTO.SourceGitHubReviewCommentDTO> reviewComments =
+                            fetchPullRequestReviewComments(pr.number, pr.reviewComments);
+                    prRepository.putReviewComments(pr.number, SourceGitHubToAnnotatedPullRequestMapper.mapReviewComments(reviewComments));
+                } catch(Exception ex) {
+                    log.warn("Failed completeMissingReviewComments in fetchPullRequestReviewComments, for #{} ... ignore, no rethrow!", pr.number, ex);
+                    sleep(syncDelayMs);
+                    // ignore, no rethrow!
+                }
+
                 completedCount++;
                 // sleep(syncGetByIdDelayMs);
                 if (completedCount % 100 == 0) {
@@ -208,9 +219,50 @@ public class GitHubPullRequestSyncRunner {
         log.info("done completeMissingReviewComments, completed {} PRs, took {} ms", completedCount, millis);
     }
 
+    /**
+     * Backfills {@code commentsData} on PRs already persisted locally that are missing it (e.g.
+     * synced before issue-comment fetching was implemented). Walks every partition's PRs and, for
+     * each with comments ({@code comments > 0}) but no data fetched yet, fetches them via
+     * {@link #fetchIssueComments} and resaves the PR.
+     */
+    public void completeMissingComments() {
+        long startMillis = System.currentTimeMillis();
+        int completedCount = 0;
+        for (int year : prRepository.findAllPartitionYears()) {
+            List<GitHubPullRequestDTO> prs = prRepository.findByPartitionYear(year, pr ->
+                    pr.comments != null && pr.comments > 0
+                            && (pr.commentsData == null || pr.commentsData.isEmpty()));
+            if (prs.isEmpty()) {
+                continue;
+            }
+            log.info("completeMissingComments for year:" + year + ", found " + prs.size() + " to complete");
+
+            for (GitHubPullRequestDTO pr : prs) {
+                try {
+                    List<SourceGitHubIssueCommentDTO> comments = fetchIssueComments(pr.number, pr.comments);
+                    prRepository.putComments(pr.number, SourceGitHubToAnnotatedPullRequestMapper.mapComments(comments));
+                } catch(Exception ex) {
+                    log.warn("Failed completeMissingComments in fetchIssueComments, for #{} ... ignore, no rethrow!", pr.number, ex);
+                    sleep(syncDelayMs);
+                    // ignore, no rethrow!
+                }
+
+                completedCount++;
+                // sleep(syncGetByIdDelayMs);
+                if (completedCount % 100 == 0) {
+                    log.info("completeMissingComments progress for partition year {}: [{}/{}] PRs completed so far", year, completedCount, prs.size());
+                }
+            }
+        }
+        if (completedCount > 0) {
+            prRepository.compactAll();
+        }
+        int millis = (int) (System.currentTimeMillis() - startMillis);
+        log.info("done completeMissingComments, completed {} PRs, took {} ms", completedCount, millis);
+    }
+
     private SourceGitHubPullRequestDTO fetchGithubPullRequestDetails(int number) throws Exception {
-        JsonNode detail = apiClient.callHttpGet("/repos/" + props.getOrg() + "/" + props.getRepo() + "/pulls/" + number);
-        SourceGitHubPullRequestDTO pr = mapper.treeToValue(detail, SourceGitHubPullRequestDTO.class);
+        SourceGitHubPullRequestDTO pr = apiClient.callHttpGet(baseRepoApiUrl + "/pulls/" + number, SourceGitHubPullRequestDTO.class);
         if (pr.reviewComments != null && pr.reviewComments > 0) {
             pr.reviewCommentsData = fetchPullRequestReviewComments(number, pr.reviewComments);
         }
@@ -218,27 +270,58 @@ public class GitHubPullRequestSyncRunner {
     }
 
     /** Pages through /pulls/{number}/comments (PR review comments), sorted "created desc", until an empty page. */
-    private List<SourceGitHubPullRequestDTO.SourceGitHubReviewCommentDTO> fetchPullRequestReviewComments(int number, int commentsCount) throws Exception {
+    private List<SourceGitHubPullRequestDTO.SourceGitHubReviewCommentDTO> fetchPullRequestReviewComments(int number, int reviewCommentsCount) throws Exception {
         List<SourceGitHubPullRequestDTO.SourceGitHubReviewCommentDTO> result = new ArrayList<>();
         int page = 1;
-        int fetchedCommentCount = 0;
+        int fetchedCount = 0;
         while (true) {
-            JsonNode comments = apiClient.callHttpGet("/repos/" + props.getOrg() + "/" + props.getRepo() + "/pulls/" + number + "/comments"
+            JsonNode comments = apiClient.callHttpGet(baseRepoApiUrl + "/pulls/" + number + "/comments"
                     + "?sort=created&direction=desc&per_page=100&page=" + page);
             if (!comments.isArray() || comments.isEmpty()) {
                 break;
             }
             for (JsonNode n : comments) {
                 result.add(mapper.treeToValue(n, SourceGitHubPullRequestDTO.SourceGitHubReviewCommentDTO.class));
-                fetchedCommentCount++;
+                fetchedCount++;
             }
-            if (fetchedCommentCount >= commentsCount) {
+            if (fetchedCount >= reviewCommentsCount) {
                 break;
             }
             page++;
             // sleep(syncGetByIdDelayMs);
         }
-        if (commentsCount != result.size()) {
+        if ((1 + reviewCommentsCount) == result.size()) {
+            log.warn("Unexpected mismatch for Github PR #{}, expecting {} review comments, missing 1", number, reviewCommentsCount);
+        } else if (reviewCommentsCount != result.size()) {
+            log.warn("Unexpected mismatch for Github PR #{}, expecting {} review comments, got {}", number, reviewCommentsCount, result.size());
+        }
+        return result;
+    }
+
+    /** Pages through /issues/{number}/comments (issue/conversation comments), sorted "created desc", until an empty page. */
+    private List<SourceGitHubIssueCommentDTO> fetchIssueComments(int number, int commentsCount) throws Exception {
+        List<SourceGitHubIssueCommentDTO> result = new ArrayList<>();
+        int page = 1;
+        int fetchedCount = 0;
+        while (true) {
+            JsonNode comments = apiClient.callHttpGet(baseRepoApiUrl + "/issues/" + number + "/comments"
+                    + "?sort=created&direction=asc&per_page=100&page=" + page);
+            if (!comments.isArray() || comments.isEmpty()) {
+                break;
+            }
+            for (JsonNode n : comments) {
+                result.add(mapper.treeToValue(n, SourceGitHubIssueCommentDTO.class));
+                fetchedCount++;
+            }
+            if (fetchedCount >= commentsCount) {
+                break;
+            }
+            page++;
+            // sleep(syncGetByIdDelayMs);
+        }
+        if ((1 + commentsCount) == result.size()) {
+            log.warn("Unexpected mismatch for Github PR #{}, expecting {} comments, missing 1", number, commentsCount);
+        } else if (commentsCount != result.size()) {
             log.warn("Unexpected mismatch for Github PR #{}, expecting {} comments, got {}", number, commentsCount, result.size());
         }
         return result;
@@ -253,8 +336,8 @@ public class GitHubPullRequestSyncRunner {
         int page = 1;
         outer:
         while (true) {
-            JsonNode prs = apiClient.callHttpGet("/repos/" + props.getOrg() + "/" + props.getRepo() + "/pulls"
-                    + "?state=all&sort=updated&direction=desc"
+            JsonNode prs = apiClient.callHttpGet(baseRepoApiUrl + "/pulls"
+                    + "?state=all&sort=created&direction=asc"
                     + "&per_page=" + props.getPerPage()
                     + "&page=" + page);
 

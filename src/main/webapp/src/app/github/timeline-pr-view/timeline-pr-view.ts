@@ -5,7 +5,7 @@ import { GitHubPullRequestDTO } from '../../rest';
 
 interface TimelineEntry {
   time: string;
-  type: 'created' | 'merged' | 'closed' | 'analysis' | 'development' | 'review-comment';
+  type: 'created' | 'merged' | 'closed' | 'analysis' | 'development' | 'review-comment' | 'comment';
   title: string;
   author?: string;
   description?: string;
@@ -68,6 +68,19 @@ export class TimelinePrView {
         type: 'development',
         title: 'Development work updated',
         description: annotated.developmentWorkDescribed,
+      });
+    }
+
+    for (const comment of pr.commentsData ?? []) {
+      if (!comment.createdAt) {
+        continue;
+      }
+      entries.push({
+        time: comment.createdAt,
+        type: 'comment',
+        title: 'Comment',
+        author: comment.authorLogin,
+        description: comment.body,
       });
     }
 

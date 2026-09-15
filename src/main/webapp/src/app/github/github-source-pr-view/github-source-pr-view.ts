@@ -1,6 +1,6 @@
 import { Component, Input } from '@angular/core';
 import { NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
-import { GitHubPullRequestDTO, GitHubPullRequestReviewCommentDTO } from '../../rest';
+import { GitHubIssueCommentDTO, GitHubPullRequestDTO, GitHubPullRequestReviewCommentDTO } from '../../rest';
 
 @Component({
   imports: [NgbNavModule],
@@ -21,6 +21,12 @@ export class GitHubSourcePrView {
   /** Review comments sorted chronologically, oldest first, for display in the Conversation tab. */
   sortedReviewComments(pr: GitHubPullRequestDTO): GitHubPullRequestReviewCommentDTO[] {
     const comments = pr.reviewCommentsData ?? [];
+    return [...comments].sort((a, b) => (a.createdAt ?? '').localeCompare(b.createdAt ?? ''));
+  }
+
+  /** Conversation (issue) comments sorted chronologically, oldest first, for display in the Conversation tab. */
+  sortedComments(pr: GitHubPullRequestDTO): GitHubIssueCommentDTO[] {
+    const comments = pr.commentsData ?? [];
     return [...comments].sort((a, b) => (a.createdAt ?? '').localeCompare(b.createdAt ?? ''));
   }
 }

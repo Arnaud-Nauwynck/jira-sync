@@ -48,6 +48,7 @@ public class SourceGitHubPullRequestDTO {
     public SourceGitHubBranchDTO base;
     @JsonProperty("author_association")
     public String authorAssociation;
+
     @JsonProperty("html_url")
     public String htmlUrl;
 
@@ -68,7 +69,10 @@ public class SourceGitHubPullRequestDTO {
     @JsonProperty("changed_files")
     public Integer changedFiles;
 
-    /** Populated separately by GitHubPullRequestSyncRunner via GET .../pulls/{number}/comments, not part of the detail response. */
+    /** when count 'comments' is set, populated separately by GitHubPullRequestSyncRunner via GET .../issues/{number}/comments, not part of the detail response. */
+    public List<SourceGitHubIssueCommentDTO> commentsData;
+
+    /** when count 'reviewComments' is set, populated separately by GitHubPullRequestSyncRunner via GET .../pulls/{number}/comments, not part of the detail response. */
     public List<SourceGitHubReviewCommentDTO> reviewCommentsData;
 
     @JsonIgnoreProperties(ignoreUnknown = true)

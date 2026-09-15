@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import fr.an.projectanalysis.github.client.dtos.SourceGitHubPullRequestDTO;
 import fr.an.projectanalysis.github.configuration.GitHubSyncProperties;
 import fr.an.projectanalysis.github.mapper.SourceGitHubToAnnotatedPullRequestMapper;
+import fr.an.projectanalysis.github.rest.dtos.GitHubIssueCommentDTO;
 import fr.an.projectanalysis.github.rest.dtos.GitHubPullRequestDTO;
 import fr.an.projectanalysis.github.rest.dtos.GitHubPullRequestExtraFieldsDTO;
 import fr.an.projectanalysis.github.rest.dtos.GitHubPullRequestReviewCommentDTO;
@@ -258,6 +259,18 @@ public class GitHubPullRequestRepository {
     public void putReviewComments(int number, List<GitHubPullRequestReviewCommentDTO> reviewCommentsData) {
         GitHubPullRequestDTO pr = getByNumber(number); // points to cached partition data... updating => update cache!
         pr.reviewCommentsData = reviewCommentsData;
+        int year = partitionYearOf(pr);
+        appendChange(year, new UpdatePullRequestChangeRecord(pr));
+    }
+
+    /**
+     * Updates the issue-comments list on an already-persisted PR, recording an "update" change
+     * like {@link #save}. Used to backfill {@code commentsData} on PRs synced before it was
+     * fetched.
+     */
+    public void putComments(int number, List<GitHubIssueCommentDTO> commentsData) {
+        GitHubPullRequestDTO pr = getByNumber(number); // points to cached partition data... updating => update cache!
+        pr.commentsData = commentsData;
         int year = partitionYearOf(pr);
         appendChange(year, new UpdatePullRequestChangeRecord(pr));
     }
