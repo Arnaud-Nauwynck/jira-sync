@@ -1,5 +1,6 @@
 package fr.an.projectanalysis.mailinglist.rest.dtos;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 
 import java.time.OffsetDateTime;
@@ -15,6 +16,7 @@ import java.util.List;
  * conversion from {@code SourceMailMessageDTO}.
  */
 @Data
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class MailMessageDTO {
 
     /** {@code Message-ID} header; globally unique, used as the local dedup/primary key. */

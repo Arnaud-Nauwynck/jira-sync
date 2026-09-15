@@ -1,6 +1,7 @@
 package fr.an.projectanalysis.github.client.dtos;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
@@ -79,6 +80,7 @@ public class SourceGitHubPullRequestDTO {
     public List<SourceGitHubIssueEventDTO> issueEventsData;
 
     @JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     @Data
     public static class SourceGitHubUserDTO {
         public String login;
@@ -86,6 +88,7 @@ public class SourceGitHubPullRequestDTO {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     @Data
     public static class SourceGitHubReviewCommentDTO {
         public long id;
@@ -128,6 +131,7 @@ public class SourceGitHubPullRequestDTO {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     @Data
     public static class SourceGitHubLabelDTO {
         public long id;
@@ -135,6 +139,7 @@ public class SourceGitHubPullRequestDTO {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     @Data
     public static class SourceGitHubMilestoneDTO {
         public int number;
@@ -143,6 +148,7 @@ public class SourceGitHubPullRequestDTO {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     @Data
     public static class SourceGitHubRepoRefDTO {
         @JsonProperty("full_name")
@@ -150,6 +156,7 @@ public class SourceGitHubPullRequestDTO {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     @Data
     public static class SourceGitHubBranchDTO {
         public String label;

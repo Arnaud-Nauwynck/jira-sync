@@ -1,5 +1,6 @@
 package fr.an.projectanalysis.github.rest.dtos;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 
 /**
@@ -8,6 +9,7 @@ import lombok.Data;
  * review comment on the diff).
  */
 @Data
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class GitHubIssueCommentDTO {
     public long id;
     public String url;

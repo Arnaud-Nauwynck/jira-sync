@@ -1,5 +1,6 @@
 package fr.an.projectanalysis.github.rest.dtos;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 
 /**
@@ -10,6 +11,7 @@ import lombok.Data;
  * to the actual {@link #event} value.
  */
 @Data
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class GitHubIssueEventDTO {
     public long id;
     public String url;

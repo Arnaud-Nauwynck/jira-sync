@@ -1,5 +1,6 @@
 package fr.an.projectanalysis.mailinglist.rest.dtos;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -10,6 +11,7 @@ import java.util.List;
  * Mirrors {@code fr.an.jira.rest.dtos.IssueExtraFieldsDTO}.
  */
 @Data
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class MailMessageExtraFieldsDTO {
 
     public String analysisSummary;

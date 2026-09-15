@@ -1,18 +1,21 @@
 package fr.an.projectanalysis.github.rest.dtos;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 
 /**
  * Mirrors the JSON returned by the GitHub REST API "GET /rate_limit" endpoint.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @Data
 public class GitHubRateLimitDTO {
 
     public Resources resources;
 
     @JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     @Data
     public static class Resources {
         public RateLimit core;
@@ -30,6 +33,7 @@ public class GitHubRateLimitDTO {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     @Data
     public static class RateLimit {
         public int limit;

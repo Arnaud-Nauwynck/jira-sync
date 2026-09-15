@@ -1,5 +1,6 @@
 package fr.an.projectanalysis.github.rest.dtos;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,6 +13,7 @@ import java.util.Map;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserGitHubPullRequestStatsDTO {
 
     public String user;
@@ -61,6 +63,7 @@ public class UserGitHubPullRequestStatsDTO {
     }
 
     @NoArgsConstructor
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class UserPullRequestCreatePerYearStatsDTO {
 
         /** Number of PR numbers to sample into {@link #firstPullRequests}. */

@@ -1,6 +1,7 @@
 package fr.an.projectanalysis.github.client.dtos;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
@@ -15,6 +16,7 @@ import lombok.Data;
  * their source JSON name where it differs from the camelCase Java field name.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @Data
 public class SourceGitHubIssueEventDTO {
     public long id;
@@ -86,6 +88,7 @@ public class SourceGitHubIssueEventDTO {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     @Data
     public static class SourceGitHubLabelDTO {
         public String name;
@@ -93,12 +96,14 @@ public class SourceGitHubIssueEventDTO {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     @Data
     public static class SourceGitHubMilestoneRefDTO {
         public String title;
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     @Data
     public static class SourceGitHubRenameDTO {
         public String from;
@@ -106,6 +111,7 @@ public class SourceGitHubIssueEventDTO {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     @Data
     public static class SourceGitHubTeamRefDTO {
         public String name;
@@ -113,6 +119,7 @@ public class SourceGitHubIssueEventDTO {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     @Data
     public static class SourceGitHubDismissedReviewDTO {
         public String state;
@@ -123,6 +130,7 @@ public class SourceGitHubIssueEventDTO {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     @Data
     public static class SourceGitHubIssueTypeDTO {
         public String name;
@@ -130,6 +138,7 @@ public class SourceGitHubIssueEventDTO {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     @Data
     public static class SourceGitHubRepoRefDTO {
         @JsonProperty("full_name")
@@ -138,6 +147,7 @@ public class SourceGitHubIssueEventDTO {
 
     /** A minimal reference to another issue, e.g. a sub-issue, parent-issue, or dependency. */
     @JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     @Data
     public static class SourceGitHubIssueRefDTO {
         public int number;

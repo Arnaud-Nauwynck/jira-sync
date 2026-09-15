@@ -1,5 +1,6 @@
 package fr.an.projectanalysis.mailinglist.rest.dtos;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,6 +13,7 @@ import java.util.Map;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserMailMessageStatsDTO {
 
     public String user;
@@ -43,6 +45,7 @@ public class UserMailMessageStatsDTO {
     }
 
     @NoArgsConstructor
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class UserMailMessagePerMonthStatsDTO {
 
         /** Number of Message-IDs to sample into {@link #firstMessages}. */

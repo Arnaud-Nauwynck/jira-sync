@@ -1,5 +1,6 @@
 package fr.an.projectanalysis.jira.rest.dtos;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -9,6 +10,7 @@ import java.util.List;
  * Extra fields enriched and persisted locally, not coming from the source Jira server.
  */
 @Data
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class IssueExtraFieldsDTO {
 
     public String analysisSummary;

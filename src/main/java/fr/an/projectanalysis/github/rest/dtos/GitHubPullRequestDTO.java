@@ -1,5 +1,6 @@
 package fr.an.projectanalysis.github.rest.dtos;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 
 import java.util.List;
@@ -14,7 +15,9 @@ import java.util.List;
  * from {@code SourceGitHubPullRequestDTO}.
  */
 @Data
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class GitHubPullRequestDTO {
+
     public long id;
     public int number;
     public String state;

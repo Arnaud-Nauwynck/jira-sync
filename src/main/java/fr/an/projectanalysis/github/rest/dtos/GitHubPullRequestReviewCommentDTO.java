@@ -1,5 +1,6 @@
 package fr.an.projectanalysis.github.rest.dtos;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 
 /**
@@ -7,7 +8,9 @@ import lombok.Data;
  * (a GitHub "Pull Request Review Comment" — an inline comment on a portion of the PR's diff).
  */
 @Data
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class GitHubPullRequestReviewCommentDTO {
+
     public long id;
     public Long pullRequestReviewId;
     public String diffHunk;

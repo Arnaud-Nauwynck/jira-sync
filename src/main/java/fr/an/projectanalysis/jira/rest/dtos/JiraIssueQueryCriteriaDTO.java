@@ -1,5 +1,6 @@
 package fr.an.projectanalysis.jira.rest.dtos;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 
 /**
@@ -8,6 +9,7 @@ import lombok.Data;
  * Interest criteria). Every field is optional; an unset field does not filter on that criterion.
  */
 @Data
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class JiraIssueQueryCriteriaDTO {
 
     // Main criteria

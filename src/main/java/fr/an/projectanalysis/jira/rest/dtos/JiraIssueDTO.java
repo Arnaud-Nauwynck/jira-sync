@@ -1,5 +1,6 @@
 package fr.an.projectanalysis.jira.rest.dtos;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 
 import java.util.LinkedHashMap;
@@ -18,7 +19,9 @@ import java.util.Map;
  * {@code JiraIssueDTO}.
  */
 @Data
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class JiraIssueDTO {
+
     public String id;
     public String key;
     public IssueFieldsDTO fields;
@@ -35,6 +38,7 @@ public class JiraIssueDTO {
     }
 
     @Data
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class IssueFieldsDTO {
         public List<Object> fixVersions;
         public String resolution;
@@ -80,6 +84,7 @@ public class JiraIssueDTO {
     }
 
     @Data
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class IssueLinkDTO {
         public String id;
         public IssueLinkTypeDTO type;
@@ -88,6 +93,7 @@ public class JiraIssueDTO {
     }
 
     @Data
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class IssueLinkTypeDTO {
         public String id;
         public String name;
@@ -96,6 +102,7 @@ public class JiraIssueDTO {
     }
 
     @Data
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class LinkedIssueDTO {
         public String id;
         public String key;
@@ -103,6 +110,7 @@ public class JiraIssueDTO {
     }
 
     @Data
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class AnnotatedJiraLinkedIssueFieldsDTO {
         public String summary;
         public String status;
@@ -111,12 +119,14 @@ public class JiraIssueDTO {
     }
 
     @Data
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class IssueProgressDTO {
         public int progress;
         public int total;
     }
 
     @Data
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class IssueCommentDTO {
         public String id;
         public String author;
@@ -127,6 +137,7 @@ public class JiraIssueDTO {
     }
 
     @Data
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class IssueHistoryDTO {
         public String id;
         public String author;
@@ -135,6 +146,7 @@ public class JiraIssueDTO {
     }
 
     @Data
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class IssueHistoryItemDTO {
         public String field;
         public String fieldtype;
