@@ -335,7 +335,7 @@ public class GitHubPullRequestSyncRunner {
                 }
 
                 completedCount++;
-                // sleep(syncGetByIdDelayMs);
+                sleep(syncGetByIdDelayMs);
                 if (completedCount % 100 == 0) {
                     log.info("completeMissingIssueCommits progress for partition year {}: [{}/{}] PRs completed so far", year, completedCount, prs.size());
                 }

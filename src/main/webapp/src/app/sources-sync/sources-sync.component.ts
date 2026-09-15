@@ -16,6 +16,7 @@ export class SourcesSync implements OnInit {
   githubCompletingReviewComments = signal(false);
   githubCompletingComments = signal(false);
   githubCompletingEvents = signal(false);
+  githubCompletingCommits = signal(false);
   mailingListRunning = signal(false);
 
   lastSyncTime = signal<string | undefined>(undefined);
@@ -128,6 +129,21 @@ export class SourcesSync implements OnInit {
       error: (ex) => {
         this.githubCompletingEvents.set(false);
         console.error("... Failed call http POST api/v1/github-sync/complete-missing-events", ex);
+      }
+    });
+  }
+
+  completeMissingCommits() {
+    this.githubCompletingCommits.set(true);
+    console.log("call http POST api/v1/github-sync/complete-missing-commits");
+    this.gitHubSyncService.completeMissingCommits().subscribe({
+      next: () => {
+        this.githubCompletingCommits.set(false);
+        console.log("... done call http POST api/v1/github-sync/complete-missing-commits");
+      },
+      error: (ex) => {
+        this.githubCompletingCommits.set(false);
+        console.error("... Failed call http POST api/v1/github-sync/complete-missing-commits", ex);
       }
     });
   }

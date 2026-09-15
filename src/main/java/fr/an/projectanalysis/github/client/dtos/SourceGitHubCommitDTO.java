@@ -19,8 +19,11 @@ import java.util.List;
 @Data
 public class SourceGitHubCommitDTO {
     public String sha;
+
+    // TODO useless, remove
     @JsonProperty("html_url")
     public String htmlUrl;
+
     public SourceGitHubCommitDetailDTO commit;
     public SourceGitHubUserDTO author;
     public SourceGitHubUserDTO committer;
@@ -66,6 +69,8 @@ public class SourceGitHubCommitDTO {
     @Data
     public static class SourceGitHubCommitParentDTO {
         public String sha;
+
+        // TODO useless, remove
         @JsonProperty("html_url")
         public String htmlUrl;
     }

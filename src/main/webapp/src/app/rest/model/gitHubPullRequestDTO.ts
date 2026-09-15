@@ -11,6 +11,7 @@ import { GitHubPullRequestReviewCommentDTO } from './gitHubPullRequestReviewComm
 import { GitHubIssueEventDTO } from './gitHubIssueEventDTO';
 import { GitHubIssueCommentDTO } from './gitHubIssueCommentDTO';
 import { GitHubPullRequestExtraFieldsDTO } from './gitHubPullRequestExtraFieldsDTO';
+import { SourceGitHubCommitDTO } from './sourceGitHubCommitDTO';
 
 
 export interface GitHubPullRequestDTO { 
@@ -42,6 +43,7 @@ export interface GitHubPullRequestDTO {
     reviewComments?: number;
     reviewCommentsData?: Array<GitHubPullRequestReviewCommentDTO>;
     commits?: number;
+    commitsData?: Array<SourceGitHubCommitDTO>;
     additions?: number;
     deletions?: number;
     changedFiles?: number;
