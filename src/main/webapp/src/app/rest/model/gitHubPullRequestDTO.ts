@@ -7,6 +7,7 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
+import { GitHubPullRequestReviewCommentDTO } from './gitHubPullRequestReviewCommentDTO';
 import { GitHubPullRequestExtraFieldsDTO } from './gitHubPullRequestExtraFieldsDTO';
 
 
@@ -35,6 +36,7 @@ export interface GitHubPullRequestDTO {
     mergeableState?: string;
     mergedByLogin?: string;
     comments?: number;
+    reviewCommentsData?: Array<GitHubPullRequestReviewCommentDTO>;
     reviewComments?: number;
     commits?: number;
     additions?: number;

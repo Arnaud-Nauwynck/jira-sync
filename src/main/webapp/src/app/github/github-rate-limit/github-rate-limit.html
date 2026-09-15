@@ -1,0 +1,33 @@
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="mb-0">GitHub API Rate Limit</h4>
+  <button class="btn btn-primary" type="button" [disabled]="loading()" (click)="refresh()">
+    Refresh
+  </button>
+</div>
+
+@if (error(); as errorMessage) {
+  <div class="alert alert-danger">{{ errorMessage }}</div>
+}
+
+<table class="table table-sm table-striped">
+  <thead>
+    <tr>
+      <th>Resource</th>
+      <th class="text-end">Limit</th>
+      <th class="text-end">Used</th>
+      <th class="text-end">Remaining</th>
+      <th>Resets at</th>
+    </tr>
+  </thead>
+  <tbody>
+    @for (row of rows(); track row.name) {
+      <tr>
+        <td>{{ row.name }}</td>
+        <td class="text-end">{{ row.limit }}</td>
+        <td class="text-end">{{ row.used }}</td>
+        <td class="text-end">{{ row.remaining }}</td>
+        <td>{{ row.resetAt }}</td>
+      </tr>
+    }
+  </tbody>
+</table>

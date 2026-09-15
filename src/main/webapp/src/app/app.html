@@ -16,15 +16,19 @@
         <li class="nav-item">
           <a class="nav-link active" aria-current="page" href="#">Home</a>
         </li>
+
         <li class="nav-item">
           <a class="nav-link" routerLink="/issues" ngbDropdownItem>Issues</a>
         </li>
+
         <li class="nav-item">
           <a class="nav-link" routerLink="/github-pull-requests" ngbDropdownItem>Github PR</a>
         </li>
+
         <li class="nav-item">
           <a class="nav-link" routerLink="/mailing-list" ngbDropdownItem>Mailing List</a>
         </li>
+
         <li class="nav-item" ngbDropdown>
           <a class="nav-link dropdown-toggle" href="#" role="button" ngbDropdownToggle>
             Statistics
@@ -35,16 +39,29 @@
             <li><a class="dropdown-item" routerLink="/user-mail-message-stats" ngbDropdownItem>MailingList Stats</a></li>
           </ul>
         </li>
+
+<!--
+        <li class="nav-item" ngbDropdown>
+          <a class="nav-link dropdown-toggle" href="#" role="button" ngbDropdownToggle>
+            Misc
+          </a>
+          <ul class="dropdown-menu" ngbDropdownMenu>
+          </ul>
+        </li>
+-->
+
         <li class="nav-item" ngbDropdown>
           <a class="nav-link dropdown-toggle" href="#" role="button" ngbDropdownToggle>
             Help
           </a>
           <ul class="dropdown-menu" ngbDropdownMenu>
             <li><a class="dropdown-item" routerLink="/sources-sync" ngbDropdownItem>Sources Sync</a></li>
+            <li><a class="dropdown-item" routerLink="/github-rate-limit" ngbDropdownItem>Github Rate Limit</a></li>
             <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item" routerLink="/about" ngbDropdownItem>About</a></li>
           </ul>
         </li>
+
       </ul>
     </div>
   </div>

@@ -1,3 +1,9 @@
+<div class="form-check mb-2">
+  <input class="form-check-input" type="checkbox" id="showAdvanced"
+         [checked]="showAdvanced()" (change)="showAdvanced.set(!showAdvanced())">
+  <label class="form-check-label" for="showAdvanced">Show advanced</label>
+</div>
+
 <H1>Jira Synchronisation</H1>
 
 <div class="text-secondary small mb-2">
@@ -15,6 +21,11 @@
 <button class="btn btn-primary" type="button" [disabled]="githubRunning()" (click)="runGitHubSyncAll()">
   Run Sync All
 </button>
+@if (showAdvanced()) {
+  <button class="btn btn-secondary" type="button" [disabled]="githubCompletingReviewComments()" (click)="completeMissingReviewComments()">
+    Complete Missing Review Comments
+  </button>
+}
 
 <H1>Mailing List Sync</H1>
 

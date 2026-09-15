@@ -2,6 +2,7 @@ package fr.an.projectanalysis.github.mapper;
 
 import fr.an.projectanalysis.github.client.dtos.SourceGitHubPullRequestDTO;
 import fr.an.projectanalysis.github.rest.dtos.GitHubPullRequestDTO;
+import fr.an.projectanalysis.github.rest.dtos.GitHubPullRequestReviewCommentDTO;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -50,8 +51,16 @@ public class SourceGitHubToAnnotatedPullRequestMapper {
         dest.additions = src.additions;
         dest.deletions = src.deletions;
         dest.changedFiles = src.changedFiles;
-        dest.htmlUrl = src.htmlUrl;
+        dest.reviewCommentsData = mapReviewComments(src.reviewCommentsData);
         return dest;
+    }
+
+    /** Maps the raw review-comment list to its flattened form; also used to backfill PRs missing this data. */
+    public static List<GitHubPullRequestReviewCommentDTO> mapReviewComments(List<SourceGitHubPullRequestDTO.SourceGitHubReviewCommentDTO> src) {
+        return src == null ? null
+                : src.stream()
+                        .map(SourceGitHubToAnnotatedPullRequestMapper::reviewComment)
+                        .collect(Collectors.toList());
     }
 
     private static String login(SourceGitHubPullRequestDTO.SourceGitHubUserDTO user) {
@@ -61,5 +70,31 @@ public class SourceGitHubToAnnotatedPullRequestMapper {
     private static List<String> logins(List<SourceGitHubPullRequestDTO.SourceGitHubUserDTO> users) {
         return users == null ? null
                 : users.stream().map(SourceGitHubToAnnotatedPullRequestMapper::login).collect(Collectors.toList());
+    }
+
+    private static GitHubPullRequestReviewCommentDTO reviewComment(SourceGitHubPullRequestDTO.SourceGitHubReviewCommentDTO c) {
+        GitHubPullRequestReviewCommentDTO d = new GitHubPullRequestReviewCommentDTO();
+        d.id = c.id;
+        d.pullRequestReviewId = c.pullRequestReviewId;
+        d.diffHunk = c.diffHunk;
+        d.path = c.path;
+        d.position = c.position;
+        d.originalPosition = c.originalPosition;
+        d.commitId = c.commitId;
+        d.originalCommitId = c.originalCommitId;
+        d.inReplyToId = c.inReplyToId;
+        d.authorLogin = login(c.user);
+        d.body = c.body;
+        d.createdAt = c.createdAt;
+        d.updatedAt = c.updatedAt;
+        d.authorAssociation = c.authorAssociation;
+        d.line = c.line;
+        d.originalLine = c.originalLine;
+        d.side = c.side;
+        d.startLine = c.startLine;
+        d.originalStartLine = c.originalStartLine;
+        d.startSide = c.startSide;
+        d.subjectType = c.subjectType;
+        return d;
     }
 }

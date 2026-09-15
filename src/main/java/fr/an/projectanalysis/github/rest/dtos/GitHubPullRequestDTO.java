@@ -38,12 +38,19 @@ public class GitHubPullRequestDTO {
     public Boolean mergeable;
     public String mergeableState;
     public String mergedByLogin;
+
+    /** TODO remove: useless, redundant once all reviewCommentsData are loaded */
     public Integer comments;
+    /** loaded on demand when 'comments' is set */
+    public List<GitHubPullRequestReviewCommentDTO> reviewCommentsData;
+
     public Integer reviewComments;
     public Integer commits;
     public Integer additions;
     public Integer deletions;
     public Integer changedFiles;
+
+    /** TODO remove:  useless, redundant with "https://github.com/{orga}/{repo}/pull/{number}" */
     public String htmlUrl;
 
     /** Extra data not coming from the source GitHub server; not set by the mapper. */

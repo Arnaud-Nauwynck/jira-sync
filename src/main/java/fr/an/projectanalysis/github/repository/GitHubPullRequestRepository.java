@@ -8,6 +8,7 @@ import fr.an.projectanalysis.github.configuration.GitHubSyncProperties;
 import fr.an.projectanalysis.github.mapper.SourceGitHubToAnnotatedPullRequestMapper;
 import fr.an.projectanalysis.github.rest.dtos.GitHubPullRequestDTO;
 import fr.an.projectanalysis.github.rest.dtos.GitHubPullRequestExtraFieldsDTO;
+import fr.an.projectanalysis.github.rest.dtos.GitHubPullRequestReviewCommentDTO;
 import jakarta.annotation.Nonnull;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
@@ -195,6 +197,17 @@ public class GitHubPullRequestRepository {
         }
     }
 
+    /** Lists the PRs in a single "created_year" partition matching the given filter. */
+    public List<GitHubPullRequestDTO> findByPartitionYear(int year, Predicate<GitHubPullRequestDTO> filter) {
+        List<GitHubPullRequestDTO> result = new ArrayList<>();
+        for (GitHubPullRequestDTO pr : cachedPartitionData(year).values()) {
+            if (filter == null || filter.test(pr)) {
+                result.add(pr);
+            }
+        }
+        return result;
+    }
+
     /** Lists the partition years within [fromYear, toYear] that currently exist on disk. */
     public List<Integer> findPartitionYearBetween(int fromYear, int toYear) {
         List<Integer> res = new ArrayList<>();
@@ -235,6 +248,18 @@ public class GitHubPullRequestRepository {
         pr.annotated = null;
         int year = partitionYearOf(pr);
         appendChange(year, new RemoveAnnotationPullRequestChangeRecord(number));
+    }
+
+    /**
+     * Updates the review-comments list on an already-persisted PR, recording an "update" change
+     * like {@link #save}. Used to backfill {@code reviewCommentsData} on PRs synced before it was
+     * fetched.
+     */
+    public void putReviewComments(int number, List<GitHubPullRequestReviewCommentDTO> reviewCommentsData) {
+        GitHubPullRequestDTO pr = getByNumber(number); // points to cached partition data... updating => update cache!
+        pr.reviewCommentsData = reviewCommentsData;
+        int year = partitionYearOf(pr);
+        appendChange(year, new UpdatePullRequestChangeRecord(pr));
     }
 
     /** Folds the pending changes log into a fresh compacted snapshot, then clears the changes log. */

@@ -35,6 +35,11 @@ public class GitHubApiClient {
         this.mapper = mapper;
     }
 
+    /** GETs the given path+query (relative to the configured GitHub API base URL) and parses the JSON response into {@code type}. */
+    public <T> T callHttpGet(String pathAndQuery, Class<T> type) throws Exception {
+        return mapper.treeToValue(callHttpGet(pathAndQuery), type);
+    }
+
     /** GETs the given path+query (relative to the configured GitHub API base URL) and parses the JSON response. */
     public JsonNode callHttpGet(String pathAndQuery) throws Exception {
         for (int attempt = 1; ; attempt++) {

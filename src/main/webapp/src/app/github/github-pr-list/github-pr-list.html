@@ -110,6 +110,28 @@
           <label class="btn btn-outline-secondary" for="mergedAvailabilityYes">✓</label>
         </div>
       </div>
+
+      <div>
+        <label class="form-label d-block">Mergeable</label>
+        <div class="btn-group" role="group">
+          <input type="radio" class="btn-check" name="mergeableAvailability" id="mergeableAvailabilityNo" autocomplete="off"
+            [(ngModel)]="mergeableAvailability" (ngModelChange)="onFilterInputsChanged()" value="no" />
+          <label class="btn btn-outline-secondary" for="mergeableAvailabilityNo">✗</label>
+
+          <input type="radio" class="btn-check" name="mergeableAvailability" id="mergeableAvailabilityAny" autocomplete="off"
+            [(ngModel)]="mergeableAvailability" (ngModelChange)="onFilterInputsChanged()" value="any" />
+          <label class="btn btn-outline-secondary" for="mergeableAvailabilityAny">Any</label>
+
+          <input type="radio" class="btn-check" name="mergeableAvailability" id="mergeableAvailabilityYes" autocomplete="off"
+            [(ngModel)]="mergeableAvailability" (ngModelChange)="onFilterInputsChanged()" value="yes" />
+          <label class="btn btn-outline-secondary" for="mergeableAvailabilityYes">✓</label>
+        </div>
+      </div>
+
+      <div>
+        <label class="form-label">Mergeable state pattern</label>
+        <input class="form-control" type="text" [(ngModel)]="mergeableStatePattern" (ngModelChange)="onFilterInputsChanged()" placeholder="regex, e.g. clean|unstable" />
+      </div>
     </div>
   </div>
 </div>

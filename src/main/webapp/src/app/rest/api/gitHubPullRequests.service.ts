@@ -228,7 +228,7 @@ export class GitHubPullRequestsService extends BaseService {
     }
 
     /**
-     * List pull requests created between fromYear and toYear (inclusive), optionally filtered by author login, PR number range, and/or PR number pattern
+     * List pull requests created between fromYear and toYear (inclusive), optionally filtered by author login, PR number range, PR number pattern, merged/mergeable tri-state, and/or mergeable-state pattern
      * @endpoint get /api/v1/github-pull-requests/pull-requests
      * @param fromYear 
      * @param toYear 
@@ -236,14 +236,17 @@ export class GitHubPullRequestsService extends BaseService {
      * @param fromPullRequestNumber 
      * @param toPullRequestNumber 
      * @param pullRequestNumberPattern 
+     * @param merged 
+     * @param mergeable 
+     * @param mergeableStatePattern 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      * @param options additional options
      */
-    public queryPullRequests(fromYear?: number, toYear?: number, usernamePattern?: string, fromPullRequestNumber?: number, toPullRequestNumber?: number, pullRequestNumberPattern?: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<GitHubPullRequestDTO>>;
-    public queryPullRequests(fromYear?: number, toYear?: number, usernamePattern?: string, fromPullRequestNumber?: number, toPullRequestNumber?: number, pullRequestNumberPattern?: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<GitHubPullRequestDTO>>>;
-    public queryPullRequests(fromYear?: number, toYear?: number, usernamePattern?: string, fromPullRequestNumber?: number, toPullRequestNumber?: number, pullRequestNumberPattern?: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<Array<GitHubPullRequestDTO>>>;
-    public queryPullRequests(fromYear?: number, toYear?: number, usernamePattern?: string, fromPullRequestNumber?: number, toPullRequestNumber?: number, pullRequestNumberPattern?: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+    public queryPullRequests(fromYear?: number, toYear?: number, usernamePattern?: string, fromPullRequestNumber?: number, toPullRequestNumber?: number, pullRequestNumberPattern?: string, merged?: boolean, mergeable?: boolean, mergeableStatePattern?: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<GitHubPullRequestDTO>>;
+    public queryPullRequests(fromYear?: number, toYear?: number, usernamePattern?: string, fromPullRequestNumber?: number, toPullRequestNumber?: number, pullRequestNumberPattern?: string, merged?: boolean, mergeable?: boolean, mergeableStatePattern?: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<GitHubPullRequestDTO>>>;
+    public queryPullRequests(fromYear?: number, toYear?: number, usernamePattern?: string, fromPullRequestNumber?: number, toPullRequestNumber?: number, pullRequestNumberPattern?: string, merged?: boolean, mergeable?: boolean, mergeableStatePattern?: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<Array<GitHubPullRequestDTO>>>;
+    public queryPullRequests(fromYear?: number, toYear?: number, usernamePattern?: string, fromPullRequestNumber?: number, toPullRequestNumber?: number, pullRequestNumberPattern?: string, merged?: boolean, mergeable?: boolean, mergeableStatePattern?: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
 
         let localVarQueryParameters = new OpenApiHttpParams(this.encoder);
 
@@ -296,6 +299,33 @@ export class GitHubPullRequestsService extends BaseService {
             localVarQueryParameters,
             'pullRequestNumberPattern',
             <any>pullRequestNumberPattern,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'merged',
+            <any>merged,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'mergeable',
+            <any>mergeable,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'mergeableStatePattern',
+            <any>mergeableStatePattern,
             QueryParamStyle.Form,
             true,
         );

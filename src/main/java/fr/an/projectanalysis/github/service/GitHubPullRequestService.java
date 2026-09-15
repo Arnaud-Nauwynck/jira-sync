@@ -32,23 +32,38 @@ public class GitHubPullRequestService {
 
     /** Lists the PRs created between fromYear and toYear (inclusive), optionally filtered by author login. */
     public List<GitHubPullRequestDTO> queryPullRequests(int fromYear, int toYear, String usernamePatternText) {
-        return queryPullRequests(fromYear, toYear, usernamePatternText, null, null, null);
+        return queryPullRequests(fromYear, toYear, usernamePatternText, null, null, null, null, null, null);
     }
 
     /** Lists the PRs created between fromYear and toYear (inclusive), optionally filtered by author login,
      * PR number range, and/or a regex on the PR number (as text). */
     public List<GitHubPullRequestDTO> queryPullRequests(int fromYear, int toYear, String usernamePatternText,
             Integer fromPullRequestNumber, Integer toPullRequestNumber, String pullRequestNumberPatternText) {
+        return queryPullRequests(fromYear, toYear, usernamePatternText,
+                fromPullRequestNumber, toPullRequestNumber, pullRequestNumberPatternText, null, null, null);
+    }
+
+    /** Lists the PRs created between fromYear and toYear (inclusive), optionally filtered by author login,
+     * PR number range, a regex on the PR number (as text), the merged/mergeable tri-state flags, and/or a
+     * regex on the mergeable state (as text). */
+    public List<GitHubPullRequestDTO> queryPullRequests(int fromYear, int toYear, String usernamePatternText,
+            Integer fromPullRequestNumber, Integer toPullRequestNumber, String pullRequestNumberPatternText,
+            Boolean merged, Boolean mergeable, String mergeableStatePatternText) {
         List<GitHubPullRequestDTO> result = new ArrayList<>();
         Pattern usernamePattern = (usernamePatternText != null && !usernamePatternText.isBlank())
                 ? Pattern.compile(usernamePatternText) : null;
         Pattern pullRequestNumberPattern = (pullRequestNumberPatternText != null && !pullRequestNumberPatternText.isBlank())
                 ? Pattern.compile(pullRequestNumberPatternText) : null;
+        Pattern mergeableStatePattern = (mergeableStatePatternText != null && !mergeableStatePatternText.isBlank())
+                ? Pattern.compile(mergeableStatePatternText) : null;
         repository.scanPullRequests(fromYear, toYear, (year, pr) -> {
             boolean matches = (usernamePattern == null || usernamePattern.matcher(authorOf(pr)).matches())
                     && (fromPullRequestNumber == null || pr.number >= fromPullRequestNumber)
                     && (toPullRequestNumber == null || pr.number <= toPullRequestNumber)
-                    && (pullRequestNumberPattern == null || pullRequestNumberPattern.matcher(String.valueOf(pr.number)).matches());
+                    && (pullRequestNumberPattern == null || pullRequestNumberPattern.matcher(String.valueOf(pr.number)).matches())
+                    && (merged == null || merged.booleanValue() == pr.merged)
+                    && (mergeable == null || mergeable.equals(pr.mergeable))
+                    && (mergeableStatePattern == null || mergeableStatePattern.matcher(pr.mergeableState != null ? pr.mergeableState : "").matches());
             if (matches) {
                 result.add(pr);
             }

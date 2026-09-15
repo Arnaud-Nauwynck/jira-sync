@@ -21,9 +21,11 @@ export class GithubPullRequestsDataService {
   }
 
   search(fromYear: number, toYear: number, usernamePattern?: string,
-      fromPullRequestNumber?: number | null, toPullRequestNumber?: number | null, pullRequestNumberPattern?: string) {
+      fromPullRequestNumber?: number | null, toPullRequestNumber?: number | null, pullRequestNumberPattern?: string,
+      merged?: boolean, mergeable?: boolean, mergeableStatePattern?: string) {
     this.gitHubPullRequestsService.queryPullRequests(fromYear, toYear, usernamePattern || undefined,
         fromPullRequestNumber ?? undefined, toPullRequestNumber ?? undefined, pullRequestNumberPattern || undefined,
+        merged, mergeable, mergeableStatePattern || undefined,
         'body', false, { httpHeaderAccept: 'application/json' as any })
       .subscribe({
         next: (pullRequests) => {

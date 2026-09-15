@@ -53,6 +53,8 @@ export class GithubPRList implements OnInit {
 
   draftAvailability: AvailabilityFilter = 'any';
   mergedAvailability: AvailabilityFilter = 'any';
+  mergeableAvailability: AvailabilityFilter = 'any';
+  mergeableStatePattern = '';
 
   // Analysis criteria panel: collapsible, collapsed by default.
   isAnalysisCriteriaCollapsed = true;
@@ -109,19 +111,34 @@ export class GithubPRList implements OnInit {
     { headerName: 'Milestone', field: 'milestoneTitle', width: 120 },
     { headerName: 'Created', field: 'createdAt', width: 100 },
     { headerName: 'Updated', field: 'updatedAt', width: 100 },
-    { headerName: 'Closed', field: 'closedAt', width: 100, hide: true },
-    { headerName: 'Merged At', field: 'mergedAt', width: 100, hide: true },
+    { headerName: 'Closed', field: 'closedAt', width: 100, },
+    { headerName: 'Merged At', field: 'mergedAt', width: 100, },
     { headerName: 'Head Ref', field: 'headRef', width: 140 },
     { headerName: 'Base Ref', field: 'baseRef', width: 120 },
-    { headerName: 'Mergeable', field: 'mergeable', width: 100, cellDataType: 'boolean', hide: true },
-    { headerName: 'Mergeable State', field: 'mergeableState', width: 130, hide: true },
-    { headerName: 'Merged By', field: 'mergedByLogin', width: 120, hide: true },
+    { headerName: 'Mergeable', field: 'mergeable', width: 100, cellDataType: 'boolean' },
+    { headerName: 'Mergeable State', field: 'mergeableState', width: 130 },
+    { headerName: 'Merged By', field: 'mergedByLogin', width: 120 },
     { headerName: 'Comments', field: 'comments', width: 100 },
-    { headerName: 'Review Comments', field: 'reviewComments', width: 130, hide: true },
-    { headerName: 'Commits', field: 'commits', width: 90, hide: true },
-    { headerName: 'Additions', field: 'additions', width: 100, hide: true },
-    { headerName: 'Deletions', field: 'deletions', width: 100, hide: true },
-    { headerName: 'Changed Files', field: 'changedFiles', width: 110, hide: true },
+
+    { headerName: 'Review Comments', field: 'reviewComments', width: 130, },
+    { headerName: 'Review Comments Count', width: 100,
+      hide: false, // FOR DEBUG
+      valueGetter: (params) => (params.data?.reviewCommentsData ?? []).length,
+    },
+    { headerName: 'Diff Review Comments Count-List', width: 130,
+      hide: false, // FOR DEBUG
+      valueGetter: (params) => {
+        const expected = params.data?.comments || 0;
+        const fetched = (params.data?.reviewCommentsData ?? []).length;
+        const diff = expected - fetched;
+        return (diff)? diff : '';
+      },
+    },
+
+    { headerName: 'Commits', field: 'commits', width: 90, },
+    { headerName: 'Additions', field: 'additions', width: 100, },
+    { headerName: 'Deletions', field: 'deletions', width: 100, },
+    { headerName: 'Changed Files', field: 'changedFiles', width: 110, },
   ];
 
   private gridApi?: GridApi<GitHubPullRequestDTO>;
@@ -179,6 +196,8 @@ export class GithubPRList implements OnInit {
       || this.excludedStates.size > 0
       || this.draftAvailability !== 'any'
       || this.mergedAvailability !== 'any'
+      || this.mergeableAvailability !== 'any'
+      || this.mergeableStatePattern.trim().length > 0
       || this.parseCsvList(this.analysisSummaryContains).length > 0
       || this.analysisSummaryUpdatedFrom.length > 0
       || this.analysisSummaryUpdatedTo.length > 0
@@ -238,6 +257,12 @@ export class GithubPRList implements OnInit {
       return false;
     }
     if (!this.matchesAvailability(this.mergedAvailability, !!pr.merged)) {
+      return false;
+    }
+    if (!this.matchesAvailability(this.mergeableAvailability, !!pr.mergeable)) {
+      return false;
+    }
+    if (!this.matchesRegex(this.mergeableStatePattern, pr.mergeableState)) {
       return false;
     }
     const annotated = pr.annotated;
@@ -415,7 +440,19 @@ export class GithubPRList implements OnInit {
 
   search() {
     this.pullRequestsDataService.search(this.fromYear, this.toYear, this.usernamePattern,
-      this.fromPullRequestNumber, this.toPullRequestNumber, this.pullRequestNumberPattern);
+      this.fromPullRequestNumber, this.toPullRequestNumber, this.pullRequestNumberPattern,
+      this.toBoolean(this.mergedAvailability), this.toBoolean(this.mergeableAvailability), this.mergeableStatePattern);
+  }
+
+  /** Converts a tri-state availability filter to the boolean expected by the server-side query ('any' = no filtering). */
+  private toBoolean(availability: AvailabilityFilter): boolean | undefined {
+    if (availability === 'yes') {
+      return true;
+    }
+    if (availability === 'no') {
+      return false;
+    }
+    return undefined;
   }
 
 }

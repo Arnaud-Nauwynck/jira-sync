@@ -39,7 +39,7 @@ public class GitHubPullRequestsRestController extends AbstractRestController {
         });
     }
 
-    @Operation(summary = "List pull requests created between fromYear and toYear (inclusive), optionally filtered by author login, PR number range, and/or PR number pattern")
+    @Operation(summary = "List pull requests created between fromYear and toYear (inclusive), optionally filtered by author login, PR number range, PR number pattern, merged/mergeable tri-state, and/or mergeable-state pattern")
     @GetMapping("/pull-requests")
     public Collection<GitHubPullRequestDTO> queryPullRequests(
             @RequestParam(name = "fromYear", defaultValue = "2020") int fromYear,
@@ -47,13 +47,17 @@ public class GitHubPullRequestsRestController extends AbstractRestController {
             @RequestParam(name = "usernamePattern", required = false) String usernamePattern,
             @RequestParam(name = "fromPullRequestNumber", required = false) Integer fromPullRequestNumber,
             @RequestParam(name = "toPullRequestNumber", required = false) Integer toPullRequestNumber,
-            @RequestParam(name = "pullRequestNumberPattern", required = false) String pullRequestNumberPattern
+            @RequestParam(name = "pullRequestNumberPattern", required = false) String pullRequestNumberPattern,
+            @RequestParam(name = "merged", required = false) Boolean merged,
+            @RequestParam(name = "mergeable", required = false) Boolean mergeable,
+            @RequestParam(name = "mergeableStatePattern", required = false) String mergeableStatePattern
     ) {
         String paramsText = "fromYear=" + fromYear + "&toYear=" + toYear + "&usernamePattern=" + usernamePattern
                 + "&fromPullRequestNumber=" + fromPullRequestNumber + "&toPullRequestNumber=" + toPullRequestNumber
-                + "&pullRequestNumberPattern=" + pullRequestNumberPattern;
+                + "&pullRequestNumberPattern=" + pullRequestNumberPattern
+                + "&merged=" + merged + "&mergeable=" + mergeable + "&mergeableStatePattern=" + mergeableStatePattern;
         return withLog("GET", "/pull-requests", paramsText, () -> delegate.queryPullRequests(fromYear, toYear, usernamePattern,
-                fromPullRequestNumber, toPullRequestNumber, pullRequestNumberPattern));
+                fromPullRequestNumber, toPullRequestNumber, pullRequestNumberPattern, merged, mergeable, mergeableStatePattern));
     }
 
     @Operation(summary = "Count pull requests created per author, for PRs created between fromYear and toYear (inclusive), optionally filtered by author login")

@@ -10,6 +10,7 @@ import {About} from './about/about';
 import {UserIssueStatList} from './jira/user-issue-stat-list/user-issue-stat-list';
 import {UserPrStatList} from './github/user-pr-stat-list/user-pr-stat-list';
 import {UserMailMessageStatList} from './mailing-list/user-mail-message-stat-list/user-mail-message-stat-list';
+import {GithubRateLimit} from './github/github-rate-limit/github-rate-limit';
 
 export const routes: Routes = [
   {path:'issues', component: IssuesList},
@@ -22,6 +23,7 @@ export const routes: Routes = [
   {path:'user-pr-stats', component: UserPrStatList},
   {path:'user-mail-message-stats', component: UserMailMessageStatList},
   {path:'sources-sync', component: SourcesSync},
+  {path:'github-rate-limit', component: GithubRateLimit},
   {path:'about', component: About},
 
 ];

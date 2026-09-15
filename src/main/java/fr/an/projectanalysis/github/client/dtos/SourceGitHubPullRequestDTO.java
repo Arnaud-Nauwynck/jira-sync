@@ -68,11 +68,56 @@ public class SourceGitHubPullRequestDTO {
     @JsonProperty("changed_files")
     public Integer changedFiles;
 
+    /** Populated separately by GitHubPullRequestSyncRunner via GET .../pulls/{number}/comments, not part of the detail response. */
+    public List<SourceGitHubReviewCommentDTO> reviewCommentsData;
+
     @JsonIgnoreProperties(ignoreUnknown = true)
     @Data
     public static class SourceGitHubUserDTO {
         public String login;
         public long id;
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    @Data
+    public static class SourceGitHubReviewCommentDTO {
+        public long id;
+        @JsonProperty("pull_request_review_id")
+        public Long pullRequestReviewId;
+        @JsonProperty("diff_hunk")
+        public String diffHunk;
+        public String path;
+        public Integer position;
+        @JsonProperty("original_position")
+        public Integer originalPosition;
+        @JsonProperty("commit_id")
+        public String commitId;
+        @JsonProperty("original_commit_id")
+        public String originalCommitId;
+        @JsonProperty("in_reply_to_id")
+        public Long inReplyToId;
+        public SourceGitHubUserDTO user;
+        public String body;
+        @JsonProperty("created_at")
+        public String createdAt;
+        @JsonProperty("updated_at")
+        public String updatedAt;
+        @JsonProperty("html_url")
+        public String htmlUrl;
+        @JsonProperty("author_association")
+        public String authorAssociation;
+        public Integer line;
+        @JsonProperty("original_line")
+        public Integer originalLine;
+        public String side;
+        @JsonProperty("start_line")
+        public Integer startLine;
+        @JsonProperty("original_start_line")
+        public Integer originalStartLine;
+        @JsonProperty("start_side")
+        public String startSide;
+        @JsonProperty("subject_type")
+        public String subjectType;
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
