@@ -7,6 +7,7 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
+import { MailMessageExtraFieldsDTO } from './mailMessageExtraFieldsDTO';
 
 
 export interface MailMessageDTO { 
@@ -19,5 +20,6 @@ export interface MailMessageDTO {
     cc?: Array<string>;
     date?: string;
     bodyText?: string;
+    annotated?: MailMessageExtraFieldsDTO;
 }
 

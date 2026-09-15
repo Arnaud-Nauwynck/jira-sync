@@ -1,7 +1,7 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="JiraSyncApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
     <module name="jira-sync" />
-    <option name="SPRING_BOOT_MAIN_CLASS" value="fr.an.jira.JiraSyncApplication" />
+    <option name="SPRING_BOOT_MAIN_CLASS" value="fr.an.projectanalysis.ProjectAnalysisApplicationMain" />
     <option name="VM_PARAMETERS" value="-Xmx5g -Xms5g" />
     <method v="2">
       <option name="Make" enabled="true" />

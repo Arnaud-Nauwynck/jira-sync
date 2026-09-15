@@ -7,6 +7,7 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
+import { GitHubPullRequestExtraFieldsDTO } from './gitHubPullRequestExtraFieldsDTO';
 
 
 export interface GitHubPullRequestDTO { 
@@ -40,5 +41,6 @@ export interface GitHubPullRequestDTO {
     deletions?: number;
     changedFiles?: number;
     htmlUrl?: string;
+    annotated?: GitHubPullRequestExtraFieldsDTO;
 }
 
