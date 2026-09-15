@@ -2,11 +2,10 @@ package fr.an.projectanalysis.github.client;
 
 import fr.an.projectanalysis.github.configuration.GitHubSyncProperties;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.val;
 import org.springframework.stereotype.Component;
-import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.type.CollectionType;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -14,6 +13,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 
 /**
  * Delegates all HTTP calls to the GitHub REST API.
@@ -39,18 +39,36 @@ public class GitHubApiClient {
         this.mapper = mapper;
     }
 
-    /** GETs the given path+query (relative to the configured GitHub API base URL) and parses the JSON response into {@code type}. */
+    /** call http GET, return response body as typed object */
     public <T> T callHttpGet(String pathAndQuery, Class<T> type) throws Exception {
-        return mapper.treeToValue(callHttpGet(pathAndQuery), type);
+        String jsonText = callHttpGet_String(pathAndQuery);
+        return mapper.readValue(jsonText, type);
     }
 
+    /** call http GET, return response body (a JSON array) as a typed list */
+    public <T> List<T> callHttpGet_List(String pathAndQuery, Class<T> elementClass) throws Exception {
+        String jsonText = callHttpGet_String(pathAndQuery);
+        val type = listTypeOf(elementClass);
+        return mapper.readValue(jsonText, type);
+    }
+
+    private <T> CollectionType listTypeOf(Class<T> elementClass) {
+        return mapper.getTypeFactory().constructCollectionType(List.class, elementClass);
+    }
+
+//    /** call http GET, return response body as JsonNode */
+//    public JsonNode callHttpGet_JsonNode(String pathAndQuery) throws Exception {
+//        String respText = callHttpGet_String(pathAndQuery);
+//        return mapper.readTree(respText);
+//    }
+
     /** GETs the given path+query (relative to the configured GitHub API base URL) and parses the JSON response. */
-    public JsonNode callHttpGet(String pathAndQuery) throws Exception {
+    public String callHttpGet_String(String pathAndQuery) throws Exception {
         for (int attempt = 1; ; attempt++) {
             HttpRequest.Builder rb = HttpRequest.newBuilder(URI.create(props.getApiBaseUrl() + pathAndQuery))
                     .timeout(Duration.ofMinutes(2))
                     .header("Accept", "application/vnd.github+json")
-                    .header("X-GitHub-Api-Version", "2022-11-28")
+                    .header("X-GitHub-Api-Version", "2026-03-10")
                     .GET();
             String httpHeaderAuth = props.getHttpHeaderAuth();
             if (httpHeaderAuth != null && !httpHeaderAuth.isBlank()) {
@@ -59,11 +77,13 @@ public class GitHubApiClient {
 
             HttpResponse<String> resp = http.send(rb.build(), HttpResponse.BodyHandlers.ofString());
             int sc = resp.statusCode();
-            if (sc == 200) return mapper.readTree(resp.body());
+            if (sc == 200) {
+                return resp.body();
+            }
 
             if (sc == 403 && isPrimaryRateLimitExhausted(resp) && attempt <= 5) {
                 long backoff = primaryRateLimitResetMs(resp);
-                log.warn("GitHub primary rate limit exhausted on {}, retry {} in {}ms", pathAndQuery, attempt, backoff);
+                log.warn("HTTP {} on {}, GitHub primary rate limit exhausted, retry {} in {}ms", sc, pathAndQuery, attempt, backoff);
                 sleep(backoff);
                 continue;
             }
@@ -99,4 +119,5 @@ public class GitHubApiClient {
     private static void sleep(long ms) {
         try { Thread.sleep(ms); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
     }
+
 }

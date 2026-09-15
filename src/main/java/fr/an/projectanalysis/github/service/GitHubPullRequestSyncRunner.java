@@ -1,5 +1,6 @@
 package fr.an.projectanalysis.github.service;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import fr.an.projectanalysis.github.client.GitHubApiClient;
 import fr.an.projectanalysis.github.client.dtos.SourceGitHubCommitDTO;
 import fr.an.projectanalysis.github.client.dtos.SourceGitHubIssueCommentDTO;
@@ -13,6 +14,7 @@ import fr.an.projectanalysis.github.rest.dtos.GitHubIssueEventDTO;
 import fr.an.projectanalysis.github.rest.dtos.GitHubPullRequestDTO;
 import fr.an.projectanalysis.github.rest.dtos.GitHubPullRequestReviewCommentDTO;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -145,14 +147,19 @@ public class GitHubPullRequestSyncRunner {
         return prChangeCount;
     }
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    protected static class NumberHolderDTO {
+        public int number;
+    }
+
     /** The highest PR number currently known for the configured org/repo, or 0 if it has none. */
     private int fetchMaxPrNumber() throws Exception {
-        JsonNode prs = apiClient.callHttpGet(baseRepoApiUrl + "/pulls"
-                + "?state=all&sort=created&direction=desc&per_page=1&page=1");
-        if (!prs.isArray() || prs.isEmpty()) {
+        List<NumberHolderDTO> prs = apiClient.callHttpGet_List(baseRepoApiUrl + "/pulls"
+                + "?state=all&sort=created&direction=desc&per_page=1&page=1", NumberHolderDTO.class);
+        if (prs.isEmpty()) {
             return 0;
         }
-        return prs.get(0).path("number").asInt();
+        return prs.get(0).number;
     }
 
     /**
@@ -372,13 +379,12 @@ public class GitHubPullRequestSyncRunner {
         int page = 1;
         int fetchedCount = 0;
         while (true) {
-            JsonNode comments = apiClient.callHttpGet(baseRepoApiUrl + "/pulls/" + number + "/comments"
-                    + "?sort=created&direction=desc&per_page=100&page=" + page);
-            if (!comments.isArray() || comments.isEmpty()) {
-                break;
-            }
-            for (JsonNode n : comments) {
-                result.add(mapper.treeToValue(n, SourceGitHubPullRequestDTO.SourceGitHubReviewCommentDTO.class));
+            val comments = apiClient.callHttpGet_List(baseRepoApiUrl + "/pulls/" + number + "/comments"
+                    + "?sort=created&direction=desc&per_page=100&page=" + page,
+                    SourceGitHubPullRequestDTO.SourceGitHubReviewCommentDTO.class);
+            for (SourceGitHubPullRequestDTO.SourceGitHubReviewCommentDTO comment : comments) {
+                // may convert
+                result.add(comment);
                 fetchedCount++;
             }
             if (fetchedCount >= reviewCommentsCount) {
@@ -401,15 +407,15 @@ public class GitHubPullRequestSyncRunner {
         int page = 1;
         int fetchedCount = 0;
         while (true) {
-            JsonNode comments = apiClient.callHttpGet(baseRepoApiUrl + "/issues/" + number + "/comments"
-                    + "?sort=created&direction=asc&per_page=100&page=" + page);
-            if (!comments.isArray() || comments.isEmpty()) {
+            val comments = apiClient.callHttpGet_List(baseRepoApiUrl + "/issues/" + number + "/comments"
+                    + "?sort=created&direction=asc&per_page=100&page=" + page,
+                    SourceGitHubIssueCommentDTO.class);
+            if (comments.isEmpty()) {
                 break;
             }
-            for (JsonNode n : comments) {
-                result.add(mapper.treeToValue(n, SourceGitHubIssueCommentDTO.class));
-                fetchedCount++;
-            }
+            // TOADD may convert
+            result.addAll(comments);
+            fetchedCount += comments.size();
             if (fetchedCount >= commentsCount) {
                 break;
             }
@@ -429,18 +435,23 @@ public class GitHubPullRequestSyncRunner {
         List<SourceGitHubIssueEventDTO> result = new ArrayList<>();
         int page = 1;
         while (true) {
-            JsonNode events = apiClient.callHttpGet(baseRepoApiUrl + "/issues/" + number + "/events"
-                    + "?per_page=100&page=" + page);
-            if (!events.isArray() || events.isEmpty()) {
+            val events = apiClient.callHttpGet_List(baseRepoApiUrl + "/issues/" + number + "/events"
+                    + "?per_page=100&page=" + page, SourceGitHubIssueEventDTO.class);
+            if (events.isEmpty()) {
                 break;
             }
-            for (JsonNode n : events) {
-                result.add(mapper.treeToValue(n, SourceGitHubIssueEventDTO.class));
-            }
+            result.addAll(events);
             page++;
             sleep(syncGetByIdDelayMs);
         }
         return result;
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    protected static class NumberAndUpdatedAtHolderDTO {
+        public int number;
+        // Instant
+        public String updated_at;
     }
 
     /**
@@ -452,22 +463,21 @@ public class GitHubPullRequestSyncRunner {
         int page = 1;
         outer:
         while (true) {
-            JsonNode prs = apiClient.callHttpGet(baseRepoApiUrl + "/pulls"
+            val prs = apiClient.callHttpGet_List(baseRepoApiUrl + "/pulls"
                     + "?state=all&sort=created&direction=asc"
                     + "&per_page=" + props.getPerPage()
-                    + "&page=" + page);
-
-            if (!prs.isArray() || prs.isEmpty()) {
+                    + "&page=" + page,
+                    NumberAndUpdatedAtHolderDTO.class);
+            if (prs.isEmpty()) {
                 break;
             }
-
-            for (JsonNode n : prs) {
-                Instant updatedAt = Instant.parse(n.path("updated_at").asText());
+            for (val pr: prs) {
+                Instant updatedAt = Instant.parse(pr.updated_at);
                 if (!updatedAt.isAfter(since)) {
                     // sorted "updated desc": everything from here on is already synced
                     break outer;
                 }
-                result.put(n.path("number").asInt(), updatedAt);
+                result.put(pr.number, updatedAt);
             }
 
             log.info("listing pull requests updated since {}: {} found so far (page {})", since, result.size(), page);
