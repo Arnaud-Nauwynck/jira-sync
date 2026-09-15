@@ -1,5 +1,6 @@
 package fr.an.projectanalysis.github.mapper;
 
+import fr.an.projectanalysis.github.client.dtos.SourceGitHubCommitDTO;
 import fr.an.projectanalysis.github.client.dtos.SourceGitHubIssueCommentDTO;
 import fr.an.projectanalysis.github.client.dtos.SourceGitHubIssueEventDTO;
 import fr.an.projectanalysis.github.client.dtos.SourceGitHubPullRequestDTO;
@@ -82,6 +83,21 @@ public class SourceGitHubToAnnotatedPullRequestMapper {
         return src == null ? null
                 : src.stream()
                         .map(SourceGitHubToAnnotatedPullRequestMapper::issueEvent)
+                        .collect(Collectors.toList());
+    }
+
+    /**
+     * Derives minimal commit references from issue-timeline events that carry a {@code commitId}
+     * (e.g. "referenced", "closed", "merged", "head_ref_force_pushed" events). Note this only
+     * captures the commit sha/htmlUrl embedded in the timeline event, not the full commit detail
+     * (message, author, stats, files) — that requires the dedicated
+     * GET /pulls/{number}/commits endpoint.
+     */
+    public static List<SourceGitHubCommitDTO> mapIssueCommits(List<SourceGitHubIssueEventDTO> src) {
+        return src == null ? null
+                : src.stream()
+                        .filter(e -> e.commitId != null)
+                        .map(SourceGitHubToAnnotatedPullRequestMapper::issueEventCommit)
                         .collect(Collectors.toList());
     }
 
@@ -175,6 +191,13 @@ public class SourceGitHubToAnnotatedPullRequestMapper {
         d.parentIssueNumber = e.parentIssue != null ? e.parentIssue.number : null;
         d.blockedByNumber = e.blockedBy != null ? e.blockedBy.number : null;
         d.blockingNumber = e.blocking != null ? e.blocking.number : null;
+        return d;
+    }
+
+    private static SourceGitHubCommitDTO issueEventCommit(SourceGitHubIssueEventDTO e) {
+        SourceGitHubCommitDTO d = new SourceGitHubCommitDTO();
+        d.sha = e.commitId;
+        d.htmlUrl = e.commitUrl;
         return d;
     }
 }

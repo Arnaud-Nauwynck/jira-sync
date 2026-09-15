@@ -106,7 +106,7 @@ public class GitHubPullRequestService {
     }
 
     public void putAnnotation(int number, GitHubPullRequestExtraFieldsDTO annotated) {
-        repository.putAnnotation(number, annotated);
+        repository.mutateIssue(number, pr -> pr.annotated = annotated);
     }
 
     public void putPersonalInterrestComment(int number, String personalInterrestComment, Integer personalInterrestPriority10) {
@@ -114,10 +114,10 @@ public class GitHubPullRequestService {
         GitHubPullRequestExtraFieldsDTO annotated = pr.annotatedOrCreate();
         annotated.personalInterrestComment = personalInterrestComment;
         annotated.personalInterrestPriority10 = personalInterrestPriority10;
-        repository.putAnnotation(number, annotated);
+        repository.mutateIssue(number, pr1 -> pr1.annotated = annotated);
     }
 
     public void removeAnnotation(int number) {
-        repository.removeAnnotation(number);
+        repository.mutateIssue(number, pr -> pr.annotated = null);
     }
 }

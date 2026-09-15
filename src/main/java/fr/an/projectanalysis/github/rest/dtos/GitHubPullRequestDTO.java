@@ -1,6 +1,7 @@
 package fr.an.projectanalysis.github.rest.dtos;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import fr.an.projectanalysis.github.client.dtos.SourceGitHubCommitDTO;
 import lombok.Data;
 
 import java.util.List;
@@ -44,13 +45,17 @@ public class GitHubPullRequestDTO {
 
     /** TODO remove: useless, redundant once all reviewCommentsData are loaded */
     public Integer comments;
-    /** loaded on demand when 'comments' is set */
+    /** loaded on demand when 'comments' > 0 */
     public List<GitHubIssueCommentDTO> commentsData;
 
     public Integer reviewComments;
-    /** loaded on demand when 'reviewComments' is set */
+    /** loaded on demand when 'reviewComments' > 0 */
     public List<GitHubPullRequestReviewCommentDTO> reviewCommentsData;
+
     public Integer commits;
+    /** loaded on demand when 'commits' > 0 */
+    public List<SourceGitHubCommitDTO> commitsData;
+
     public Integer additions;
     public Integer deletions;
     public Integer changedFiles;

@@ -1,16 +1,18 @@
 package fr.an.projectanalysis.github.service;
 
 import fr.an.projectanalysis.github.client.GitHubApiClient;
+import fr.an.projectanalysis.github.client.dtos.SourceGitHubCommitDTO;
 import fr.an.projectanalysis.github.client.dtos.SourceGitHubIssueCommentDTO;
 import fr.an.projectanalysis.github.client.dtos.SourceGitHubIssueEventDTO;
 import fr.an.projectanalysis.github.client.dtos.SourceGitHubPullRequestDTO;
 import fr.an.projectanalysis.github.configuration.GitHubSyncProperties;
 import fr.an.projectanalysis.github.mapper.SourceGitHubToAnnotatedPullRequestMapper;
 import fr.an.projectanalysis.github.repository.GitHubPullRequestRepository;
+import fr.an.projectanalysis.github.rest.dtos.GitHubIssueCommentDTO;
+import fr.an.projectanalysis.github.rest.dtos.GitHubIssueEventDTO;
 import fr.an.projectanalysis.github.rest.dtos.GitHubPullRequestDTO;
+import fr.an.projectanalysis.github.rest.dtos.GitHubPullRequestReviewCommentDTO;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -199,7 +201,8 @@ public class GitHubPullRequestSyncRunner {
                 try {
                     List<SourceGitHubPullRequestDTO.SourceGitHubReviewCommentDTO> reviewComments =
                             fetchPullRequestReviewComments(pr.number, pr.reviewComments);
-                    prRepository.putReviewComments(pr.number, SourceGitHubToAnnotatedPullRequestMapper.mapReviewComments(reviewComments));
+                    List<GitHubPullRequestReviewCommentDTO> reviewCommentsData = SourceGitHubToAnnotatedPullRequestMapper.mapReviewComments(reviewComments);
+                    prRepository.mutateIssue(pr.number, pr1 -> pr1.reviewCommentsData = reviewCommentsData);
                 } catch(Exception ex) {
                     log.warn("Failed completeMissingReviewComments in fetchPullRequestReviewComments, for #{} ... ignore, no rethrow!", pr.number, ex);
                     sleep(syncDelayMs);
@@ -241,7 +244,8 @@ public class GitHubPullRequestSyncRunner {
             for (GitHubPullRequestDTO pr : prs) {
                 try {
                     List<SourceGitHubIssueCommentDTO> comments = fetchIssueComments(pr.number, pr.comments);
-                    prRepository.putComments(pr.number, SourceGitHubToAnnotatedPullRequestMapper.mapComments(comments));
+                    List<GitHubIssueCommentDTO> commentsData = SourceGitHubToAnnotatedPullRequestMapper.mapComments(comments);
+                    prRepository.mutateIssue(pr.number, pr1 -> pr1.commentsData = commentsData);
                 } catch(Exception ex) {
                     log.warn("Failed completeMissingComments in fetchIssueComments, for #{} ... ignore, no rethrow!", pr.number, ex);
                     sleep(syncDelayMs);
@@ -282,7 +286,8 @@ public class GitHubPullRequestSyncRunner {
             for (GitHubPullRequestDTO pr : prs) {
                 try {
                     List<SourceGitHubIssueEventDTO> issueEvents = fetchIssueEvents(pr.number);
-                    prRepository.putIssueEvents(pr.number, SourceGitHubToAnnotatedPullRequestMapper.mapIssueEvents(issueEvents));
+                    List<GitHubIssueEventDTO> value = SourceGitHubToAnnotatedPullRequestMapper.mapIssueEvents(issueEvents);
+                    prRepository.mutateIssue(pr.number, pr1 -> pr1.issueEventsData = value);
                 } catch(Exception ex) {
                     log.warn("Failed completeMissingIssueEvents in fetchIssueEvents, for #{} ... ignore, no rethrow!", pr.number, ex);
                     sleep(syncDelayMs);
@@ -302,6 +307,47 @@ public class GitHubPullRequestSyncRunner {
         int millis = (int) (System.currentTimeMillis() - startMillis);
         log.info("done completeMissingIssueEvents, completed {} PRs, took {} ms", completedCount, millis);
     }
+
+
+    /**
+     * Backfills {@code commitsData} on PRs already persisted locally that are missing
+     */
+    public void completeMissingIssueCommits() {
+        long startMillis = System.currentTimeMillis();
+        int completedCount = 0;
+        for (int year : prRepository.findAllPartitionYears()) {
+            List<GitHubPullRequestDTO> prs = prRepository.findByPartitionYear(year, pr ->
+                    pr.commits != null && pr.commits > 0 && (pr.issueEventsData == null || pr.commits == pr.issueEventsData.size()));
+            if (prs.isEmpty()) {
+                continue;
+            }
+            log.info("completeMissingIssueCommits for year:" + year + ", found " + prs.size() + " to complete");
+
+            for (GitHubPullRequestDTO pr : prs) {
+                try {
+                    List<SourceGitHubIssueEventDTO> issueEvents = fetchIssueEvents(pr.number);
+                    List<SourceGitHubCommitDTO> commitsData = SourceGitHubToAnnotatedPullRequestMapper.mapIssueCommits(issueEvents);
+                    prRepository.mutateIssue(pr.number, pr1 -> pr1.commitsData = commitsData);
+                } catch(Exception ex) {
+                    log.warn("Failed completeMissingIssueCommits in fetchIssueCommits, for #{} ... ignore, no rethrow!", pr.number, ex);
+                    sleep(syncDelayMs);
+                    // ignore, no rethrow!
+                }
+
+                completedCount++;
+                // sleep(syncGetByIdDelayMs);
+                if (completedCount % 100 == 0) {
+                    log.info("completeMissingIssueCommits progress for partition year {}: [{}/{}] PRs completed so far", year, completedCount, prs.size());
+                }
+            }
+        }
+        if (completedCount > 0) {
+            prRepository.compactAll();
+        }
+        int millis = (int) (System.currentTimeMillis() - startMillis);
+        log.info("done completeMissingIssueCommits, completed {} PRs, took {} ms", completedCount, millis);
+    }
+
 
     private SourceGitHubPullRequestDTO fetchGithubPullRequestDetails(int number) throws Exception {
         SourceGitHubPullRequestDTO pr = apiClient.callHttpGet(baseRepoApiUrl + "/pulls/" + number, SourceGitHubPullRequestDTO.class);

@@ -6,11 +6,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import fr.an.projectanalysis.github.client.dtos.SourceGitHubPullRequestDTO;
 import fr.an.projectanalysis.github.configuration.GitHubSyncProperties;
 import fr.an.projectanalysis.github.mapper.SourceGitHubToAnnotatedPullRequestMapper;
-import fr.an.projectanalysis.github.rest.dtos.GitHubIssueCommentDTO;
-import fr.an.projectanalysis.github.rest.dtos.GitHubIssueEventDTO;
 import fr.an.projectanalysis.github.rest.dtos.GitHubPullRequestDTO;
 import fr.an.projectanalysis.github.rest.dtos.GitHubPullRequestExtraFieldsDTO;
-import fr.an.projectanalysis.github.rest.dtos.GitHubPullRequestReviewCommentDTO;
 import jakarta.annotation.Nonnull;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -55,11 +53,6 @@ import java.util.zip.ZipOutputStream;
  * Partitions are identified by their year as an {@code int}; PRs with a missing/unparsable
  * "created" date fall into the {@link #UNKNOWN_YEAR} partition ("created_year=unknown").
  * <p>
- * Mirrors {@code fr.an.jira.repository.JiraIssueRepository}'s on-disk format, keyed by PR number
- * instead of issue key; on every "create"/"update" change, the previously persisted
- * {@code annotated} data (see {@link GitHubPullRequestDTO#annotated}) is carried over onto the
- * newly mapped PR, so a local annotation survives a re-sync. {@link #putAnnotation} and
- * {@link #removeAnnotation} record dedicated "updateAnnotation"/"removeAnnotation" changes.
  */
 @Component
 @Slf4j
@@ -238,55 +231,13 @@ public class GitHubPullRequestRepository {
         }
     }
 
-    public void putAnnotation(int number, GitHubPullRequestExtraFieldsDTO annotated) {
+    public void mutateIssue(int number, Consumer<GitHubPullRequestDTO> updateCallback) {
         GitHubPullRequestDTO pr = getByNumber(number); // points to cached partition data... updating => update cache!
-        pr.annotated = annotated;
-        int year = partitionYearOf(pr);
-        appendChange(year, new UpdateAnnotationPullRequestChangeRecord(number, annotated));
-    }
-
-    public void removeAnnotation(int number) {
-        GitHubPullRequestDTO pr = getByNumber(number); // points to cached partition data... updating => update cache!
-        pr.annotated = null;
-        int year = partitionYearOf(pr);
-        appendChange(year, new RemoveAnnotationPullRequestChangeRecord(number));
-    }
-
-    /**
-     * Updates the review-comments list on an already-persisted PR, recording an "update" change
-     * like {@link #save}. Used to backfill {@code reviewCommentsData} on PRs synced before it was
-     * fetched.
-     */
-    public void putReviewComments(int number, List<GitHubPullRequestReviewCommentDTO> reviewCommentsData) {
-        GitHubPullRequestDTO pr = getByNumber(number); // points to cached partition data... updating => update cache!
-        pr.reviewCommentsData = reviewCommentsData;
+        updateCallback.accept(pr);
         int year = partitionYearOf(pr);
         appendChange(year, new UpdatePullRequestChangeRecord(pr));
     }
 
-    /**
-     * Updates the issue-comments list on an already-persisted PR, recording an "update" change
-     * like {@link #save}. Used to backfill {@code commentsData} on PRs synced before it was
-     * fetched.
-     */
-    public void putComments(int number, List<GitHubIssueCommentDTO> commentsData) {
-        GitHubPullRequestDTO pr = getByNumber(number); // points to cached partition data... updating => update cache!
-        pr.commentsData = commentsData;
-        int year = partitionYearOf(pr);
-        appendChange(year, new UpdatePullRequestChangeRecord(pr));
-    }
-
-    /**
-     * Updates the issue-events list on an already-persisted PR, recording an "update" change
-     * like {@link #save}. Used to backfill {@code issueEventsData} on PRs synced before it was
-     * fetched.
-     */
-    public void putIssueEvents(int number, List<GitHubIssueEventDTO> issueEventsData) {
-        GitHubPullRequestDTO pr = getByNumber(number); // points to cached partition data... updating => update cache!
-        pr.issueEventsData = issueEventsData;
-        int year = partitionYearOf(pr);
-        appendChange(year, new UpdatePullRequestChangeRecord(pr));
-    }
 
     /** Folds the pending changes log into a fresh compacted snapshot, then clears the changes log. */
     public void compact(int year) {
