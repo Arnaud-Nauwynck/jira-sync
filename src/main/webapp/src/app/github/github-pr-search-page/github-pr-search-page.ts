@@ -1,14 +1,14 @@
 import { Component, OnInit, ViewChild, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { FormsModule } from '@angular/forms';
 import { GitHubPullRequestDTO } from '../../rest';
-import { GithubPullRequestsDataService } from './github-pull-requests-data.service';
+import { GithubPullRequestsDataService } from '../service/github-pull-requests-data.service';
 import { GithubPrView } from '../github-pr-view/github-pr-view';
 import { GithubPrListView } from '../github-pr-list-view/github-pr-list-view';
 import { GithubPrSearchCriteriaView } from '../github-pr-search-criteria-view/github-pr-search-criteria-view';
+import { SearchStatsBar } from '../../jira/issues-search-page/filters/search-stats-bar';
 
 @Component({
-  imports: [FormsModule, GithubPrView, GithubPrListView, GithubPrSearchCriteriaView],
+  imports: [GithubPrView, GithubPrListView, GithubPrSearchCriteriaView, SearchStatsBar],
   selector: 'app-github-pr-list',
   templateUrl: './github-pr-search-page.html',
 })

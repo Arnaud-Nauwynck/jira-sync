@@ -2,19 +2,10 @@
 
 <app-github-pr-search-criteria-view #criteriaView (search)="search()" (criteriaChanged)="listView.onFilterInputsChanged()" />
 
-<div class="small text-secondary mb-2 d-flex align-items-center flex-wrap gap-2">
-  <span>
-    Available in [{{ criteriaView.criteria.fromYear }}, {{ criteriaView.criteria.toYear }}]: {{ availableInRange() }}
-    &nbsp;·&nbsp;Grand total: {{ grandTotal() }}
-    &nbsp;·&nbsp;Matching criteria: {{ pullRequestsDataService.pullRequests().length }}
-  </span>
-  <span class="ms-auto d-flex align-items-center gap-1">
-    <label class="mb-0" for="limit">Limit</label>
-    <input id="limit" class="form-control form-control-sm narrow-number-input" type="number" [(ngModel)]="limit" />
-    <label class="mb-0" for="cachedLimit">Cached limit</label>
-    <input id="cachedLimit" class="form-control form-control-sm narrow-number-input" type="number" [(ngModel)]="cachedLimit" />
-  </span>
-</div>
+<app-search-stats-bar
+  [rangeFrom]="criteriaView.criteria.fromYear" [rangeTo]="criteriaView.criteria.toYear"
+  [availableInRange]="availableInRange()" [total]="grandTotal()" [matchingCount]="pullRequestsDataService.pullRequests().length"
+  [(limit)]="limit" [(cachedLimit)]="cachedLimit" />
 
 <app-github-pr-list-view #listView
   [rowData]="pullRequestsDataService.pullRequests()"

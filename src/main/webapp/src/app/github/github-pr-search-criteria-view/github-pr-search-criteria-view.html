@@ -6,11 +6,11 @@
     <div class="d-flex gap-2 align-items-end">
       <div>
         <label class="form-label">From year</label>
-        <input class="form-control narrow-number-input" type="number" [(ngModel)]="criteria.fromYear" (ngModelChange)="onFieldChanged()" />
+        <input class="form-control app-number-input-sm" type="number" [(ngModel)]="criteria.fromYear" (ngModelChange)="onFieldChanged()" />
       </div>
       <div>
         <label class="form-label">To year</label>
-        <input class="form-control narrow-number-input" type="number" [(ngModel)]="criteria.toYear" (ngModelChange)="onFieldChanged()" />
+        <input class="form-control app-number-input-sm" type="number" [(ngModel)]="criteria.toYear" (ngModelChange)="onFieldChanged()" />
       </div>
       <div>
         <label class="form-label">Author login pattern</label>
@@ -18,11 +18,11 @@
       </div>
       <div>
         <label class="form-label">From PR</label>
-        <input class="form-control narrow-number-input" type="number" [(ngModel)]="criteria.fromPullRequestNumber" (ngModelChange)="onFieldChanged()" />
+        <input class="form-control app-number-input-sm" type="number" [(ngModel)]="criteria.fromPullRequestNumber" (ngModelChange)="onFieldChanged()" />
       </div>
       <div>
         <label class="form-label">To PR</label>
-        <input class="form-control narrow-number-input" type="number" [(ngModel)]="criteria.toPullRequestNumber" (ngModelChange)="onFieldChanged()" />
+        <input class="form-control app-number-input-sm" type="number" [(ngModel)]="criteria.toPullRequestNumber" (ngModelChange)="onFieldChanged()" />
       </div>
       <div>
         <label class="form-label">PR number pattern</label>
@@ -60,6 +60,8 @@
         <input class="form-control" type="text" [(ngModel)]="criteria.baseRefContains" (ngModelChange)="onFieldChanged()" placeholder="comma separated" />
       </div>
 
+      <div class="w-100"></div>
+
       <app-exclude-buttongroup-filter label="State" [options]="stateOptions"
         [excluded]="excludedStates" (excludedChange)="onExcludedStatesChange($event)" />
 
@@ -70,10 +72,8 @@
       <app-availability-filter label="Mergeable" name="mergeableAvailability"
         [value]="availabilityOf(criteria.mergeableAvailability)" (valueChange)="criteria.mergeableAvailability = $event; onFieldChanged()" />
 
-      <div>
-        <label class="form-label">Mergeable state pattern</label>
-        <input class="form-control" type="text" [(ngModel)]="criteria.mergeableStatePattern" (ngModelChange)="onFieldChanged()" placeholder="regex, e.g. clean|unstable" />
-      </div>
+      <app-exclude-buttongroup-filter label="Mergeable state" [options]="mergeableStateOptions"
+        [excluded]="excludedMergeableStates" (excludedChange)="onExcludedMergeableStatesChange($event)" />
     </div>
   </div>
 </div>

@@ -1,14 +1,14 @@
 import { Component, OnInit, ViewChild, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { FormsModule } from '@angular/forms';
 import { JiraIssueDTO } from '../../rest';
-import { IssuesDataService } from './issues-data.service';
+import { IssuesDataService } from '../service/issues-data.service';
 import { IssueView } from '../issue-view/issue-view';
 import { IssuesListView } from '../issues-list-view/issues-list-view';
 import { IssuesListCriteriaView } from '../issues-list-criteria-view/issues-list-criteria-view';
+import { SearchStatsBar } from './filters/search-stats-bar';
 
 @Component({
-  imports: [FormsModule, IssueView, IssuesListView, IssuesListCriteriaView],
+  imports: [IssueView, IssuesListView, IssuesListCriteriaView, SearchStatsBar],
   selector: 'app-issues-list',
   templateUrl: './issues-search-page.html',
 })

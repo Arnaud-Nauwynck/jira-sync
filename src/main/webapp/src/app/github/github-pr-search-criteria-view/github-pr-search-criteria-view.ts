@@ -52,6 +52,11 @@ export class GithubPrSearchCriteriaView {
   stateOptions = ['open', 'closed'];
   excludedStates = new Set<string>();
 
+  // Mergeable state enum filter: kept locally as a Set for the exclude-buttongroup-filter widget,
+  // serialized onto the criteria's `mergeableStatePattern` regex field.
+  mergeableStateOptions = ['unknown', 'dirty', 'clean'];
+  excludedMergeableStates = new Set<string>();
+
   onFieldChanged() {
     this.criteriaChanged.emit();
   }
@@ -63,6 +68,14 @@ export class GithubPrSearchCriteriaView {
   onExcludedStatesChange(excluded: Set<string>) {
     this.excludedStates = excluded;
     this.criteria.excludedStates = Array.from(excluded).join(',');
+    this.onFieldChanged();
+  }
+
+  onExcludedMergeableStatesChange(excluded: Set<string>) {
+    this.excludedMergeableStates = excluded;
+    // `mergeableStatePattern` is matched by the server with a full-string regex match, so excluded
+    // values are encoded as a negative-lookahead pattern rather than a plain CSV list.
+    this.criteria.mergeableStatePattern = excluded.size > 0 ? `(?!${Array.from(excluded).join('$|')}$).*` : undefined;
     this.onFieldChanged();
   }
 

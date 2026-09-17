@@ -2,7 +2,7 @@ import { Component, Input, OnChanges, OnInit, SimpleChanges, signal } from '@ang
 import { ActivatedRoute } from '@angular/router';
 import { switchMap } from 'rxjs';
 import { JiraIssueDTO } from '../../rest';
-import { IssuesDataService } from '../issues-search-page/issues-data.service';
+import { IssuesDataService } from '../service/issues-data.service';
 import { IssueView } from '../issue-view/issue-view';
 
 @Component({

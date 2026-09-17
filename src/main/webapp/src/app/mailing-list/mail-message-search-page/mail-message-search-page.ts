@@ -1,14 +1,14 @@
 import { Component, OnInit, ViewChild, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { FormsModule } from '@angular/forms';
 import { MailMessageDTO } from '../../rest';
 import { MailMessagesDataService } from './mail-messages-data.service';
 import { MailMessageView } from '../mail-message-view/mail-message-view';
 import { MailMessageListView } from '../mail-message-list-view/mail-message-list-view';
 import { MailMessageCriteriaView } from '../mail-message-criteria-view/mail-message-criteria-view';
+import { SearchStatsBar } from '../../jira/issues-search-page/filters/search-stats-bar';
 
 @Component({
-  imports: [FormsModule, MailMessageView, MailMessageListView, MailMessageCriteriaView],
+  imports: [MailMessageView, MailMessageListView, MailMessageCriteriaView, SearchStatsBar],
   selector: 'app-mail-message-list',
   templateUrl: './mail-message-search-page.html',
 })

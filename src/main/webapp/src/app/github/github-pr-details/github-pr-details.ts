@@ -2,7 +2,7 @@ import { Component, Input, OnChanges, OnInit, SimpleChanges, signal } from '@ang
 import { ActivatedRoute } from '@angular/router';
 import { switchMap } from 'rxjs';
 import { GitHubPullRequestDTO } from '../../rest';
-import { GithubPullRequestsDataService } from '../github-pr-search-page/github-pull-requests-data.service';
+import { GithubPullRequestsDataService } from '../service/github-pull-requests-data.service';
 import { GithubPrView } from '../github-pr-view/github-pr-view';
 
 @Component({
