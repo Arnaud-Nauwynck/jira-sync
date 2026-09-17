@@ -14,6 +14,7 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Delegates all HTTP calls to the GitHub REST API.
@@ -25,6 +26,12 @@ import java.util.List;
 @Slf4j
 public class GitHubApiClient {
 
+    /** last known rate-limiting status, updated after each response, consulted before each request. */
+    public record RateLimitStatus(int rateLimitRemaining, Instant rateLimitReset, Instant retryAfter) {
+    }
+
+    private static final int RATE_LIMIT_LOW_WATERMARK = 10;
+
     private final GitHubSyncProperties props;
 
     private final ObjectMapper mapper;
@@ -34,9 +41,17 @@ public class GitHubApiClient {
             .followRedirects(HttpClient.Redirect.NORMAL)
             .build();
 
+    private final AtomicReference<RateLimitStatus> rateLimitStatus =
+            new AtomicReference<>(new RateLimitStatus(5000, Instant.now().plus(Duration.ofHours(1)), null));
+
     public GitHubApiClient(GitHubSyncProperties props, ObjectMapper mapper) {
         this.props = props;
         this.mapper = mapper;
+    }
+
+    /** last known rate-limiting status, as observed from the last http response received (or its initial default). */
+    public RateLimitStatus getLastRateLimitStatus() {
+        return rateLimitStatus.get();
     }
 
     /** call http GET, return response body as typed object */
@@ -65,6 +80,8 @@ public class GitHubApiClient {
     /** GETs the given path+query (relative to the configured GitHub API base URL) and parses the JSON response. */
     public String callHttpGet_String(String pathAndQuery) throws Exception {
         for (int attempt = 1; ; attempt++) {
+            awaitRateLimitBudget();
+
             HttpRequest.Builder rb = HttpRequest.newBuilder(URI.create(props.getApiBaseUrl() + pathAndQuery))
                     .timeout(Duration.ofMinutes(2))
                     .header("Accept", "application/vnd.github+json")
@@ -76,6 +93,7 @@ public class GitHubApiClient {
             }
 
             HttpResponse<String> resp = http.send(rb.build(), HttpResponse.BodyHandlers.ofString());
+            updateRateLimitStatus(resp);
             int sc = resp.statusCode();
             if (sc == 200) {
                 return resp.body();
@@ -98,6 +116,40 @@ public class GitHubApiClient {
         }
     }
 
+    /** sleeps before an http call when the last known rate-limit status requires it, then resets it once its window has elapsed. */
+    private void awaitRateLimitBudget() {
+        RateLimitStatus status = rateLimitStatus.get();
+        Instant now = Instant.now();
+
+        if (status.retryAfter() != null && now.isBefore(status.retryAfter())) {
+            log.warn("Rate limit retry-after in effect, sleeping until {}", status.retryAfter());
+            sleepUntil(status.retryAfter());
+            now = Instant.now();
+        }
+
+        if (!now.isBefore(status.rateLimitReset())) {
+            rateLimitStatus.compareAndSet(status, new RateLimitStatus(5000, status.rateLimitReset(), null));
+            return;
+        }
+
+        if (status.rateLimitRemaining() <= RATE_LIMIT_LOW_WATERMARK) {
+            log.warn("Rate limit remaining {} <= {}, sleeping until reset {}",
+                    status.rateLimitRemaining(), RATE_LIMIT_LOW_WATERMARK, status.rateLimitReset());
+            sleepUntil(status.rateLimitReset());
+            rateLimitStatus.compareAndSet(status, new RateLimitStatus(5000, status.rateLimitReset(), null));
+        }
+    }
+
+    private void updateRateLimitStatus(HttpResponse<?> resp) {
+        rateLimitStatus.updateAndGet(prev -> new RateLimitStatus(
+                resp.headers().firstValue("X-RateLimit-Remaining")
+                        .map(s -> Integer.parseInt(s.trim())).orElse(prev.rateLimitRemaining()),
+                resp.headers().firstValue("X-RateLimit-Reset")
+                        .map(s -> Instant.ofEpochSecond(Long.parseLong(s.trim()))).orElse(prev.rateLimitReset()),
+                resp.headers().firstValue("Retry-After")
+                        .map(s -> Instant.now().plusSeconds(Long.parseLong(s.trim()))).orElse(null)));
+    }
+
     private static boolean isPrimaryRateLimitExhausted(HttpResponse<?> resp) {
         return resp.headers().firstValue("X-RateLimit-Remaining")
                 .map(s -> "0".equals(s.trim()))
@@ -114,6 +166,10 @@ public class GitHubApiClient {
         return resp.headers().firstValue("Retry-After")
                 .map(s -> Long.parseLong(s.trim()) * 1000L)
                 .orElse((long) Math.min(60_000, 1000L * (1L << attempt))); // 2s,4s,8s,...
+    }
+
+    private static void sleepUntil(Instant instant) {
+        sleep(Math.max(0, instant.toEpochMilli() - System.currentTimeMillis()) + 1000);
     }
 
     private static void sleep(long ms) {

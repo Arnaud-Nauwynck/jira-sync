@@ -1,5 +1,7 @@
 package fr.an.projectanalysis.github.rest;
 
+import fr.an.projectanalysis.github.rest.dtos.GitHubPrPartitionStatsDTO;
+import fr.an.projectanalysis.github.rest.dtos.GitHubPrQueryDTO;
 import fr.an.projectanalysis.github.rest.dtos.GitHubPullRequestDTO;
 import fr.an.projectanalysis.github.rest.dtos.UserGitHubPullRequestStatsDTO;
 import fr.an.projectanalysis.github.service.GitHubPullRequestService;
@@ -10,6 +12,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -39,25 +43,25 @@ public class GitHubPullRequestsRestController extends AbstractRestController {
         });
     }
 
-    @Operation(summary = "List pull requests created between fromYear and toYear (inclusive), optionally filtered by author login, PR number range, PR number pattern, merged/mergeable tri-state, and/or mergeable-state pattern")
-    @GetMapping("/pull-requests")
-    public Collection<GitHubPullRequestDTO> queryPullRequests(
-            @RequestParam(name = "fromYear", defaultValue = "2020") int fromYear,
-            @RequestParam(name = "toYear", defaultValue = "2050") int toYear,
-            @RequestParam(name = "usernamePattern", required = false) String usernamePattern,
-            @RequestParam(name = "fromPullRequestNumber", required = false) Integer fromPullRequestNumber,
-            @RequestParam(name = "toPullRequestNumber", required = false) Integer toPullRequestNumber,
-            @RequestParam(name = "pullRequestNumberPattern", required = false) String pullRequestNumberPattern,
-            @RequestParam(name = "merged", required = false) Boolean merged,
-            @RequestParam(name = "mergeable", required = false) Boolean mergeable,
-            @RequestParam(name = "mergeableStatePattern", required = false) String mergeableStatePattern
-    ) {
-        String paramsText = "fromYear=" + fromYear + "&toYear=" + toYear + "&usernamePattern=" + usernamePattern
-                + "&fromPullRequestNumber=" + fromPullRequestNumber + "&toPullRequestNumber=" + toPullRequestNumber
-                + "&pullRequestNumberPattern=" + pullRequestNumberPattern
-                + "&merged=" + merged + "&mergeable=" + mergeable + "&mergeableStatePattern=" + mergeableStatePattern;
-        return withLog("GET", "/pull-requests", paramsText, () -> delegate.queryPullRequests(fromYear, toYear, usernamePattern,
-                fromPullRequestNumber, toPullRequestNumber, pullRequestNumberPattern, merged, mergeable, mergeableStatePattern));
+    @Operation(summary = "List pull requests matching the given criteria (Data Fetching + Main/Analysis/Development Work/Personal Interest "
+            + "filter criteria of the github-pull-requests page), capped at the given limit (default 1000)")
+    @PostMapping("/query")
+    public Collection<GitHubPullRequestDTO> queryPullRequests(@RequestBody GitHubPrQueryDTO query) {
+        return withLog("POST", "/query", "limit=" + (query != null ? query.limit : null),
+                () -> delegate.queryPullRequests(query));
+    }
+
+    @Operation(summary = "Same as /query, but returns only the matching PR numbers, without fetching the full pull request objects")
+    @PostMapping("/query-ids")
+    public Collection<Integer> queryPullRequestIds(@RequestBody GitHubPrQueryDTO query) {
+        return withLog("POST", "/query-ids", "limit=" + (query != null ? query.limit : null),
+                () -> delegate.queryPullRequestIds(query));
+    }
+
+    @Operation(summary = "Count of locally-synced pull requests per \"created_year\" partition")
+    @GetMapping("/partition-stats")
+    public GitHubPrPartitionStatsDTO queryPartitionStats() {
+        return withLog("GET", "/partition-stats", "", delegate::queryPartitionStats);
     }
 
     @Operation(summary = "Count pull requests created per author, for PRs created between fromYear and toYear (inclusive), optionally filtered by author login")

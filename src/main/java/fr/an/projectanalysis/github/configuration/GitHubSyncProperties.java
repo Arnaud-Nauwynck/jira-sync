@@ -22,7 +22,7 @@ public class GitHubSyncProperties {
 
     protected int perPage = 100;
 
-    protected long syncGetByIdDelayMs = 15;
+    protected long syncGetByIdDelayMs = 300;
     protected long delayMs = 500;
 
     protected String httpHeaderAuth;

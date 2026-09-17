@@ -1,7 +1,12 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { interval } from 'rxjs';
 import { GitHubSyncService } from '../rest/api/gitHubSync.service';
 import { JiraSyncService } from '../rest/api/jiraSync.service';
 import { MailingListSyncService } from '../rest/api/mailingListSync.service';
+import { LastCallLimits } from '../rest/model/lastCallLimits';
+
+const RATE_LIMIT_REFRESH_MILLIS = 60_000;
 
 @Component({
   imports: [],
@@ -23,16 +28,34 @@ export class SourcesSync implements OnInit {
   githubLastSyncTime = signal<string | undefined>(undefined);
   mailingListLastClosedMonth = signal<string | undefined>(undefined);
 
+  githubLastCallLimits = signal<LastCallLimits | undefined>(undefined);
+
   constructor(
     private jiraSyncService: JiraSyncService,
     private gitHubSyncService: GitHubSyncService,
     private mailingListSyncService: MailingListSyncService,
+    private destroyRef: DestroyRef,
   ) {}
 
   ngOnInit() {
     this.refreshLastSync();
     this.refreshGithubLastSync();
     this.refreshMailingListLastSync();
+    this.refreshGithubLastRateLimit();
+    interval(RATE_LIMIT_REFRESH_MILLIS)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.refreshGithubLastRateLimit());
+  }
+
+  refreshGithubLastRateLimit() {
+    this.gitHubSyncService.getLastRateLimit().subscribe({
+      next: (lastCallLimits) => this.githubLastCallLimits.set(lastCallLimits),
+      error: (ex) => console.error("... Failed to load last rate limit info for github-sync", ex),
+    });
+  }
+
+  formatInstant(isoDateTime: string | undefined): string | undefined {
+    return isoDateTime != null ? new Date(isoDateTime).toLocaleString() : undefined;
   }
 
   refreshLastSync() {

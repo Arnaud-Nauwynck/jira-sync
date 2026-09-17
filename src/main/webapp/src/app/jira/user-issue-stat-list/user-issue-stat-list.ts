@@ -6,7 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { JiraIssuesService } from '../../rest';
 import { UserIssueCreatePerYearStatsDTO } from '../../rest';
 import {UserJiraIssueStatsDTO} from '../../rest';
-import { IssueDetails } from '../issue-details/issue-details';
+import { IssueDetailsPage } from '../issue-details/issue-details';
 
 interface PerYearStatDef {
   key: keyof UserIssueCreatePerYearStatsDTO;
@@ -26,7 +26,7 @@ const PER_YEAR_STAT_DEFS: PerYearStatDef[] = [
 ];
 
 @Component({
-  imports: [AgGridAngular, FormsModule, IssueDetails],
+  imports: [AgGridAngular, FormsModule, IssueDetailsPage],
   selector: 'app-user-issue-stat-list',
   templateUrl: './user-issue-stat-list.html',
 })

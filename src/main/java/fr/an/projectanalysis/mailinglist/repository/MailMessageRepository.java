@@ -8,6 +8,7 @@ import fr.an.projectanalysis.mailinglist.configuration.MailingListSyncProperties
 import fr.an.projectanalysis.mailinglist.mapper.SourceMailMessageToAnnotatedMailMessageMapper;
 import fr.an.projectanalysis.mailinglist.rest.dtos.MailMessageDTO;
 import fr.an.projectanalysis.mailinglist.rest.dtos.MailMessageExtraFieldsDTO;
+import fr.an.projectanalysis.mailinglist.rest.dtos.SenderCountDTO;
 import jakarta.annotation.Nonnull;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +27,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.time.OffsetDateTime;
 import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -69,9 +71,11 @@ public class MailMessageRepository {
 
     static final String PARTITION_PREFIX = "archived=";
     static final String UNKNOWN_MONTH = "unknown";
+    private static final String UNKNOWN_USER = "unknown";
     private static final String SNAPSHOT_FILE = "data.ndjson.zip";
     private static final String SNAPSHOT_ENTRY = "data.ndjson";
     private static final String CHANGES_FILE = "changes.ndjson";
+    private static final String STATS_FILE = "data-stats.json";
 
     private final ObjectMapper mapper;
 
@@ -79,6 +83,42 @@ public class MailMessageRepository {
 
     /** partition month ("yyyy-MM") -> (Message-ID -> current message), lazily loaded from disk. */
     private final Map<String, Map<String, MailMessageDTO>> partitionCache = new ConcurrentHashMap<>();
+
+    /** partition month -> message count, and sender -> {count,minDate,maxDate}, loaded from {@value #STATS_FILE}
+     * (or recomputed if missing) on first access, kept up to date incrementally as messages are created, and
+     * re-persisted on compact/recompact. */
+    private final Map<String, Integer> partitionCounts = new ConcurrentHashMap<>();
+    private final Map<String, SenderStats> senderStats = new ConcurrentHashMap<>();
+    private volatile boolean partitionCountsLoaded = false;
+
+    /** Count, and earliest/latest message date, sent by a single sender (the raw {@code From} header). */
+    public static class SenderStats {
+        public int count;
+        public OffsetDateTime minDate;
+        public OffsetDateTime maxDate;
+
+        void addDate(OffsetDateTime date) {
+            count++;
+            if (date == null) {
+                return;
+            }
+            if (minDate == null || date.isBefore(minDate)) {
+                minDate = date;
+            }
+            if (maxDate == null || date.isAfter(maxDate)) {
+                maxDate = date;
+            }
+        }
+
+        public SenderCountDTO toDTO(String sender) {
+            return new SenderCountDTO(sender, count, minDate, maxDate);
+        }
+    }
+
+    private static class StatsFile {
+        public Map<String, Integer> partitionMonthCounts = new LinkedHashMap<>();
+        public Map<String, SenderStats> senderStats = new LinkedHashMap<>();
+    }
 
     @Autowired
     public MailMessageRepository(MailingListSyncProperties props, ObjectMapper mapper) throws IOException {
@@ -111,12 +151,14 @@ public class MailMessageRepository {
         Map<String, MailMessageDTO> cachedPartition = cachedPartitionData(partition);
         List<MailMessageChangeRecord> chgRecords = new ArrayList<>(partitionData.size());
         List<MailMessageDTO> mappedMessages = new ArrayList<>(partitionData.size());
+        List<MailMessageDTO> created = new ArrayList<>();
         for (SourceMailMessageDTO src : partitionData) {
             MailMessageDTO msg = SourceMailMessageToAnnotatedMailMessageMapper.from(src);
             String messageId = requireMessageId(msg);
             MailMessageDTO previous = cachedPartition.get(messageId);
             if (previous == null) {
                 chgRecords.add(new CreateMailMessageChangeRecord(msg));
+                created.add(msg);
             } else {
                 msg.annotated = previous.annotated;
                 chgRecords.add(new UpdateMailMessageChangeRecord(msg));
@@ -126,6 +168,13 @@ public class MailMessageRepository {
         appendChanges(partition, chgRecords);
         for (MailMessageDTO msg : mappedMessages) {
             cachedPartition.put(msg.messageId, msg);
+        }
+        if (!created.isEmpty()) {
+            ensurePartitionCountsLoaded();
+            partitionCounts.merge(partition, created.size(), Integer::sum);
+            for (MailMessageDTO msg : created) {
+                senderStats.computeIfAbsent(senderOf(msg), s -> new SenderStats()).addDate(msg.date);
+            }
         }
     }
 
@@ -144,6 +193,9 @@ public class MailMessageRepository {
         MailMessageChangeRecord chgRecord;
         if (previous == null) {
             chgRecord = new CreateMailMessageChangeRecord(msg);
+            ensurePartitionCountsLoaded();
+            partitionCounts.merge(partition, 1, Integer::sum);
+            senderStats.computeIfAbsent(senderOf(msg), s -> new SenderStats()).addDate(msg.date);
         } else {
             msg.annotated = previous.annotated;
             chgRecord = new UpdateMailMessageChangeRecord(msg);
@@ -212,6 +264,71 @@ public class MailMessageRepository {
         }
     }
 
+    /** Count of messages per "archived" (month) partition, from the in-memory stats (see {@link #STATS_FILE}). */
+    public Map<String, Integer> countByPartitionMonth() {
+        ensurePartitionCountsLoaded();
+        return new LinkedHashMap<>(partitionCounts);
+    }
+
+    /** Count, and earliest/latest message date, per sender (the raw {@code From} header), from the in-memory
+     * stats (see {@link #STATS_FILE}). */
+    public Map<String, SenderStats> senderStats() {
+        ensurePartitionCountsLoaded();
+        return new LinkedHashMap<>(senderStats);
+    }
+
+    /** Loads {@link #partitionCounts} and {@link #senderStats} from {@value #STATS_FILE} on first call, or
+     * recomputes and persists them from the partitions on disk when the file is missing/unreadable. */
+    private synchronized void ensurePartitionCountsLoaded() {
+        if (partitionCountsLoaded) {
+            return;
+        }
+        Path statsFile = baseDir.resolve(STATS_FILE);
+        if (Files.exists(statsFile)) {
+            try {
+                String json = Files.readString(statsFile, StandardCharsets.UTF_8);
+                StatsFile loaded = mapper.readValue(json, StatsFile.class);
+                if (loaded.partitionMonthCounts != null) {
+                    partitionCounts.putAll(loaded.partitionMonthCounts);
+                }
+                if (loaded.senderStats != null) {
+                    senderStats.putAll(loaded.senderStats);
+                }
+                partitionCountsLoaded = true;
+                return;
+            } catch (Exception e) {
+                log.warn("failed to read {}, recomputing from partitions", statsFile, e);
+            }
+        }
+        for (String month : findAllPartitionMonths()) {
+            Map<String, MailMessageDTO> data = cachedPartitionData(month);
+            partitionCounts.put(month, data.size());
+            for (MailMessageDTO msg : data.values()) {
+                senderStats.computeIfAbsent(senderOf(msg), s -> new SenderStats()).addDate(msg.date);
+            }
+        }
+        partitionCountsLoaded = true;
+        writePartitionCountsFile();
+    }
+
+    private void writePartitionCountsFile() {
+        try {
+            Path statsFile = baseDir.resolve(STATS_FILE);
+            StatsFile toWrite = new StatsFile();
+            toWrite.partitionMonthCounts = new java.util.TreeMap<>(partitionCounts);
+            toWrite.senderStats = new java.util.TreeMap<>(senderStats);
+            String json = mapper.writeValueAsString(toWrite);
+            Files.writeString(statsFile, json, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new UncheckedIOException("failed to write " + STATS_FILE, e);
+        }
+    }
+
+    private static String senderOf(MailMessageDTO msg) {
+        String from = msg.from;
+        return from != null && !from.isBlank() ? from : UNKNOWN_USER;
+    }
+
     /** Streams every message whose partition month falls within [fromMonth, toMonth] to the callback. */
     public void scanMessages(String fromMonth, String toMonth, BiConsumer<String, MailMessageDTO> callback) {
         for (String month : findPartitionMonthsBetween(fromMonth, toMonth)) {
@@ -250,10 +367,14 @@ public class MailMessageRepository {
         appendChange(partition, new RemoveAnnotationMailMessageChangeRecord(messageId));
     }
 
-    /** Folds the pending changes log into a fresh compacted snapshot, then clears the changes log. */
+    /** Folds the pending changes log into a fresh compacted snapshot, then clears the changes log
+     * and re-persists the partition/sender stats (see {@value #STATS_FILE}). */
     public void compact(String month) {
         writeSnapshot(month, cachedPartitionData(month).values());
         clearChangesFile(month);
+        ensurePartitionCountsLoaded();
+        partitionCounts.put(month, cachedPartitionData(month).size());
+        writePartitionCountsFile();
     }
 
     public void compactAll() {
@@ -271,6 +392,9 @@ public class MailMessageRepository {
         partitionCache.put(month, reloaded);
         writeSnapshot(month, reloaded.values());
         clearChangesFile(month);
+        ensurePartitionCountsLoaded();
+        partitionCounts.put(month, reloaded.size());
+        writePartitionCountsFile();
     }
 
     public void recompactAll() {
@@ -408,7 +532,13 @@ public class MailMessageRepository {
         try {
             for (String line : Files.readAllLines(file, StandardCharsets.UTF_8)) {
                 if (line.isBlank()) continue;
-                MailMessageChangeRecord rec = mapper.readValue(line, MailMessageChangeRecord.class);
+                MailMessageChangeRecord rec;
+                try {
+                    rec = mapper.readValue(line, MailMessageChangeRecord.class);
+                } catch(Exception ex) {
+                    log.error("FATAL ... failed to reload change log for MailingList, ignore, no rethrow!! line:\n" + line + "\n", ex);
+                    continue; // ignore no rethrow!
+                }
                 if (rec instanceof CreateMailMessageChangeRecord chg) {
                     msgByMessageId.put(chg.data.messageId, chg.data);
                 } else if (rec instanceof UpdateMailMessageChangeRecord chg) {

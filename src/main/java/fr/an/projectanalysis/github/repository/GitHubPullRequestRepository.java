@@ -8,6 +8,7 @@ import fr.an.projectanalysis.github.configuration.GitHubSyncProperties;
 import fr.an.projectanalysis.github.mapper.SourceGitHubToAnnotatedPullRequestMapper;
 import fr.an.projectanalysis.github.rest.dtos.GitHubPullRequestDTO;
 import fr.an.projectanalysis.github.rest.dtos.GitHubPullRequestExtraFieldsDTO;
+import fr.an.projectanalysis.github.rest.dtos.YearCountDTO;
 import jakarta.annotation.Nonnull;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -63,6 +64,7 @@ public class GitHubPullRequestRepository {
     private static final String SNAPSHOT_FILE = "data.ndjson.zip";
     private static final String SNAPSHOT_ENTRY = "data.ndjson";
     private static final String CHANGES_FILE = "changes.ndjson";
+    private static final String STATS_FILE = "data-stats.json";
 
     private final ObjectMapper mapper;
 
@@ -70,6 +72,37 @@ public class GitHubPullRequestRepository {
 
     /** partition year -> (PR number -> current PR), lazily loaded from disk and kept up to date. */
     private final Map<Integer, Map<Integer, GitHubPullRequestDTO>> partitionCache = new ConcurrentHashMap<>();
+
+    /** partition year -> PR count/min/max number, loaded from {@value #STATS_FILE} (or recomputed if missing)
+     * on first access, kept up to date incrementally as PRs are created, and re-persisted on compact/recompact. */
+    private final Map<Integer, PartitionIndexes> partitionStats = new ConcurrentHashMap<>();
+    private volatile boolean partitionStatsLoaded = false;
+
+    /** Count, and lowest/highest PR number, of the PRs in a single partition. PR numbers are sequential, so
+     * min/max give a cheap sense of the partition's covered range without listing every PR. */
+    public static class PartitionIndexes {
+        public int count;
+        public Integer minId;
+        public Integer maxId;
+
+        void addId(int id) {
+            count++;
+            if (minId == null || id < minId) {
+                minId = id;
+            }
+            if (maxId == null || id > maxId) {
+                maxId = id;
+            }
+        }
+
+        public YearCountDTO toDTO(int year) {
+            return new YearCountDTO(year, count, minId, maxId);
+        }
+    }
+
+    private static class StatsFile {
+        public Map<Integer, PartitionIndexes> partitionStats = new LinkedHashMap<>();
+    }
 
     @Autowired
     public GitHubPullRequestRepository(GitHubSyncProperties props, ObjectMapper mapper) throws IOException {
@@ -105,6 +138,8 @@ public class GitHubPullRequestRepository {
         PullRequestChangeRecord chgRecord;
         if (previous == null) {
             chgRecord = new CreatePullRequestChangeRecord(pr);
+            ensurePartitionStatsLoaded();
+            partitionStats.computeIfAbsent(year, y -> new PartitionIndexes()).addId(number);
         } else {
             pr.annotated = previous.annotated;
             chgRecord = new UpdatePullRequestChangeRecord(pr);
@@ -231,6 +266,64 @@ public class GitHubPullRequestRepository {
         }
     }
 
+    /** Count, and lowest/highest PR number, per "created_year" partition, from the in-memory stats
+     * (see {@link #STATS_FILE}). */
+    public Map<Integer, PartitionIndexes> partitionStats() {
+        ensurePartitionStatsLoaded();
+        return new LinkedHashMap<>(partitionStats);
+    }
+
+    /** Loads {@link #partitionStats} from {@value #STATS_FILE} on first call, or recomputes and persists it
+     * from the partitions on disk when the file is missing/unreadable. */
+    private synchronized void ensurePartitionStatsLoaded() {
+        if (partitionStatsLoaded) {
+            return;
+        }
+        Path statsFile = baseDir.resolve(STATS_FILE);
+        if (Files.exists(statsFile)) {
+            try {
+                String json = Files.readString(statsFile, StandardCharsets.UTF_8);
+                StatsFile loaded = mapper.readValue(json, StatsFile.class);
+                if (loaded.partitionStats != null) {
+                    partitionStats.putAll(loaded.partitionStats);
+                }
+                partitionStatsLoaded = true;
+                return;
+            } catch (Exception e) {
+                log.warn("failed to read {}, recomputing from partitions", statsFile, e);
+            }
+        }
+        recomputeAllPartitionStats();
+        partitionStatsLoaded = true;
+        writePartitionStatsFile();
+    }
+
+    private void recomputeAllPartitionStats() {
+        for (int year : findAllPartitionYears()) {
+            partitionStats.put(year, recomputePartitionStats(year));
+        }
+    }
+
+    private PartitionIndexes recomputePartitionStats(int year) {
+        PartitionIndexes stats = new PartitionIndexes();
+        for (GitHubPullRequestDTO pr : cachedPartitionData(year).values()) {
+            stats.addId(pr.number);
+        }
+        return stats;
+    }
+
+    private void writePartitionStatsFile() {
+        try {
+            Path statsFile = baseDir.resolve(STATS_FILE);
+            StatsFile toWrite = new StatsFile();
+            toWrite.partitionStats = new java.util.TreeMap<>(partitionStats);
+            String json = mapper.writeValueAsString(toWrite);
+            Files.writeString(statsFile, json, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new UncheckedIOException("failed to write " + STATS_FILE, e);
+        }
+    }
+
     public void mutateIssue(int number, Consumer<GitHubPullRequestDTO> updateCallback) {
         GitHubPullRequestDTO pr = getByNumber(number); // points to cached partition data... updating => update cache!
         updateCallback.accept(pr);
@@ -239,10 +332,14 @@ public class GitHubPullRequestRepository {
     }
 
 
-    /** Folds the pending changes log into a fresh compacted snapshot, then clears the changes log. */
+    /** Folds the pending changes log into a fresh compacted snapshot, then clears the changes log
+     * and re-persists the partition stats (see {@value #STATS_FILE}). */
     public void compact(int year) {
         writeSnapshot(year, cachedPartitionData(year).values());
         clearChangesFile(year);
+        ensurePartitionStatsLoaded();
+        partitionStats.put(year, recomputePartitionStats(year));
+        writePartitionStatsFile();
     }
 
     public void compactAll() {
@@ -253,13 +350,21 @@ public class GitHubPullRequestRepository {
 
     /**
      * Discards any cached in-memory state for the partition, reloads it from disk (snapshot +
-     * replayed changes), then rewrites the compacted snapshot and clears the changes log.
+     * replayed changes), then rewrites the compacted snapshot, clears the changes log, and
+     * re-persists the partition stats (see {@value #STATS_FILE}).
      */
     public void recompact(int year) {
         Map<Integer, GitHubPullRequestDTO> reloaded = readPartitionFromDisk(year);
         partitionCache.put(year, reloaded);
         writeSnapshot(year, reloaded.values());
         clearChangesFile(year);
+        ensurePartitionStatsLoaded();
+        PartitionIndexes stats = new PartitionIndexes();
+        for (GitHubPullRequestDTO pr : reloaded.values()) {
+            stats.addId(pr.number);
+        }
+        partitionStats.put(year, stats);
+        writePartitionStatsFile();
     }
 
     public void recompactAll() {
@@ -404,7 +509,13 @@ public class GitHubPullRequestRepository {
         try {
             for (String line : Files.readAllLines(file, StandardCharsets.UTF_8)) {
                 if (line.isBlank()) continue;
-                PullRequestChangeRecord rec = mapper.readValue(line, PullRequestChangeRecord.class);
+                PullRequestChangeRecord rec;
+                try {
+                    rec = mapper.readValue(line, PullRequestChangeRecord.class);
+                } catch(Exception ex) {
+                    log.error("FATAL ... failed to reload change log for PullRequest, ignore, no rethrow!! line:\n" + line + "\n", ex);
+                    continue; // ignore no rethrow!
+                }
                 if (rec instanceof CreatePullRequestChangeRecord chg) {
                     prByNumber.put(chg.data.number, chg.data);
                 } else if (rec instanceof UpdatePullRequestChangeRecord chg) {

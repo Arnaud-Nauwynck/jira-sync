@@ -1,4 +1,9 @@
 @if (issue(); as data) {
+  <div class="d-flex justify-content-end mb-2">
+    <button class="btn btn-outline-secondary btn-sm" type="button" [disabled]="refreshing()" (click)="refresh()">
+      {{ refreshing() ? 'Refreshing...' : 'Refresh' }}
+    </button>
+  </div>
   <app-issue-view [issue]="data" />
 } @else if (notFound()) {
   <p>Issue not found.</p>

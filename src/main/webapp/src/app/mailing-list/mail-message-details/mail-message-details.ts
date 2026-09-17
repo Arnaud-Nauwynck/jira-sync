@@ -2,7 +2,7 @@ import { Component, Input, OnChanges, OnInit, SimpleChanges, signal } from '@ang
 import { ActivatedRoute } from '@angular/router';
 import { switchMap } from 'rxjs';
 import { MailMessageDTO } from '../../rest';
-import { MailMessagesDataService } from '../mail-message-list/mail-messages-data.service';
+import { MailMessagesDataService } from '../mail-message-search-page/mail-messages-data.service';
 import { MailMessageView } from '../mail-message-view/mail-message-view';
 
 @Component({

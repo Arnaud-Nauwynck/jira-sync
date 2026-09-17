@@ -17,6 +17,10 @@ import { Observable }                                        from 'rxjs';
 import { OpenApiHttpParams, QueryParamStyle } from '../query.params';
 
 // @ts-ignore
+import { IssuesPartitionStatsDTO } from '../model/issuesPartitionStatsDTO';
+// @ts-ignore
+import { IssuesQueryDTO } from '../model/issuesQueryDTO';
+// @ts-ignore
 import { JiraIssueAnnotationDTO } from '../model/jiraIssueAnnotationDTO';
 // @ts-ignore
 import { JiraIssueDTO } from '../model/jiraIssueDTO';
@@ -283,6 +287,72 @@ export class JiraIssuesService extends BaseService {
     }
 
     /**
+     * Same as /query, but returns only the matching issue keys, without fetching the full issue objects
+     * @endpoint post /api/v1/jira-issues/query-ids
+     * @param issuesQueryDTO 
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public queryIssueIds(issuesQueryDTO: IssuesQueryDTO, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<string>>;
+    public queryIssueIds(issuesQueryDTO: IssuesQueryDTO, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<string>>>;
+    public queryIssueIds(issuesQueryDTO: IssuesQueryDTO, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<Array<string>>>;
+    public queryIssueIds(issuesQueryDTO: IssuesQueryDTO, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (issuesQueryDTO === null || issuesQueryDTO === undefined) {
+            throw new Error('Required parameter issuesQueryDTO was null or undefined when calling queryIssueIds.');
+        }
+
+        let localVarHeaders = this.defaultHeaders;
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        // to determine the Content-Type header
+        const consumes: string[] = [
+            'application/json'
+        ];
+        const httpContentTypeSelected: string | undefined = this.configuration.selectHeaderContentType(consumes);
+        if (httpContentTypeSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Content-Type', httpContentTypeSelected);
+        }
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/jira-issues/query-ids`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<Array<string>>('post', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                body: issuesQueryDTO,
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
      * Query annotations for issues, by years
      * @endpoint get /api/v1/jira-issue-annotations/
      * @param fromYear 
@@ -358,378 +428,82 @@ export class JiraIssuesService extends BaseService {
     }
 
     /**
-     * List issues created between fromYear and toYear (inclusive), optionally filtered by creator username, issue number range, key pattern, and/or the Main/Analysis/Development Work/Personal Interest filter criteria of the issues-list page
-     * @endpoint get /api/v1/jira-issues/by-query
-     * @param fromYear 
-     * @param toYear 
-     * @param usernamePattern 
-     * @param fromNumber 
-     * @param toNumber 
-     * @param keyPattern 
-     * @param summaryContains 
-     * @param descriptionContains 
-     * @param authorContains 
-     * @param commentsContains 
-     * @param commentAuthorContains 
-     * @param excludedTypes 
-     * @param excludedResolutions 
-     * @param excludedStatuses 
-     * @param excludedPriorities 
-     * @param labelsContains 
-     * @param pullRequestAvailableLabel 
-     * @param componentsContains 
-     * @param analysisSummaryContains 
-     * @param analysisUserExtraPromptsContains 
-     * @param analysisSummaryUpdatedFrom 
-     * @param analysisSummaryUpdatedTo 
-     * @param analysisSummaryMinTokensK 
-     * @param analysisSummaryMaxTokensK 
-     * @param analysisAvailability 
-     * @param developmentWorkDescribedContains 
-     * @param developmentWorkUserExtraPromptsContains 
-     * @param developmentWorkUpdatedFrom 
-     * @param developmentWorkUpdatedTo 
-     * @param developmentWorkMinTokensK 
-     * @param developmentWorkMaxTokensK 
-     * @param developmentWorkAvailability 
-     * @param personalInterrestCommentContains 
-     * @param personalInterrestMinPriority 
-     * @param personalInterrestMaxPriority 
-     * @param personalInterrestAvailability 
+     * List issues matching the given criteria (Data Fetching + Main/Analysis/Development Work/Personal Interest filter criteria of the issues-list page), capped at the given limit (default 1000)
+     * @endpoint post /api/v1/jira-issues/query
+     * @param issuesQueryDTO 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      * @param options additional options
      */
-    public queryIssues(fromYear?: number, toYear?: number, usernamePattern?: string, fromNumber?: number, toNumber?: number, keyPattern?: string, summaryContains?: string, descriptionContains?: string, authorContains?: string, commentsContains?: string, commentAuthorContains?: string, excludedTypes?: string, excludedResolutions?: string, excludedStatuses?: string, excludedPriorities?: string, labelsContains?: string, pullRequestAvailableLabel?: string, componentsContains?: string, analysisSummaryContains?: string, analysisUserExtraPromptsContains?: string, analysisSummaryUpdatedFrom?: string, analysisSummaryUpdatedTo?: string, analysisSummaryMinTokensK?: number, analysisSummaryMaxTokensK?: number, analysisAvailability?: string, developmentWorkDescribedContains?: string, developmentWorkUserExtraPromptsContains?: string, developmentWorkUpdatedFrom?: string, developmentWorkUpdatedTo?: string, developmentWorkMinTokensK?: number, developmentWorkMaxTokensK?: number, developmentWorkAvailability?: string, personalInterrestCommentContains?: string, personalInterrestMinPriority?: number, personalInterrestMaxPriority?: number, personalInterrestAvailability?: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<JiraIssueDTO>>;
-    public queryIssues(fromYear?: number, toYear?: number, usernamePattern?: string, fromNumber?: number, toNumber?: number, keyPattern?: string, summaryContains?: string, descriptionContains?: string, authorContains?: string, commentsContains?: string, commentAuthorContains?: string, excludedTypes?: string, excludedResolutions?: string, excludedStatuses?: string, excludedPriorities?: string, labelsContains?: string, pullRequestAvailableLabel?: string, componentsContains?: string, analysisSummaryContains?: string, analysisUserExtraPromptsContains?: string, analysisSummaryUpdatedFrom?: string, analysisSummaryUpdatedTo?: string, analysisSummaryMinTokensK?: number, analysisSummaryMaxTokensK?: number, analysisAvailability?: string, developmentWorkDescribedContains?: string, developmentWorkUserExtraPromptsContains?: string, developmentWorkUpdatedFrom?: string, developmentWorkUpdatedTo?: string, developmentWorkMinTokensK?: number, developmentWorkMaxTokensK?: number, developmentWorkAvailability?: string, personalInterrestCommentContains?: string, personalInterrestMinPriority?: number, personalInterrestMaxPriority?: number, personalInterrestAvailability?: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<JiraIssueDTO>>>;
-    public queryIssues(fromYear?: number, toYear?: number, usernamePattern?: string, fromNumber?: number, toNumber?: number, keyPattern?: string, summaryContains?: string, descriptionContains?: string, authorContains?: string, commentsContains?: string, commentAuthorContains?: string, excludedTypes?: string, excludedResolutions?: string, excludedStatuses?: string, excludedPriorities?: string, labelsContains?: string, pullRequestAvailableLabel?: string, componentsContains?: string, analysisSummaryContains?: string, analysisUserExtraPromptsContains?: string, analysisSummaryUpdatedFrom?: string, analysisSummaryUpdatedTo?: string, analysisSummaryMinTokensK?: number, analysisSummaryMaxTokensK?: number, analysisAvailability?: string, developmentWorkDescribedContains?: string, developmentWorkUserExtraPromptsContains?: string, developmentWorkUpdatedFrom?: string, developmentWorkUpdatedTo?: string, developmentWorkMinTokensK?: number, developmentWorkMaxTokensK?: number, developmentWorkAvailability?: string, personalInterrestCommentContains?: string, personalInterrestMinPriority?: number, personalInterrestMaxPriority?: number, personalInterrestAvailability?: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<Array<JiraIssueDTO>>>;
-    public queryIssues(fromYear?: number, toYear?: number, usernamePattern?: string, fromNumber?: number, toNumber?: number, keyPattern?: string, summaryContains?: string, descriptionContains?: string, authorContains?: string, commentsContains?: string, commentAuthorContains?: string, excludedTypes?: string, excludedResolutions?: string, excludedStatuses?: string, excludedPriorities?: string, labelsContains?: string, pullRequestAvailableLabel?: string, componentsContains?: string, analysisSummaryContains?: string, analysisUserExtraPromptsContains?: string, analysisSummaryUpdatedFrom?: string, analysisSummaryUpdatedTo?: string, analysisSummaryMinTokensK?: number, analysisSummaryMaxTokensK?: number, analysisAvailability?: string, developmentWorkDescribedContains?: string, developmentWorkUserExtraPromptsContains?: string, developmentWorkUpdatedFrom?: string, developmentWorkUpdatedTo?: string, developmentWorkMinTokensK?: number, developmentWorkMaxTokensK?: number, developmentWorkAvailability?: string, personalInterrestCommentContains?: string, personalInterrestMinPriority?: number, personalInterrestMaxPriority?: number, personalInterrestAvailability?: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+    public queryIssues(issuesQueryDTO: IssuesQueryDTO, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<JiraIssueDTO>>;
+    public queryIssues(issuesQueryDTO: IssuesQueryDTO, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<JiraIssueDTO>>>;
+    public queryIssues(issuesQueryDTO: IssuesQueryDTO, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<Array<JiraIssueDTO>>>;
+    public queryIssues(issuesQueryDTO: IssuesQueryDTO, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (issuesQueryDTO === null || issuesQueryDTO === undefined) {
+            throw new Error('Required parameter issuesQueryDTO was null or undefined when calling queryIssues.');
+        }
 
-        let localVarQueryParameters = new OpenApiHttpParams(this.encoder);
+        let localVarHeaders = this.defaultHeaders;
 
-        localVarQueryParameters = this.addToHttpParams(
-            localVarQueryParameters,
-            'fromYear',
-            <any>fromYear,
-            QueryParamStyle.Form,
-            true,
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        // to determine the Content-Type header
+        const consumes: string[] = [
+            'application/json'
+        ];
+        const httpContentTypeSelected: string | undefined = this.configuration.selectHeaderContentType(consumes);
+        if (httpContentTypeSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Content-Type', httpContentTypeSelected);
+        }
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/jira-issues/query`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<Array<JiraIssueDTO>>('post', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                body: issuesQueryDTO,
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
         );
-
-
-        localVarQueryParameters = this.addToHttpParams(
-            localVarQueryParameters,
-            'toYear',
-            <any>toYear,
-            QueryParamStyle.Form,
-            true,
-        );
-
-
-        localVarQueryParameters = this.addToHttpParams(
-            localVarQueryParameters,
-            'usernamePattern',
-            <any>usernamePattern,
-            QueryParamStyle.Form,
-            true,
-        );
-
-
-        localVarQueryParameters = this.addToHttpParams(
-            localVarQueryParameters,
-            'fromNumber',
-            <any>fromNumber,
-            QueryParamStyle.Form,
-            true,
-        );
-
-
-        localVarQueryParameters = this.addToHttpParams(
-            localVarQueryParameters,
-            'toNumber',
-            <any>toNumber,
-            QueryParamStyle.Form,
-            true,
-        );
-
-
-        localVarQueryParameters = this.addToHttpParams(
-            localVarQueryParameters,
-            'keyPattern',
-            <any>keyPattern,
-            QueryParamStyle.Form,
-            true,
-        );
-
-
-        localVarQueryParameters = this.addToHttpParams(
-            localVarQueryParameters,
-            'summaryContains',
-            <any>summaryContains,
-            QueryParamStyle.Form,
-            true,
-        );
-
-
-        localVarQueryParameters = this.addToHttpParams(
-            localVarQueryParameters,
-            'descriptionContains',
-            <any>descriptionContains,
-            QueryParamStyle.Form,
-            true,
-        );
-
-
-        localVarQueryParameters = this.addToHttpParams(
-            localVarQueryParameters,
-            'authorContains',
-            <any>authorContains,
-            QueryParamStyle.Form,
-            true,
-        );
-
-
-        localVarQueryParameters = this.addToHttpParams(
-            localVarQueryParameters,
-            'commentsContains',
-            <any>commentsContains,
-            QueryParamStyle.Form,
-            true,
-        );
-
-
-        localVarQueryParameters = this.addToHttpParams(
-            localVarQueryParameters,
-            'commentAuthorContains',
-            <any>commentAuthorContains,
-            QueryParamStyle.Form,
-            true,
-        );
-
-
-        localVarQueryParameters = this.addToHttpParams(
-            localVarQueryParameters,
-            'excludedTypes',
-            <any>excludedTypes,
-            QueryParamStyle.Form,
-            true,
-        );
-
-
-        localVarQueryParameters = this.addToHttpParams(
-            localVarQueryParameters,
-            'excludedResolutions',
-            <any>excludedResolutions,
-            QueryParamStyle.Form,
-            true,
-        );
-
-
-        localVarQueryParameters = this.addToHttpParams(
-            localVarQueryParameters,
-            'excludedStatuses',
-            <any>excludedStatuses,
-            QueryParamStyle.Form,
-            true,
-        );
-
-
-        localVarQueryParameters = this.addToHttpParams(
-            localVarQueryParameters,
-            'excludedPriorities',
-            <any>excludedPriorities,
-            QueryParamStyle.Form,
-            true,
-        );
-
-
-        localVarQueryParameters = this.addToHttpParams(
-            localVarQueryParameters,
-            'labelsContains',
-            <any>labelsContains,
-            QueryParamStyle.Form,
-            true,
-        );
-
-
-        localVarQueryParameters = this.addToHttpParams(
-            localVarQueryParameters,
-            'pullRequestAvailableLabel',
-            <any>pullRequestAvailableLabel,
-            QueryParamStyle.Form,
-            true,
-        );
-
-
-        localVarQueryParameters = this.addToHttpParams(
-            localVarQueryParameters,
-            'componentsContains',
-            <any>componentsContains,
-            QueryParamStyle.Form,
-            true,
-        );
-
-
-        localVarQueryParameters = this.addToHttpParams(
-            localVarQueryParameters,
-            'analysisSummaryContains',
-            <any>analysisSummaryContains,
-            QueryParamStyle.Form,
-            true,
-        );
-
-
-        localVarQueryParameters = this.addToHttpParams(
-            localVarQueryParameters,
-            'analysisUserExtraPromptsContains',
-            <any>analysisUserExtraPromptsContains,
-            QueryParamStyle.Form,
-            true,
-        );
-
-
-        localVarQueryParameters = this.addToHttpParams(
-            localVarQueryParameters,
-            'analysisSummaryUpdatedFrom',
-            <any>analysisSummaryUpdatedFrom,
-            QueryParamStyle.Form,
-            true,
-        );
-
-
-        localVarQueryParameters = this.addToHttpParams(
-            localVarQueryParameters,
-            'analysisSummaryUpdatedTo',
-            <any>analysisSummaryUpdatedTo,
-            QueryParamStyle.Form,
-            true,
-        );
-
-
-        localVarQueryParameters = this.addToHttpParams(
-            localVarQueryParameters,
-            'analysisSummaryMinTokensK',
-            <any>analysisSummaryMinTokensK,
-            QueryParamStyle.Form,
-            true,
-        );
-
-
-        localVarQueryParameters = this.addToHttpParams(
-            localVarQueryParameters,
-            'analysisSummaryMaxTokensK',
-            <any>analysisSummaryMaxTokensK,
-            QueryParamStyle.Form,
-            true,
-        );
-
-
-        localVarQueryParameters = this.addToHttpParams(
-            localVarQueryParameters,
-            'analysisAvailability',
-            <any>analysisAvailability,
-            QueryParamStyle.Form,
-            true,
-        );
-
-
-        localVarQueryParameters = this.addToHttpParams(
-            localVarQueryParameters,
-            'developmentWorkDescribedContains',
-            <any>developmentWorkDescribedContains,
-            QueryParamStyle.Form,
-            true,
-        );
-
-
-        localVarQueryParameters = this.addToHttpParams(
-            localVarQueryParameters,
-            'developmentWorkUserExtraPromptsContains',
-            <any>developmentWorkUserExtraPromptsContains,
-            QueryParamStyle.Form,
-            true,
-        );
-
-
-        localVarQueryParameters = this.addToHttpParams(
-            localVarQueryParameters,
-            'developmentWorkUpdatedFrom',
-            <any>developmentWorkUpdatedFrom,
-            QueryParamStyle.Form,
-            true,
-        );
-
-
-        localVarQueryParameters = this.addToHttpParams(
-            localVarQueryParameters,
-            'developmentWorkUpdatedTo',
-            <any>developmentWorkUpdatedTo,
-            QueryParamStyle.Form,
-            true,
-        );
-
-
-        localVarQueryParameters = this.addToHttpParams(
-            localVarQueryParameters,
-            'developmentWorkMinTokensK',
-            <any>developmentWorkMinTokensK,
-            QueryParamStyle.Form,
-            true,
-        );
-
-
-        localVarQueryParameters = this.addToHttpParams(
-            localVarQueryParameters,
-            'developmentWorkMaxTokensK',
-            <any>developmentWorkMaxTokensK,
-            QueryParamStyle.Form,
-            true,
-        );
-
-
-        localVarQueryParameters = this.addToHttpParams(
-            localVarQueryParameters,
-            'developmentWorkAvailability',
-            <any>developmentWorkAvailability,
-            QueryParamStyle.Form,
-            true,
-        );
-
-
-        localVarQueryParameters = this.addToHttpParams(
-            localVarQueryParameters,
-            'personalInterrestCommentContains',
-            <any>personalInterrestCommentContains,
-            QueryParamStyle.Form,
-            true,
-        );
-
-
-        localVarQueryParameters = this.addToHttpParams(
-            localVarQueryParameters,
-            'personalInterrestMinPriority',
-            <any>personalInterrestMinPriority,
-            QueryParamStyle.Form,
-            true,
-        );
-
-
-        localVarQueryParameters = this.addToHttpParams(
-            localVarQueryParameters,
-            'personalInterrestMaxPriority',
-            <any>personalInterrestMaxPriority,
-            QueryParamStyle.Form,
-            true,
-        );
-
-
-        localVarQueryParameters = this.addToHttpParams(
-            localVarQueryParameters,
-            'personalInterrestAvailability',
-            <any>personalInterrestAvailability,
-            QueryParamStyle.Form,
-            true,
-        );
-
+    }
+
+    /**
+     * Count of locally-synced issues per \&quot;created_year\&quot; partition
+     * @endpoint get /api/v1/jira-issues/partition-stats
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public queryPartitionStats1(observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<IssuesPartitionStatsDTO>;
+    public queryPartitionStats1(observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<IssuesPartitionStatsDTO>>;
+    public queryPartitionStats1(observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<IssuesPartitionStatsDTO>>;
+    public queryPartitionStats1(observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
 
         let localVarHeaders = this.defaultHeaders;
 
@@ -756,12 +530,11 @@ export class JiraIssuesService extends BaseService {
             }
         }
 
-        let localVarPath = `/api/v1/jira-issues/by-query`;
+        let localVarPath = `/api/v1/jira-issues/partition-stats`;
         const { basePath, withCredentials } = this.configuration;
-        return this.httpClient.request<Array<JiraIssueDTO>>('get', `${basePath}${localVarPath}`,
+        return this.httpClient.request<IssuesPartitionStatsDTO>('get', `${basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
-                params: localVarQueryParameters.toHttpParams(),
                 responseType: <any>responseType_,
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,

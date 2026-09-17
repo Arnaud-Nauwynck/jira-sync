@@ -1,9 +1,9 @@
 import { Routes } from '@angular/router';
-import {IssuesList} from './jira/issues-list/issues-list';
-import {IssueDetails} from './jira/issue-details/issue-details';
-import {GithubPRList} from './github/github-pr-list/github-pr-list';
-import {GithubPrDetails} from './github/github-pr-details/github-pr-details';
-import {MailMessageList} from './mailing-list/mail-message-list/mail-message-list';
+import {IssuesSearchPage} from './jira/issues-search-page/issues-search-page';
+import {IssueDetailsPage} from './jira/issue-details/issue-details';
+import {GithubPrSearchPage} from './github/github-pr-search-page/github-pr-search-page';
+import {GithubPrDetailsPage} from './github/github-pr-details/github-pr-details';
+import {MailMessageSearchPage} from './mailing-list/mail-message-search-page/mail-message-search-page';
 import {MailMessageDetails} from './mailing-list/mail-message-details/mail-message-details';
 import {SourcesSync} from './sources-sync/sources-sync.component';
 import {About} from './about/about';
@@ -13,11 +13,11 @@ import {UserMailMessageStatList} from './mailing-list/user-mail-message-stat-lis
 import {GithubRateLimit} from './github/github-rate-limit/github-rate-limit';
 
 export const routes: Routes = [
-  {path:'issues', component: IssuesList},
-  {path:'issue/:key', component: IssueDetails},
-  {path:'github-pull-requests', component: GithubPRList},
-  {path:'github-pull-request/:number', component: GithubPrDetails},
-  {path:'mailing-list', component: MailMessageList},
+  {path:'issues', component: IssuesSearchPage},
+  {path:'issue/:key', component: IssueDetailsPage},
+  {path:'github-pull-requests', component: GithubPrSearchPage},
+  {path:'github-pull-request/:number', component: GithubPrDetailsPage},
+  {path:'mailing-list', component: MailMessageSearchPage},
   {path:'mailing-list-message/:messageId', component: MailMessageDetails},
   {path:'user-issue-stats', component: UserIssueStatList},
   {path:'user-pr-stats', component: UserPrStatList},

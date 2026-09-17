@@ -8,6 +8,7 @@ import fr.an.projectanalysis.jira.configuration.JiraSyncProperties;
 import fr.an.projectanalysis.jira.mapper.SourceJiraToAnnotatedIssueMapper;
 import fr.an.projectanalysis.jira.rest.dtos.IssueExtraFieldsDTO;
 import fr.an.projectanalysis.jira.rest.dtos.JiraIssueDTO;
+import fr.an.projectanalysis.jira.rest.dtos.YearCountDTO;
 import jakarta.annotation.Nonnull;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -66,6 +67,7 @@ public class JiraIssueRepository {
     private static final String SNAPSHOT_FILE = "data.ndjson.zip";
     private static final String SNAPSHOT_ENTRY = "data.ndjson";
     private static final String CHANGES_FILE = "changes.ndjson";
+    private static final String STATS_FILE = "data-stats.json";
 
     private final ObjectMapper mapper;
 
@@ -75,6 +77,40 @@ public class JiraIssueRepository {
 
     /** partition year -> (issue key -> current issue), lazily loaded from disk and kept up to date. */
     private final Map<Integer, Map<String, JiraIssueDTO>> partitionCache = new ConcurrentHashMap<>();
+
+    /** partition year -> issue count/min/max number, loaded from {@value #STATS_FILE} (or recomputed if missing)
+     * on first access, kept up to date incrementally as issues are created, and re-persisted on compact/recompact. */
+    private final Map<Integer, PartitionIndexes> partitionStats = new ConcurrentHashMap<>();
+    private volatile boolean partitionStatsLoaded = false;
+
+    /** Count, and lowest/highest numeric suffix of the key (eg "123" in "PROJ-123"), of the issues in a single
+     * partition. Issue numbers are sequential, so min/max give a cheap sense of the partition's covered range. */
+    public static class PartitionIndexes {
+        public int count;
+        public Integer minId;
+        public Integer maxId;
+
+        void addId(Integer id) {
+            count++;
+            if (id == null) {
+                return;
+            }
+            if (minId == null || id < minId) {
+                minId = id;
+            }
+            if (maxId == null || id > maxId) {
+                maxId = id;
+            }
+        }
+
+        public YearCountDTO toDTO(int year) {
+            return new YearCountDTO(year, count, minId, maxId);
+        }
+    }
+
+    private static class StatsFile {
+        public Map<Integer, PartitionIndexes> partitionStats = new LinkedHashMap<>();
+    }
 
     @Autowired
     public JiraIssueRepository(JiraSyncProperties props, ObjectMapper mapper) throws IOException {
@@ -111,6 +147,8 @@ public class JiraIssueRepository {
         IssueChangeRecord chgRecord;
         if (previous == null) {
             chgRecord = new CreateIssueChangeRecord(issue); // may use jiraSourceIssue
+            ensurePartitionStatsLoaded();
+            partitionStats.computeIfAbsent(year, y -> new PartitionIndexes()).addId(issueNumberOf(key));
         } else {
             chgRecord = new UpdateSyncIssueChangeRecord(issue); // may use jiraSourceIssue
             issue.annotated = previous.annotated;
@@ -203,10 +241,84 @@ public class JiraIssueRepository {
         return res;
     }
 
-    /** Folds the pending changes log into a fresh compacted snapshot, then clears the changes log. */
+    /** Count, and lowest/highest issue number, per "created_year" partition, from the in-memory stats
+     * (see {@link #STATS_FILE}). */
+    public Map<Integer, PartitionIndexes> partitionStats() {
+        ensurePartitionStatsLoaded();
+        return new LinkedHashMap<>(partitionStats);
+    }
+
+    /** Loads {@link #partitionStats} from {@value #STATS_FILE} on first call, or recomputes and persists it
+     * from the partitions on disk when the file is missing/unreadable. */
+    private synchronized void ensurePartitionStatsLoaded() {
+        if (partitionStatsLoaded) {
+            return;
+        }
+        Path statsFile = baseDir.resolve(STATS_FILE);
+        if (Files.exists(statsFile)) {
+            try {
+                String json = Files.readString(statsFile, StandardCharsets.UTF_8);
+                StatsFile loaded = mapper.readValue(json, StatsFile.class);
+                if (loaded.partitionStats != null) {
+                    partitionStats.putAll(loaded.partitionStats);
+                }
+                partitionStatsLoaded = true;
+                return;
+            } catch (Exception e) {
+                log.warn("failed to read {}, recomputing from partitions", statsFile, e);
+            }
+        }
+        for (int year : findAllPartitionYears()) {
+            partitionStats.put(year, recomputePartitionStats(year));
+        }
+        partitionStatsLoaded = true;
+        writePartitionStatsFile();
+    }
+
+    private PartitionIndexes recomputePartitionStats(int year) {
+        PartitionIndexes stats = new PartitionIndexes();
+        for (JiraIssueDTO issue : cachedPartitionData(year).values()) {
+            stats.addId(issueNumberOf(issue.key));
+        }
+        return stats;
+    }
+
+    /** Whether the numeric suffix of the key (eg "123" in "PROJ-123") can be parsed, or null otherwise. */
+    private static Integer issueNumberOf(String key) {
+        if (key == null) {
+            return null;
+        }
+        int dashIdx = key.lastIndexOf('-');
+        if (dashIdx < 0 || dashIdx == key.length() - 1) {
+            return null;
+        }
+        try {
+            return Integer.parseInt(key.substring(dashIdx + 1));
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private void writePartitionStatsFile() {
+        try {
+            Path statsFile = baseDir.resolve(STATS_FILE);
+            StatsFile toWrite = new StatsFile();
+            toWrite.partitionStats = new java.util.TreeMap<>(partitionStats);
+            String json = mapper.writeValueAsString(toWrite);
+            Files.writeString(statsFile, json, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new UncheckedIOException("failed to write " + STATS_FILE, e);
+        }
+    }
+
+    /** Folds the pending changes log into a fresh compacted snapshot, then clears the changes log
+     * and re-persists the partition stats (see {@value #STATS_FILE}). */
     public void compact(int year) {
         writeSnapshot(year, cachedPartitionData(year).values());
         clearChangesFile(year);
+        ensurePartitionStatsLoaded();
+        partitionStats.put(year, recomputePartitionStats(year));
+        writePartitionStatsFile();
     }
 
     public void compactAll() {
@@ -236,6 +348,13 @@ public class JiraIssueRepository {
         partitionCache.put(year, reloaded);
         writeSnapshot(year, reloaded.values());
         clearChangesFile(year);
+        ensurePartitionStatsLoaded();
+        PartitionIndexes stats = new PartitionIndexes();
+        for (JiraIssueDTO issue : reloaded.values()) {
+            stats.addId(issueNumberOf(issue.key));
+        }
+        partitionStats.put(year, stats);
+        writePartitionStatsFile();
     }
 
     private void clearChangesFile(int year) {
@@ -402,7 +521,13 @@ public class JiraIssueRepository {
         try {
             for (String line : Files.readAllLines(file, StandardCharsets.UTF_8)) {
                 if (line.isBlank()) continue;
-                IssueChangeRecord rec = mapper.readValue(line, IssueChangeRecord.class);
+                IssueChangeRecord rec;
+                try {
+                    rec = mapper.readValue(line, IssueChangeRecord.class);
+                } catch(Exception ex) {
+                    log.error("FATAL ... failed to reload change log for JiraIssue, ignore, no rethrow!! line:\n" + line + "\n", ex);
+                    continue; // ignore no rethrow!
+                }
                 if (rec instanceof CreateIssueChangeRecord chg) {
                     JiraIssueDTO newData = chg.data;
                     JiraIssueDTO prev = issueByKey.put(newData.key, newData);

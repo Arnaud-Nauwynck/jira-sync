@@ -26,6 +26,8 @@ Never try to inspect maven jar dependencies, ask and the end-user will provide.
 source in src/main/webapp
 very standard Angular (typescript) + ag-grid + ... technology stack.
 
+Angular component classes used as page, in 'app.route.ts', should be suffixed with 'Page'. 
+
 After each edition of source code, the end-user will follow and recompile (in "ng serve") himself in real-time.
 The end user will say as soon as there is a compile error, so do not waste tokens trying to launch "ng" and analyze results output.
 

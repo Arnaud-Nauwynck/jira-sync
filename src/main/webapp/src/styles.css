@@ -1,8 +1,13 @@
 /* You can add global styles to this file, and also import other style files */
 
-/* Narrow fixed-width numeric filter inputs (year, issue/PR number, count filters) */
-.narrow-number-input {
+/* Small fixed-width numeric filter inputs (year, issue/PR number, count filters) */
+.app-number-input-sm {
   width: 9ch;
+}
+
+/* Large fixed-width numeric filter inputs (big numbers) */
+.app-number-input-lg {
+  width: 11ch;
 }
 
 /* Personal Interest module, shared by the jira/mailing-list/github personal-interest views.

@@ -1,13 +1,18 @@
 import { Injectable, signal } from '@angular/core';
 import { Observable, of } from 'rxjs';
-import { MailMessagesService } from '../../rest';
-import { MailMessageDTO } from '../../rest';
+import { MailMessageCriteriaDTO, MailMessagePartitionStatsDTO, MailMessageDTO, MailMessagesService } from '../../rest';
+
+const DEFAULT_LIMIT = 1000;
 
 @Injectable({ providedIn: 'root' })
 export class MailMessagesDataService {
 
   // Row Data: the last fetched messages, shared with anyone injecting this service.
   readonly messages = signal<MailMessageDTO[]>([]);
+
+  // Count of locally-synced messages per "archived" (month) partition and per sender, loaded once and
+  // used to show how many messages are available versus how many currently match the search criteria.
+  readonly partitionStats = signal<MailMessagePartitionStatsDTO | undefined>(undefined);
 
   constructor(private mailMessagesService: MailMessagesService) {}
 
@@ -20,16 +25,26 @@ export class MailMessagesDataService {
     return this.mailMessagesService.findMessageByMessageId(messageId);
   }
 
-  search(fromMonth?: string, toMonth?: string, fromPattern?: string, subjectPattern?: string, bodyPattern?: string) {
-    this.mailMessagesService.queryMessages(fromMonth || undefined, toMonth || undefined, fromPattern || undefined,
-        subjectPattern || undefined, bodyPattern || undefined,
-        'body', false, { httpHeaderAccept: 'application/json' as any })
+  query(criteria: MailMessageCriteriaDTO, limit = DEFAULT_LIMIT) {
+    this.mailMessagesService.queryMessages({ criteria, limit })
       .subscribe({
         next: (messages) => {
           this.messages.set(messages);
         },
         error: (err) => {
           console.error('failed to load mailing-list messages', err)
+        },
+      });
+  }
+
+  loadPartitionStats() {
+    this.mailMessagesService.queryPartitionStats()
+      .subscribe({
+        next: (stats) => {
+          this.partitionStats.set(stats);
+        },
+        error: (err) => {
+          console.error('failed to load mailing-list partition stats', err)
         },
       });
   }

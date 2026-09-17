@@ -1,6 +1,8 @@
 package fr.an.projectanalysis.mailinglist.rest;
 
 import fr.an.projectanalysis.mailinglist.rest.dtos.MailMessageDTO;
+import fr.an.projectanalysis.mailinglist.rest.dtos.MailMessagePartitionStatsDTO;
+import fr.an.projectanalysis.mailinglist.rest.dtos.MailMessageQueryDTO;
 import fr.an.projectanalysis.mailinglist.service.MailMessageService;
 import fr.an.projectanalysis.util.AbstractRestController;
 import io.swagger.v3.oas.annotations.Operation;
@@ -8,6 +10,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -37,19 +41,25 @@ public class MailMessagesRestController extends AbstractRestController {
         });
     }
 
-    @Operation(summary = "List mailing-list messages archived between fromMonth and toMonth (both 'yyyy-MM', inclusive), optionally filtered by regexes matched against the From header, the Subject, and/or the body text")
-    @GetMapping("/messages")
-    public Collection<MailMessageDTO> queryMessages(
-            @RequestParam(name = "fromMonth", required = false) String fromMonth,
-            @RequestParam(name = "toMonth", required = false) String toMonth,
-            @RequestParam(name = "fromPattern", required = false) String fromPattern,
-            @RequestParam(name = "subjectPattern", required = false) String subjectPattern,
-            @RequestParam(name = "bodyPattern", required = false) String bodyPattern
-    ) {
-        String paramsText = "fromMonth=" + fromMonth + "&toMonth=" + toMonth + "&fromPattern=" + fromPattern
-                + "&subjectPattern=" + subjectPattern + "&bodyPattern=" + bodyPattern;
-        return withLog("GET", "/messages", paramsText,
-                () -> delegate.queryMessages(fromMonth, toMonth, fromPattern, subjectPattern, bodyPattern));
+    @Operation(summary = "List messages matching the given criteria (Data Fetching + Main/Analysis/Development Work/Personal Interest "
+            + "filter criteria of the mailing-list page), capped at the given limit (default 1000)")
+    @PostMapping("/query")
+    public Collection<MailMessageDTO> queryMessages(@RequestBody MailMessageQueryDTO query) {
+        return withLog("POST", "/query", "limit=" + (query != null ? query.limit : null),
+                () -> delegate.queryMessages(query));
+    }
+
+    @Operation(summary = "Same as /query, but returns only the matching message ids, without fetching the full message objects")
+    @PostMapping("/query-ids")
+    public Collection<String> queryMessageIds(@RequestBody MailMessageQueryDTO query) {
+        return withLog("POST", "/query-ids", "limit=" + (query != null ? query.limit : null),
+                () -> delegate.queryMessageIds(query));
+    }
+
+    @Operation(summary = "Count of locally-synced messages per \"archived\" (month) partition, and per sender")
+    @GetMapping("/partition-stats")
+    public MailMessagePartitionStatsDTO queryPartitionStats() {
+        return withLog("GET", "/partition-stats", "", delegate::queryPartitionStats);
     }
 
 }

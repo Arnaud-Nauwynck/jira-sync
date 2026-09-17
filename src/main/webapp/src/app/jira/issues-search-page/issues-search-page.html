@@ -1,0 +1,32 @@
+<H4>Issues</H4>
+
+<app-issues-list-criteria-view #criteriaView (search)="search()" (criteriaChanged)="listView.onFilterInputsChanged()" />
+
+<div class="small text-secondary mb-2 d-flex align-items-center flex-wrap gap-2">
+  <span>
+    Available in [{{ criteriaView.criteria.fromYear }}, {{ criteriaView.criteria.toYear }}]: {{ availableInRange() }}
+    &nbsp;·&nbsp;Grand total: {{ grandTotal() }}
+    &nbsp;·&nbsp;Matching criteria: {{ issuesDataService.issues().length }}
+  </span>
+  <span class="ms-auto d-flex align-items-center gap-1">
+    <label class="mb-0" for="limit">Limit</label>
+    <input id="limit" class="form-control form-control-sm narrow-number-input" type="number" [(ngModel)]="limit" />
+    <label class="mb-0" for="cachedLimit">Cached limit</label>
+    <input id="cachedLimit" class="form-control form-control-sm narrow-number-input" type="number" [(ngModel)]="cachedLimit" />
+  </span>
+</div>
+
+<app-issues-list-view #listView
+  [rowData]="issuesDataService.issues()"
+  [criteria]="criteriaView.criteria"
+  (rowSelected)="selectedIssue.set($event)" />
+
+@if (selectedIssue(); as data) {
+  <div class="border rounded mt-3 p-3">
+    <div class="d-flex justify-content-end gap-2 mb-2">
+      <button class="btn btn-sm btn-outline-secondary" type="button" (click)="openDetailAsRoute()">Show as page</button>
+      <button class="btn btn-sm btn-outline-secondary" type="button" (click)="closeDetail()">Close</button>
+    </div>
+    <app-issue-view [issue]="data" />
+  </div>
+}

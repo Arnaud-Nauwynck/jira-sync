@@ -1,0 +1,140 @@
+<div class="mb-2">
+  <div class="small text-secondary mb-1" style="cursor: pointer;" (click)="dataFetchingCollapse.toggle()" [attr.aria-expanded]="!isDataFetchingCollapsed">
+    {{ isDataFetchingCollapsed ? '▸' : '▾' }} Data Fetching
+  </div>
+  <div #dataFetchingCollapse="ngbCollapse" [(ngbCollapse)]="isDataFetchingCollapsed">
+    <div class="d-flex gap-2 align-items-end">
+      <div>
+        <label class="form-label">From year</label>
+        <input class="form-control narrow-number-input" type="number" [(ngModel)]="criteria.fromYear" (ngModelChange)="onFieldChanged()" />
+      </div>
+      <div>
+        <label class="form-label">To year</label>
+        <input class="form-control narrow-number-input" type="number" [(ngModel)]="criteria.toYear" (ngModelChange)="onFieldChanged()" />
+      </div>
+      <div>
+        <label class="form-label">Author login pattern</label>
+        <input class="form-control" type="text" [(ngModel)]="criteria.usernamePattern" (ngModelChange)="onFieldChanged()" placeholder="regex, optional" />
+      </div>
+      <div>
+        <label class="form-label">From PR</label>
+        <input class="form-control narrow-number-input" type="number" [(ngModel)]="criteria.fromPullRequestNumber" (ngModelChange)="onFieldChanged()" />
+      </div>
+      <div>
+        <label class="form-label">To PR</label>
+        <input class="form-control narrow-number-input" type="number" [(ngModel)]="criteria.toPullRequestNumber" (ngModelChange)="onFieldChanged()" />
+      </div>
+      <div>
+        <label class="form-label">PR number pattern</label>
+        <input class="form-control" type="text" [(ngModel)]="criteria.pullRequestNumberPattern" (ngModelChange)="onFieldChanged()" placeholder="regex, optional" />
+      </div>
+      <button class="btn btn-primary" type="button" (click)="onSearch()">Search</button>
+    </div>
+  </div>
+</div>
+
+<div class="mb-3">
+  <div class="small text-secondary mb-1" style="cursor: pointer;" (click)="mainCriteriaCollapse.toggle()" [attr.aria-expanded]="!isMainCriteriaCollapsed">
+    {{ isMainCriteriaCollapsed ? '▸' : '▾' }} Main Criteria
+  </div>
+  <div #mainCriteriaCollapse="ngbCollapse" [(ngbCollapse)]="isMainCriteriaCollapsed">
+    <div class="d-flex gap-2 align-items-end flex-wrap">
+      <div>
+        <label class="form-label">Title contains</label>
+        <input class="form-control" type="text" [(ngModel)]="criteria.titleContains" (ngModelChange)="onFieldChanged()" placeholder="comma separated" />
+      </div>
+      <div>
+        <label class="form-label">Body contains</label>
+        <input class="form-control" type="text" [(ngModel)]="criteria.bodyContains" (ngModelChange)="onFieldChanged()" placeholder="comma separated" />
+      </div>
+      <div>
+        <label class="form-label">Author contains</label>
+        <input class="form-control" type="text" [(ngModel)]="criteria.authorContains" (ngModelChange)="onFieldChanged()" placeholder="author, assignee or reviewer" />
+      </div>
+      <div>
+        <label class="form-label">Label contains</label>
+        <input class="form-control" type="text" [(ngModel)]="criteria.labelContains" (ngModelChange)="onFieldChanged()" placeholder="comma separated" />
+      </div>
+      <div>
+        <label class="form-label">Base branch contains</label>
+        <input class="form-control" type="text" [(ngModel)]="criteria.baseRefContains" (ngModelChange)="onFieldChanged()" placeholder="comma separated" />
+      </div>
+
+      <app-exclude-buttongroup-filter label="State" [options]="stateOptions"
+        [excluded]="excludedStates" (excludedChange)="onExcludedStatesChange($event)" />
+
+      <app-availability-filter label="Draft" name="draftAvailability"
+        [value]="availabilityOf(criteria.draftAvailability)" (valueChange)="criteria.draftAvailability = $event; onFieldChanged()" />
+      <app-availability-filter label="Merged" name="mergedAvailability"
+        [value]="availabilityOf(criteria.mergedAvailability)" (valueChange)="criteria.mergedAvailability = $event; onFieldChanged()" />
+      <app-availability-filter label="Mergeable" name="mergeableAvailability"
+        [value]="availabilityOf(criteria.mergeableAvailability)" (valueChange)="criteria.mergeableAvailability = $event; onFieldChanged()" />
+
+      <div>
+        <label class="form-label">Mergeable state pattern</label>
+        <input class="form-control" type="text" [(ngModel)]="criteria.mergeableStatePattern" (ngModelChange)="onFieldChanged()" placeholder="regex, e.g. clean|unstable" />
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mb-2">
+  <div class="small text-secondary mb-1" style="cursor: pointer;" (click)="analysisCriteriaCollapse.toggle()" [attr.aria-expanded]="!isAnalysisCriteriaCollapsed">
+    {{ isAnalysisCriteriaCollapsed ? '▸' : '▾' }} Analysis Criteria
+  </div>
+  <div #analysisCriteriaCollapse="ngbCollapse" [(ngbCollapse)]="isAnalysisCriteriaCollapsed">
+    <div class="d-flex gap-2 align-items-end flex-wrap">
+      <app-text-contains-filter label="Analysis summary contains"
+        [value]="criteria.analysisSummaryContains ?? ''" (valueChange)="criteria.analysisSummaryContains = $event; onFieldChanged()" />
+      <app-text-contains-filter label="Analysis extra prompts contains"
+        [value]="criteria.analysisUserExtraPromptsContains ?? ''" (valueChange)="criteria.analysisUserExtraPromptsContains = $event; onFieldChanged()" />
+      <app-date-range-filter
+        [from]="criteria.analysisSummaryUpdatedFrom ?? ''" (fromChange)="criteria.analysisSummaryUpdatedFrom = $event; onFieldChanged()"
+        [to]="criteria.analysisSummaryUpdatedTo ?? ''" (toChange)="criteria.analysisSummaryUpdatedTo = $event; onFieldChanged()" />
+      <app-number-range-filter fromLabel="Tokens (k) from" toLabel="Tokens (k) to"
+        [from]="criteria.analysisSummaryMinTokensK ?? null" (fromChange)="criteria.analysisSummaryMinTokensK = $event ?? undefined; onFieldChanged()"
+        [to]="criteria.analysisSummaryMaxTokensK ?? null" (toChange)="criteria.analysisSummaryMaxTokensK = $event ?? undefined; onFieldChanged()" />
+      <app-availability-filter name="analysisAvailability"
+        [value]="availabilityOf(criteria.analysisAvailability)" (valueChange)="criteria.analysisAvailability = $event; onFieldChanged()" />
+    </div>
+  </div>
+</div>
+
+<div class="mb-2">
+  <div class="small text-secondary mb-1" style="cursor: pointer;" (click)="developmentWorkCriteriaCollapse.toggle()" [attr.aria-expanded]="!isDevelopmentWorkCriteriaCollapsed">
+    {{ isDevelopmentWorkCriteriaCollapsed ? '▸' : '▾' }} Development Work Criteria
+  </div>
+  <div #developmentWorkCriteriaCollapse="ngbCollapse" [(ngbCollapse)]="isDevelopmentWorkCriteriaCollapsed">
+    <div class="d-flex gap-2 align-items-end flex-wrap">
+      <app-text-contains-filter label="Development work contains"
+        [value]="criteria.developmentWorkDescribedContains ?? ''" (valueChange)="criteria.developmentWorkDescribedContains = $event; onFieldChanged()" />
+      <app-text-contains-filter label="Development extra prompts contains"
+        [value]="criteria.developmentWorkUserExtraPromptsContains ?? ''" (valueChange)="criteria.developmentWorkUserExtraPromptsContains = $event; onFieldChanged()" />
+      <app-date-range-filter
+        [from]="criteria.developmentWorkUpdatedFrom ?? ''" (fromChange)="criteria.developmentWorkUpdatedFrom = $event; onFieldChanged()"
+        [to]="criteria.developmentWorkUpdatedTo ?? ''" (toChange)="criteria.developmentWorkUpdatedTo = $event; onFieldChanged()" />
+      <app-number-range-filter fromLabel="Tokens (k) from" toLabel="Tokens (k) to"
+        [from]="criteria.developmentWorkMinTokensK ?? null" (fromChange)="criteria.developmentWorkMinTokensK = $event ?? undefined; onFieldChanged()"
+        [to]="criteria.developmentWorkMaxTokensK ?? null" (toChange)="criteria.developmentWorkMaxTokensK = $event ?? undefined; onFieldChanged()" />
+      <app-availability-filter name="developmentWorkAvailability"
+        [value]="availabilityOf(criteria.developmentWorkAvailability)" (valueChange)="criteria.developmentWorkAvailability = $event; onFieldChanged()" />
+    </div>
+  </div>
+</div>
+
+<div class="mb-3">
+  <div class="small text-secondary mb-1" style="cursor: pointer;" (click)="personalInterestCriteriaCollapse.toggle()" [attr.aria-expanded]="!isPersonalInterestCriteriaCollapsed">
+    {{ isPersonalInterestCriteriaCollapsed ? '▸' : '▾' }} Personal Interest Criteria
+  </div>
+  <div #personalInterestCriteriaCollapse="ngbCollapse" [(ngbCollapse)]="isPersonalInterestCriteriaCollapsed">
+    <div class="d-flex gap-2 align-items-end flex-wrap">
+      <app-text-contains-filter label="Personal interest comment contains"
+        [value]="criteria.personalInterrestCommentContains ?? ''" (valueChange)="criteria.personalInterrestCommentContains = $event; onFieldChanged()" />
+      <app-number-range-filter fromLabel="Priority from" toLabel="Priority to" [min]="0" [max]="10"
+        [from]="criteria.personalInterrestMinPriority ?? null" (fromChange)="criteria.personalInterrestMinPriority = $event ?? undefined; onFieldChanged()"
+        [to]="criteria.personalInterrestMaxPriority ?? null" (toChange)="criteria.personalInterrestMaxPriority = $event ?? undefined; onFieldChanged()" />
+      <app-availability-filter name="personalInterrestAvailability"
+        [value]="availabilityOf(criteria.personalInterrestAvailability)" (valueChange)="criteria.personalInterrestAvailability = $event; onFieldChanged()" />
+    </div>
+  </div>
+</div>

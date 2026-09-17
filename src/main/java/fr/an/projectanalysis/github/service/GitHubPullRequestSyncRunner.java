@@ -203,6 +203,7 @@ public class GitHubPullRequestSyncRunner {
                 continue;
             }
             log.info("completeMissingReviewComments for year:" + year + ", found " + prs.size() + " to complete");
+            sleep(syncDelayMs);
 
             for (GitHubPullRequestDTO pr : prs) {
                 try {
@@ -217,7 +218,7 @@ public class GitHubPullRequestSyncRunner {
                 }
 
                 completedCount++;
-                // sleep(syncGetByIdDelayMs);
+                sleep(syncGetByIdDelayMs);
                 if (completedCount % 100 == 0) {
                     log.info("completeMissingReviewComments progress for partition year {}: [{}/{}] PRs completed so far", year, completedCount, prs.size());
                 }
@@ -260,7 +261,7 @@ public class GitHubPullRequestSyncRunner {
                 }
 
                 completedCount++;
-                // sleep(syncGetByIdDelayMs);
+                sleep(syncGetByIdDelayMs);
                 if (completedCount % 100 == 0) {
                     log.info("completeMissingComments progress for partition year {}: [{}/{}] PRs completed so far", year, completedCount, prs.size());
                 }
@@ -289,6 +290,7 @@ public class GitHubPullRequestSyncRunner {
                 continue;
             }
             log.info("completeMissingIssueEvents for year:" + year + ", found " + prs.size() + " to complete");
+            sleep(syncDelayMs);
 
             for (GitHubPullRequestDTO pr : prs) {
                 try {
@@ -302,7 +304,7 @@ public class GitHubPullRequestSyncRunner {
                 }
 
                 completedCount++;
-                // sleep(syncGetByIdDelayMs);
+                sleep(syncGetByIdDelayMs);
                 if (completedCount % 100 == 0) {
                     log.info("completeMissingIssueEvents progress for partition year {}: [{}/{}] PRs completed so far", year, completedCount, prs.size());
                 }
@@ -329,6 +331,7 @@ public class GitHubPullRequestSyncRunner {
                 continue;
             }
             log.info("completeMissingIssueCommits for year:" + year + ", found " + prs.size() + " to complete");
+            sleep(syncDelayMs);
 
             for (GitHubPullRequestDTO pr : prs) {
                 try {

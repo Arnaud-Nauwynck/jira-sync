@@ -1,5 +1,3 @@
-<H4>Issues</H4>
-
 <div class="mb-2">
   <div class="small text-secondary mb-1" style="cursor: pointer;" (click)="dataFetchingCollapse.toggle()" [attr.aria-expanded]="!isDataFetchingCollapsed">
     {{ isDataFetchingCollapsed ? '▸' : '▾' }} Data Fetching
@@ -7,16 +5,16 @@
   <div #dataFetchingCollapse="ngbCollapse" [(ngbCollapse)]="isDataFetchingCollapsed">
     <div class="d-flex gap-2 align-items-end">
       <app-number-range-filter fromLabel="From year" toLabel="To year" width="9ch"
-        [from]="fromYear" (fromChange)="fromYear = $event ?? fromYear; onFilterInputsChanged()"
-        [to]="toYear" (toChange)="toYear = $event ?? toYear; onFilterInputsChanged()" />
+        [from]="criteria.fromYear ?? null" (fromChange)="criteria.fromYear = $event ?? criteria.fromYear; onFieldChanged()"
+        [to]="criteria.toYear ?? null" (toChange)="criteria.toYear = $event ?? criteria.toYear; onFieldChanged()" />
       <app-text-contains-filter label="Username pattern" placeholder="regex, optional"
-        [value]="usernamePattern" (valueChange)="usernamePattern = $event; onFilterInputsChanged()" />
+        [value]="criteria.usernamePattern ?? ''" (valueChange)="criteria.usernamePattern = $event; onFieldChanged()" />
       <app-number-range-filter fromLabel="From number" toLabel="To number" width="9ch"
-        [from]="fromNumber" (fromChange)="fromNumber = $event; onFilterInputsChanged()"
-        [to]="toNumber" (toChange)="toNumber = $event; onFilterInputsChanged()" />
+        [from]="criteria.fromNumber ?? null" (fromChange)="criteria.fromNumber = $event ?? undefined; onFieldChanged()"
+        [to]="criteria.toNumber ?? null" (toChange)="criteria.toNumber = $event ?? undefined; onFieldChanged()" />
       <app-text-contains-filter label="Key pattern" placeholder="regex, optional"
-        [value]="keyPattern" (valueChange)="keyPattern = $event; onFilterInputsChanged()" />
-      <button class="btn btn-primary" type="button" (click)="search()">Search</button>
+        [value]="criteria.keyPattern ?? ''" (valueChange)="criteria.keyPattern = $event; onFieldChanged()" />
+      <button class="btn btn-primary" type="button" (click)="onSearch()">Search</button>
     </div>
   </div>
 </div>
@@ -28,19 +26,19 @@
   <div #mainCriteriaCollapse="ngbCollapse" [(ngbCollapse)]="isMainCriteriaCollapsed">
     <div class="d-flex gap-2 align-items-end flex-wrap">
       <app-text-contains-filter label="Summary contains"
-        [value]="summaryContains" (valueChange)="summaryContains = $event; onFilterInputsChanged()" />
+        [value]="criteria.summaryContains ?? ''" (valueChange)="criteria.summaryContains = $event; onFieldChanged()" />
       <app-text-contains-filter label="Description contains"
-        [value]="descriptionContains" (valueChange)="descriptionContains = $event; onFilterInputsChanged()" />
+        [value]="criteria.descriptionContains ?? ''" (valueChange)="criteria.descriptionContains = $event; onFieldChanged()" />
       <app-text-contains-filter label="Author contains" placeholder="creator or reporter"
-        [value]="authorContains" (valueChange)="authorContains = $event; onFilterInputsChanged()" />
+        [value]="criteria.authorContains ?? ''" (valueChange)="criteria.authorContains = $event; onFieldChanged()" />
       <app-text-contains-filter label="Comments contains"
-        [value]="commentsContains" (valueChange)="commentsContains = $event; onFilterInputsChanged()" />
+        [value]="criteria.commentsContains ?? ''" (valueChange)="criteria.commentsContains = $event; onFieldChanged()" />
       <app-text-contains-filter label="Comment author contains"
-        [value]="commentAuthorContains" (valueChange)="commentAuthorContains = $event; onFilterInputsChanged()" />
+        [value]="criteria.commentAuthorContains ?? ''" (valueChange)="criteria.commentAuthorContains = $event; onFieldChanged()" />
       <app-text-contains-filter label="Labels contains"
-        [value]="labelsContains" (valueChange)="labelsContains = $event; onFilterInputsChanged()" />
+        [value]="criteria.labelsContains ?? ''" (valueChange)="criteria.labelsContains = $event; onFieldChanged()" />
       <app-text-contains-filter label="Components contains"
-        [value]="componentsContains" (valueChange)="componentsContains = $event; onFilterInputsChanged()" />
+        [value]="criteria.componentsContains ?? ''" (valueChange)="criteria.componentsContains = $event; onFieldChanged()" />
 
       <div class="w-100"></div>
 
@@ -53,7 +51,7 @@
       <app-exclude-dropdown-filter label="Priority" [options]="priorityFilterOptions"
         [excluded]="excludedPriorities" (excludedChange)="onExcludedPrioritiesChange($event)" />
       <app-availability-filter label="Pull Request Available" name="pullRequestAvailableLabel"
-        [value]="pullRequestAvailableLabel" (valueChange)="pullRequestAvailableLabel = $event; onFilterInputsChanged()" />
+        [value]="availabilityOf(criteria.pullRequestAvailableLabel)" (valueChange)="criteria.pullRequestAvailableLabel = $event; onFieldChanged()" />
     </div>
   </div>
 </div>
@@ -65,17 +63,17 @@
   <div #analysisCriteriaCollapse="ngbCollapse" [(ngbCollapse)]="isAnalysisCriteriaCollapsed">
     <div class="d-flex gap-2 align-items-end flex-wrap">
       <app-text-contains-filter label="Analysis summary contains"
-        [value]="analysisSummaryContains" (valueChange)="analysisSummaryContains = $event; onFilterInputsChanged()" />
+        [value]="criteria.analysisSummaryContains ?? ''" (valueChange)="criteria.analysisSummaryContains = $event; onFieldChanged()" />
       <app-text-contains-filter label="Analysis extra prompts contains"
-        [value]="analysisUserExtraPromptsContains" (valueChange)="analysisUserExtraPromptsContains = $event; onFilterInputsChanged()" />
+        [value]="criteria.analysisUserExtraPromptsContains ?? ''" (valueChange)="criteria.analysisUserExtraPromptsContains = $event; onFieldChanged()" />
       <app-date-range-filter
-        [from]="analysisSummaryUpdatedFrom" (fromChange)="analysisSummaryUpdatedFrom = $event; onFilterInputsChanged()"
-        [to]="analysisSummaryUpdatedTo" (toChange)="analysisSummaryUpdatedTo = $event; onFilterInputsChanged()" />
+        [from]="criteria.analysisSummaryUpdatedFrom ?? ''" (fromChange)="criteria.analysisSummaryUpdatedFrom = $event; onFieldChanged()"
+        [to]="criteria.analysisSummaryUpdatedTo ?? ''" (toChange)="criteria.analysisSummaryUpdatedTo = $event; onFieldChanged()" />
       <app-number-range-filter fromLabel="Tokens (k) from" toLabel="Tokens (k) to"
-        [from]="analysisSummaryMinTokensK" (fromChange)="analysisSummaryMinTokensK = $event; onFilterInputsChanged()"
-        [to]="analysisSummaryMaxTokensK" (toChange)="analysisSummaryMaxTokensK = $event; onFilterInputsChanged()" />
+        [from]="criteria.analysisSummaryMinTokensK ?? null" (fromChange)="criteria.analysisSummaryMinTokensK = $event ?? undefined; onFieldChanged()"
+        [to]="criteria.analysisSummaryMaxTokensK ?? null" (toChange)="criteria.analysisSummaryMaxTokensK = $event ?? undefined; onFieldChanged()" />
       <app-availability-filter name="analysisAvailability"
-        [value]="analysisAvailability" (valueChange)="analysisAvailability = $event; onFilterInputsChanged()" />
+        [value]="availabilityOf(criteria.analysisAvailability)" (valueChange)="criteria.analysisAvailability = $event; onFieldChanged()" />
     </div>
   </div>
 </div>
@@ -87,17 +85,17 @@
   <div #developmentWorkCriteriaCollapse="ngbCollapse" [(ngbCollapse)]="isDevelopmentWorkCriteriaCollapsed">
     <div class="d-flex gap-2 align-items-end flex-wrap">
       <app-text-contains-filter label="Development work contains"
-        [value]="developmentWorkDescribedContains" (valueChange)="developmentWorkDescribedContains = $event; onFilterInputsChanged()" />
+        [value]="criteria.developmentWorkDescribedContains ?? ''" (valueChange)="criteria.developmentWorkDescribedContains = $event; onFieldChanged()" />
       <app-text-contains-filter label="Development extra prompts contains"
-        [value]="developmentWorkUserExtraPromptsContains" (valueChange)="developmentWorkUserExtraPromptsContains = $event; onFilterInputsChanged()" />
+        [value]="criteria.developmentWorkUserExtraPromptsContains ?? ''" (valueChange)="criteria.developmentWorkUserExtraPromptsContains = $event; onFieldChanged()" />
       <app-date-range-filter
-        [from]="developmentWorkUpdatedFrom" (fromChange)="developmentWorkUpdatedFrom = $event; onFilterInputsChanged()"
-        [to]="developmentWorkUpdatedTo" (toChange)="developmentWorkUpdatedTo = $event; onFilterInputsChanged()" />
+        [from]="criteria.developmentWorkUpdatedFrom ?? ''" (fromChange)="criteria.developmentWorkUpdatedFrom = $event; onFieldChanged()"
+        [to]="criteria.developmentWorkUpdatedTo ?? ''" (toChange)="criteria.developmentWorkUpdatedTo = $event; onFieldChanged()" />
       <app-number-range-filter fromLabel="Tokens (k) from" toLabel="Tokens (k) to"
-        [from]="developmentWorkMinTokensK" (fromChange)="developmentWorkMinTokensK = $event; onFilterInputsChanged()"
-        [to]="developmentWorkMaxTokensK" (toChange)="developmentWorkMaxTokensK = $event; onFilterInputsChanged()" />
+        [from]="criteria.developmentWorkMinTokensK ?? null" (fromChange)="criteria.developmentWorkMinTokensK = $event ?? undefined; onFieldChanged()"
+        [to]="criteria.developmentWorkMaxTokensK ?? null" (toChange)="criteria.developmentWorkMaxTokensK = $event ?? undefined; onFieldChanged()" />
       <app-availability-filter name="developmentWorkAvailability"
-        [value]="developmentWorkAvailability" (valueChange)="developmentWorkAvailability = $event; onFilterInputsChanged()" />
+        [value]="availabilityOf(criteria.developmentWorkAvailability)" (valueChange)="criteria.developmentWorkAvailability = $event; onFieldChanged()" />
     </div>
   </div>
 </div>
@@ -109,30 +107,12 @@
   <div #personalInterestCriteriaCollapse="ngbCollapse" [(ngbCollapse)]="isPersonalInterestCriteriaCollapsed">
     <div class="d-flex gap-2 align-items-end flex-wrap">
       <app-text-contains-filter label="Personal interest comment contains"
-        [value]="personalInterrestCommentContains" (valueChange)="personalInterrestCommentContains = $event; onFilterInputsChanged()" />
+        [value]="criteria.personalInterrestCommentContains ?? ''" (valueChange)="criteria.personalInterrestCommentContains = $event; onFieldChanged()" />
       <app-number-range-filter fromLabel="Priority from" toLabel="Priority to" [min]="0" [max]="10"
-        [from]="personalInterrestMinPriority" (fromChange)="personalInterrestMinPriority = $event; onFilterInputsChanged()"
-        [to]="personalInterrestMaxPriority" (toChange)="personalInterrestMaxPriority = $event; onFilterInputsChanged()" />
+        [from]="criteria.personalInterrestMinPriority ?? null" (fromChange)="criteria.personalInterrestMinPriority = $event ?? undefined; onFieldChanged()"
+        [to]="criteria.personalInterrestMaxPriority ?? null" (toChange)="criteria.personalInterrestMaxPriority = $event ?? undefined; onFieldChanged()" />
       <app-availability-filter name="personalInterrestAvailability"
-        [value]="personalInterrestAvailability" (valueChange)="personalInterrestAvailability = $event; onFilterInputsChanged()" />
+        [value]="availabilityOf(criteria.personalInterrestAvailability)" (valueChange)="criteria.personalInterrestAvailability = $event; onFieldChanged()" />
     </div>
   </div>
 </div>
-
-<ag-grid-angular
-  style="width: 100%; height: 500px;"
-  [rowData]="issuesDataService.issues()"
-  [columnDefs]="colDefs"
-  [isExternalFilterPresent]="isExternalFilterPresent"
-  [doesExternalFilterPass]="doesExternalFilterPass"
-  (gridReady)="onGridReady($event)" />
-
-@if (selectedIssue(); as data) {
-  <div class="border rounded mt-3 p-3">
-    <div class="d-flex justify-content-end gap-2 mb-2">
-      <button class="btn btn-sm btn-outline-secondary" type="button" (click)="openDetailAsRoute()">Show as page</button>
-      <button class="btn btn-sm btn-outline-secondary" type="button" (click)="closeDetail()">Close</button>
-    </div>
-    <app-issue-view [issue]="data" />
-  </div>
-}

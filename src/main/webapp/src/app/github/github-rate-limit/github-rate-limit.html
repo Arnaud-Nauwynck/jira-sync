@@ -9,6 +9,30 @@
   <div class="alert alert-danger">{{ errorMessage }}</div>
 }
 
+@if (lastCallLimits(); as lastCallLimits) {
+  <div class="mb-3">
+    <h6>Last GitHub API call</h6>
+    <table class="table table-sm table-bordered w-auto">
+      <tbody>
+        <tr>
+          <th>Remaining</th>
+          <td>{{ lastCallLimits.rateLimitRemaining }}</td>
+        </tr>
+        <tr>
+          <th>Reset at</th>
+          <td>{{ formatInstant(lastCallLimits.rateLimitReset) }}</td>
+        </tr>
+        @if (lastCallLimits.retryAfter) {
+          <tr>
+            <th>Retry after</th>
+            <td>{{ formatInstant(lastCallLimits.retryAfter) }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}
+
 <table class="table table-sm table-striped">
   <thead>
     <tr>

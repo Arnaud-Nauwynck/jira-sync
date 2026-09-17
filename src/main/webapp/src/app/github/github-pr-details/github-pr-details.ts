@@ -2,7 +2,7 @@ import { Component, Input, OnChanges, OnInit, SimpleChanges, signal } from '@ang
 import { ActivatedRoute } from '@angular/router';
 import { switchMap } from 'rxjs';
 import { GitHubPullRequestDTO } from '../../rest';
-import { GithubPullRequestsDataService } from '../github-pr-list/github-pull-requests-data.service';
+import { GithubPullRequestsDataService } from '../github-pr-search-page/github-pull-requests-data.service';
 import { GithubPrView } from '../github-pr-view/github-pr-view';
 
 @Component({
@@ -10,13 +10,16 @@ import { GithubPrView } from '../github-pr-view/github-pr-view';
   selector: 'app-github-pr-details',
   templateUrl: './github-pr-details.html',
 })
-export class GithubPrDetails implements OnInit, OnChanges {
+export class GithubPrDetailsPage implements OnInit, OnChanges {
 
   /** Pull request number to load when embedded directly (e.g. in a master-detail panel); takes precedence over the route param. */
   @Input() pullRequestNumber?: number;
 
   readonly pullRequest = signal<GitHubPullRequestDTO | undefined>(undefined);
   readonly notFound = signal(false);
+  readonly refreshing = signal(false);
+
+  private currentNumber?: number;
 
   constructor(
     private route: ActivatedRoute,
@@ -28,7 +31,11 @@ export class GithubPrDetails implements OnInit, OnChanges {
       this.loadPullRequest(this.pullRequestNumber);
     } else {
       this.route.paramMap
-        .pipe(switchMap((params) => this.pullRequestsDataService.findByNumber(Number(params.get('number')))))
+        .pipe(switchMap((params) => {
+          const number = Number(params.get('number'));
+          this.currentNumber = number;
+          return this.pullRequestsDataService.findByNumber(number);
+        }))
         .subscribe({
           next: (pullRequest) => {
             this.pullRequest.set(pullRequest);
@@ -49,7 +56,27 @@ export class GithubPrDetails implements OnInit, OnChanges {
     }
   }
 
+  refresh() {
+    if (this.currentNumber == null) {
+      return;
+    }
+    this.refreshing.set(true);
+    this.pullRequestsDataService.refreshByNumber(this.currentNumber).subscribe({
+      next: (pullRequest) => {
+        this.refreshing.set(false);
+        this.pullRequest.set(pullRequest);
+        this.notFound.set(false);
+      },
+      error: (err) => {
+        this.refreshing.set(false);
+        console.error('failed to refresh pull request', err);
+        this.notFound.set(true);
+      },
+    });
+  }
+
   private loadPullRequest(number: number) {
+    this.currentNumber = number;
     this.pullRequestsDataService.findByNumber(number).subscribe({
       next: (pullRequest) => {
         this.pullRequest.set(pullRequest);

@@ -1,6 +1,7 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { GitHubSyncService } from '../../rest/api/gitHubSync.service';
 import { RateLimit } from '../../rest/model/rateLimit';
+import { LastCallLimits } from '../../rest/model/lastCallLimits';
 
 interface RateLimitRow {
   name: string;
@@ -19,6 +20,7 @@ export class GithubRateLimit implements OnInit {
   loading = signal(false);
   error = signal<string | undefined>(undefined);
   rows = signal<RateLimitRow[]>([]);
+  lastCallLimits = signal<LastCallLimits | undefined>(undefined);
 
   constructor(private gitHubSyncService: GitHubSyncService) {}
 
@@ -37,6 +39,7 @@ export class GithubRateLimit implements OnInit {
           .filter(([, value]) => value != null)
           .map(([name, value]) => this.toRow(name, value as RateLimit));
         this.rows.set(rows);
+        this.lastCallLimits.set(dto.lastCallLimits);
       },
       error: (ex) => {
         this.loading.set(false);
@@ -54,5 +57,9 @@ export class GithubRateLimit implements OnInit {
       used: rateLimit.used,
       resetAt: rateLimit.reset != null ? new Date(rateLimit.reset * 1000).toLocaleString() : undefined,
     };
+  }
+
+  formatInstant(isoDateTime: string | undefined): string | undefined {
+    return isoDateTime != null ? new Date(isoDateTime).toLocaleString() : undefined;
   }
 }

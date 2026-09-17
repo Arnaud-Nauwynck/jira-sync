@@ -2,10 +2,13 @@ package fr.an.projectanalysis.jira.service;
 
 import fr.an.projectanalysis.jira.repository.JiraIssueRepository;
 import fr.an.projectanalysis.jira.rest.dtos.IssueExtraFieldsDTO;
+import fr.an.projectanalysis.jira.rest.dtos.IssuesCriteriaDTO;
+import fr.an.projectanalysis.jira.rest.dtos.IssuesPartitionStatsDTO;
+import fr.an.projectanalysis.jira.rest.dtos.IssuesQueryDTO;
 import fr.an.projectanalysis.jira.rest.dtos.JiraIssueAnnotationDTO;
 import fr.an.projectanalysis.jira.rest.dtos.JiraIssueDTO;
-import fr.an.projectanalysis.jira.rest.dtos.JiraIssueQueryCriteriaDTO;
 import fr.an.projectanalysis.jira.rest.dtos.UserJiraIssueStatsDTO;
+import fr.an.projectanalysis.jira.rest.dtos.YearCountDTO;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.stereotype.Component;
@@ -128,7 +131,7 @@ public class JiraIssueService {
 
     /** Same as above, plus the Main/Analysis/Development Work/Personal Interest filter criteria from the issues-list page. */
     public List<JiraIssueDTO> queryAnnotatedIssues(int fromYear, int toYear, String usernamePatternText,
-            Integer fromNumber, Integer toNumber, String keyPatternText, JiraIssueQueryCriteriaDTO criteria) {
+            Integer fromNumber, Integer toNumber, String keyPatternText, IssuesCriteriaDTO criteria) {
         List<JiraIssueDTO> result = new ArrayList<>();
         Pattern usernamePattern = compilePattern(usernamePatternText);
         Pattern keyPattern = compilePattern(keyPatternText);
@@ -144,7 +147,63 @@ public class JiraIssueService {
         return result;
     }
 
-    private static boolean matchesCriteria(JiraIssueQueryCriteriaDTO c, JiraIssueDTO issue) {
+    private static final int DEFAULT_LIMIT = 1000;
+
+    /** Lists the issues matching the given criteria (Data Fetching + Main/Analysis/Development Work/Personal
+     * Interest filter criteria of the issues-list page), capped at {@code query.limit} (default 1000). */
+    public List<JiraIssueDTO> queryIssues(IssuesQueryDTO query) {
+        return queryIssuesMatching(query != null ? query.criteria : null, limitOf(query));
+    }
+
+    /** Same as {@link #queryIssues(IssuesQueryDTO)}, but returns only the issue keys. */
+    public List<String> queryIssueIds(IssuesQueryDTO query) {
+        List<JiraIssueDTO> matched = queryIssuesMatching(query != null ? query.criteria : null, limitOf(query));
+        List<String> ids = new ArrayList<>(matched.size());
+        for (JiraIssueDTO issue : matched) {
+            ids.add(issue.key);
+        }
+        return ids;
+    }
+
+    private static int limitOf(IssuesQueryDTO query) {
+        return (query != null && query.limit != null) ? query.limit : DEFAULT_LIMIT;
+    }
+
+    private List<JiraIssueDTO> queryIssuesMatching(IssuesCriteriaDTO c, int limit) {
+        int fromYear = c != null && c.fromYear != null ? c.fromYear : 2020;
+        int toYear = c != null && c.toYear != null ? c.toYear : 2050;
+        Pattern usernamePattern = c != null ? compilePattern(c.usernamePattern) : null;
+        Pattern keyPattern = c != null ? compilePattern(c.keyPattern) : null;
+        Integer fromNumber = c != null ? c.fromNumber : null;
+        Integer toNumber = c != null ? c.toNumber : null;
+        List<JiraIssueDTO> result = new ArrayList<>();
+        repository.scanIssues(fromYear, toYear, (year, issue) -> {
+            if (result.size() >= limit) {
+                return;
+            }
+            boolean matches = (usernamePattern == null || usernamePattern.matcher(creatorOf(issue)).matches())
+                    && (keyPattern == null || (issue.key != null && keyPattern.matcher(issue.key).matches()))
+                    && matchesNumberRange(issue.key, fromNumber, toNumber)
+                    && matchesCriteria(c, issue);
+            if (matches) {
+                result.add(issue);
+            }
+        });
+        return result;
+    }
+
+    /** Count, and lowest/highest issue number, of locally-synced issues per "created_year" partition. */
+    public IssuesPartitionStatsDTO queryPartitionStats() {
+        IssuesPartitionStatsDTO dto = new IssuesPartitionStatsDTO();
+        List<YearCountDTO> stats = new ArrayList<>();
+        for (Map.Entry<Integer, JiraIssueRepository.PartitionIndexes> e : repository.partitionStats().entrySet()) {
+            stats.add(e.getValue().toDTO(e.getKey()));
+        }
+        dto.statsPerYear = stats;
+        return dto;
+    }
+
+    private static boolean matchesCriteria(IssuesCriteriaDTO c, JiraIssueDTO issue) {
         if (c == null) {
             return true;
         }

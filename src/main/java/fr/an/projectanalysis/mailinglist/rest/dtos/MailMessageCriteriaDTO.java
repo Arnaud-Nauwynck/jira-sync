@@ -1,31 +1,31 @@
-package fr.an.projectanalysis.jira.rest.dtos;
+package fr.an.projectanalysis.mailinglist.rest.dtos;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 
 /**
- * Optional filter criteria for {@code JiraIssueService.queryAnnotatedIssues}, mirroring the
- * filter panels of the issues-list Angular page (Main / Analysis / Development Work / Personal
- * Interest criteria). Every field is optional; an unset field does not filter on that criterion.
+ * Filter criteria for {@code MailMessageService.queryMessages}, mirroring the Data Fetching and
+ * Main/Analysis/Development Work/Personal Interest filter panels of the mailing-list Angular
+ * page. Every field is optional; an unset field does not filter on that criterion.
  */
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class JiraIssueQueryCriteriaDTO {
+public class MailMessageCriteriaDTO {
+
+    // Data fetching criteria
+    /** 'yyyy-MM', inclusive. */
+    public String fromMonth;
+    /** 'yyyy-MM', inclusive. */
+    public String toMonth;
+    public String fromPattern;
+    public String subjectPattern;
+    public String bodyPattern;
 
     // Main criteria
-    public String summaryContains;
-    public String descriptionContains;
-    public String authorContains;
-    public String commentsContains;
-    public String commentAuthorContains;
-    public String excludedTypes;
-    public String excludedResolutions;
-    public String excludedStatuses;
-    public String excludedPriorities;
-    public String labelsContains;
-    /** Tri-state ('yes'/'no'/'any'): whether the issue's labels contain "pull-request-available". */
-    public String pullRequestAvailableLabel;
-    public String componentsContains;
+    public String subjectContains;
+    public String bodyContains;
+    public String fromContains;
+    public String toCcContains;
 
     // Analysis criteria
     public String analysisSummaryContains;

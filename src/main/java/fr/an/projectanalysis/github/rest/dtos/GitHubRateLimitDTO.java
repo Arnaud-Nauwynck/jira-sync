@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 
+import java.time.Instant;
+
 /**
  * Mirrors the JSON returned by the GitHub REST API "GET /rate_limit" endpoint.
  */
@@ -13,6 +15,9 @@ import lombok.Data;
 public class GitHubRateLimitDTO {
 
     public Resources resources;
+
+    /** rate-limiting status tracked locally by GitHubApiClient from the headers of its last http call. */
+    public LastCallLimits lastCallLimits;
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -40,6 +45,15 @@ public class GitHubRateLimitDTO {
         public int remaining;
         public long reset;
         public int used;
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Data
+    public static class LastCallLimits {
+        public int rateLimitRemaining;
+        public Instant rateLimitReset;
+        public Instant retryAfter;
     }
 
 }

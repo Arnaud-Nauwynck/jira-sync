@@ -7,10 +7,12 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
+import { LastCallLimits } from './lastCallLimits';
 import { Resources } from './resources';
 
 
 export interface GitHubRateLimitDTO { 
     resources?: Resources;
+    lastCallLimits?: LastCallLimits;
 }
 

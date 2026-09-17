@@ -17,6 +17,10 @@ import { Observable }                                        from 'rxjs';
 import { OpenApiHttpParams, QueryParamStyle } from '../query.params';
 
 // @ts-ignore
+import { GitHubPrPartitionStatsDTO } from '../model/gitHubPrPartitionStatsDTO';
+// @ts-ignore
+import { GitHubPrQueryDTO } from '../model/gitHubPrQueryDTO';
+// @ts-ignore
 import { GitHubPullRequestAnnotationDTO } from '../model/gitHubPullRequestAnnotationDTO';
 // @ts-ignore
 import { GitHubPullRequestDTO } from '../model/gitHubPullRequestDTO';
@@ -228,108 +232,16 @@ export class GitHubPullRequestsService extends BaseService {
     }
 
     /**
-     * List pull requests created between fromYear and toYear (inclusive), optionally filtered by author login, PR number range, PR number pattern, merged/mergeable tri-state, and/or mergeable-state pattern
-     * @endpoint get /api/v1/github-pull-requests/pull-requests
-     * @param fromYear 
-     * @param toYear 
-     * @param usernamePattern 
-     * @param fromPullRequestNumber 
-     * @param toPullRequestNumber 
-     * @param pullRequestNumberPattern 
-     * @param merged 
-     * @param mergeable 
-     * @param mergeableStatePattern 
+     * Count of locally-synced pull requests per \&quot;created_year\&quot; partition
+     * @endpoint get /api/v1/github-pull-requests/partition-stats
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      * @param options additional options
      */
-    public queryPullRequests(fromYear?: number, toYear?: number, usernamePattern?: string, fromPullRequestNumber?: number, toPullRequestNumber?: number, pullRequestNumberPattern?: string, merged?: boolean, mergeable?: boolean, mergeableStatePattern?: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<GitHubPullRequestDTO>>;
-    public queryPullRequests(fromYear?: number, toYear?: number, usernamePattern?: string, fromPullRequestNumber?: number, toPullRequestNumber?: number, pullRequestNumberPattern?: string, merged?: boolean, mergeable?: boolean, mergeableStatePattern?: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<GitHubPullRequestDTO>>>;
-    public queryPullRequests(fromYear?: number, toYear?: number, usernamePattern?: string, fromPullRequestNumber?: number, toPullRequestNumber?: number, pullRequestNumberPattern?: string, merged?: boolean, mergeable?: boolean, mergeableStatePattern?: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<Array<GitHubPullRequestDTO>>>;
-    public queryPullRequests(fromYear?: number, toYear?: number, usernamePattern?: string, fromPullRequestNumber?: number, toPullRequestNumber?: number, pullRequestNumberPattern?: string, merged?: boolean, mergeable?: boolean, mergeableStatePattern?: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
-
-        let localVarQueryParameters = new OpenApiHttpParams(this.encoder);
-
-        localVarQueryParameters = this.addToHttpParams(
-            localVarQueryParameters,
-            'fromYear',
-            <any>fromYear,
-            QueryParamStyle.Form,
-            true,
-        );
-
-
-        localVarQueryParameters = this.addToHttpParams(
-            localVarQueryParameters,
-            'toYear',
-            <any>toYear,
-            QueryParamStyle.Form,
-            true,
-        );
-
-
-        localVarQueryParameters = this.addToHttpParams(
-            localVarQueryParameters,
-            'usernamePattern',
-            <any>usernamePattern,
-            QueryParamStyle.Form,
-            true,
-        );
-
-
-        localVarQueryParameters = this.addToHttpParams(
-            localVarQueryParameters,
-            'fromPullRequestNumber',
-            <any>fromPullRequestNumber,
-            QueryParamStyle.Form,
-            true,
-        );
-
-
-        localVarQueryParameters = this.addToHttpParams(
-            localVarQueryParameters,
-            'toPullRequestNumber',
-            <any>toPullRequestNumber,
-            QueryParamStyle.Form,
-            true,
-        );
-
-
-        localVarQueryParameters = this.addToHttpParams(
-            localVarQueryParameters,
-            'pullRequestNumberPattern',
-            <any>pullRequestNumberPattern,
-            QueryParamStyle.Form,
-            true,
-        );
-
-
-        localVarQueryParameters = this.addToHttpParams(
-            localVarQueryParameters,
-            'merged',
-            <any>merged,
-            QueryParamStyle.Form,
-            true,
-        );
-
-
-        localVarQueryParameters = this.addToHttpParams(
-            localVarQueryParameters,
-            'mergeable',
-            <any>mergeable,
-            QueryParamStyle.Form,
-            true,
-        );
-
-
-        localVarQueryParameters = this.addToHttpParams(
-            localVarQueryParameters,
-            'mergeableStatePattern',
-            <any>mergeableStatePattern,
-            QueryParamStyle.Form,
-            true,
-        );
-
+    public queryPartitionStats2(observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<GitHubPrPartitionStatsDTO>;
+    public queryPartitionStats2(observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<GitHubPrPartitionStatsDTO>>;
+    public queryPartitionStats2(observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<GitHubPrPartitionStatsDTO>>;
+    public queryPartitionStats2(observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
 
         let localVarHeaders = this.defaultHeaders;
 
@@ -356,12 +268,143 @@ export class GitHubPullRequestsService extends BaseService {
             }
         }
 
-        let localVarPath = `/api/v1/github-pull-requests/pull-requests`;
+        let localVarPath = `/api/v1/github-pull-requests/partition-stats`;
         const { basePath, withCredentials } = this.configuration;
-        return this.httpClient.request<Array<GitHubPullRequestDTO>>('get', `${basePath}${localVarPath}`,
+        return this.httpClient.request<GitHubPrPartitionStatsDTO>('get', `${basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
-                params: localVarQueryParameters.toHttpParams(),
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
+     * Same as /query, but returns only the matching PR numbers, without fetching the full pull request objects
+     * @endpoint post /api/v1/github-pull-requests/query-ids
+     * @param gitHubPrQueryDTO 
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public queryPullRequestIds(gitHubPrQueryDTO: GitHubPrQueryDTO, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<number>>;
+    public queryPullRequestIds(gitHubPrQueryDTO: GitHubPrQueryDTO, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<number>>>;
+    public queryPullRequestIds(gitHubPrQueryDTO: GitHubPrQueryDTO, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<Array<number>>>;
+    public queryPullRequestIds(gitHubPrQueryDTO: GitHubPrQueryDTO, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (gitHubPrQueryDTO === null || gitHubPrQueryDTO === undefined) {
+            throw new Error('Required parameter gitHubPrQueryDTO was null or undefined when calling queryPullRequestIds.');
+        }
+
+        let localVarHeaders = this.defaultHeaders;
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        // to determine the Content-Type header
+        const consumes: string[] = [
+            'application/json'
+        ];
+        const httpContentTypeSelected: string | undefined = this.configuration.selectHeaderContentType(consumes);
+        if (httpContentTypeSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Content-Type', httpContentTypeSelected);
+        }
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/github-pull-requests/query-ids`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<Array<number>>('post', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                body: gitHubPrQueryDTO,
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
+     * List pull requests matching the given criteria (Data Fetching + Main/Analysis/Development Work/Personal Interest filter criteria of the github-pull-requests page), capped at the given limit (default 1000)
+     * @endpoint post /api/v1/github-pull-requests/query
+     * @param gitHubPrQueryDTO 
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public queryPullRequests(gitHubPrQueryDTO: GitHubPrQueryDTO, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<GitHubPullRequestDTO>>;
+    public queryPullRequests(gitHubPrQueryDTO: GitHubPrQueryDTO, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<GitHubPullRequestDTO>>>;
+    public queryPullRequests(gitHubPrQueryDTO: GitHubPrQueryDTO, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<Array<GitHubPullRequestDTO>>>;
+    public queryPullRequests(gitHubPrQueryDTO: GitHubPrQueryDTO, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (gitHubPrQueryDTO === null || gitHubPrQueryDTO === undefined) {
+            throw new Error('Required parameter gitHubPrQueryDTO was null or undefined when calling queryPullRequests.');
+        }
+
+        let localVarHeaders = this.defaultHeaders;
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        // to determine the Content-Type header
+        const consumes: string[] = [
+            'application/json'
+        ];
+        const httpContentTypeSelected: string | undefined = this.configuration.selectHeaderContentType(consumes);
+        if (httpContentTypeSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Content-Type', httpContentTypeSelected);
+        }
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/github-pull-requests/query`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<Array<GitHubPullRequestDTO>>('post', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                body: gitHubPrQueryDTO,
                 responseType: <any>responseType_,
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,

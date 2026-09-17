@@ -75,6 +75,26 @@ public class GitHubSyncRestController extends AbstractRestController {
     @Operation(summary = "Get the current GitHub API rate limit status (proxies GET https://api.github.com/rate_limit)")
     @GetMapping("/rate-limit")
     public GitHubRateLimitDTO getRateLimit() {
-        return withLog("GET", "/rate-limit", "", () -> gitHubApiClient.callHttpGet("/rate_limit", GitHubRateLimitDTO.class));
+        return withLog("GET", "/rate-limit", "", () -> {
+            GitHubRateLimitDTO dto = gitHubApiClient.callHttpGet("/rate_limit", GitHubRateLimitDTO.class);
+            dto.lastCallLimits = toLastCallLimits(gitHubApiClient.getLastRateLimitStatus());
+            return dto;
+        });
+    }
+
+    @Operation(summary = "Get the rate limit status tracked locally from the headers of the last GitHub API call, "
+            + "without making a live call to GitHub (cheap enough to poll regularly)")
+    @GetMapping("/last-rate-limit")
+    public GitHubRateLimitDTO.LastCallLimits getLastRateLimit() {
+        // NO log needed .. return withLog("GET", "/last-rate-limit", "", () -> toLastCallLimits(gitHubApiClient.getLastRateLimitStatus()));
+        return toLastCallLimits(gitHubApiClient.getLastRateLimitStatus());
+    }
+
+    private static GitHubRateLimitDTO.LastCallLimits toLastCallLimits(GitHubApiClient.RateLimitStatus status) {
+        GitHubRateLimitDTO.LastCallLimits lastCallLimits = new GitHubRateLimitDTO.LastCallLimits();
+        lastCallLimits.rateLimitRemaining = status.rateLimitRemaining();
+        lastCallLimits.rateLimitReset = status.rateLimitReset();
+        lastCallLimits.retryAfter = status.retryAfter();
+        return lastCallLimits;
     }
 }

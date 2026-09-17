@@ -21,6 +21,10 @@ import { MailMessageAnnotationDTO } from '../model/mailMessageAnnotationDTO';
 // @ts-ignore
 import { MailMessageDTO } from '../model/mailMessageDTO';
 // @ts-ignore
+import { MailMessagePartitionStatsDTO } from '../model/mailMessagePartitionStatsDTO';
+// @ts-ignore
+import { MailMessageQueryDTO } from '../model/mailMessageQueryDTO';
+// @ts-ignore
 import { PersonalInterrestMailCommentDTO } from '../model/personalInterrestMailCommentDTO';
 
 // @ts-ignore
@@ -238,68 +242,20 @@ export class MailMessagesService extends BaseService {
     }
 
     /**
-     * List mailing-list messages archived between fromMonth and toMonth (both \&#39;yyyy-MM\&#39;, inclusive), optionally filtered by regexes matched against the From header, the Subject, and/or the body text
-     * @endpoint get /api/v1/mailing-list-messages/messages
-     * @param fromMonth 
-     * @param toMonth 
-     * @param fromPattern 
-     * @param subjectPattern 
-     * @param bodyPattern 
+     * Same as /query, but returns only the matching message ids, without fetching the full message objects
+     * @endpoint post /api/v1/mailing-list-messages/query-ids
+     * @param mailMessageQueryDTO 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      * @param options additional options
      */
-    public queryMessages(fromMonth?: string, toMonth?: string, fromPattern?: string, subjectPattern?: string, bodyPattern?: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<MailMessageDTO>>;
-    public queryMessages(fromMonth?: string, toMonth?: string, fromPattern?: string, subjectPattern?: string, bodyPattern?: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<MailMessageDTO>>>;
-    public queryMessages(fromMonth?: string, toMonth?: string, fromPattern?: string, subjectPattern?: string, bodyPattern?: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<Array<MailMessageDTO>>>;
-    public queryMessages(fromMonth?: string, toMonth?: string, fromPattern?: string, subjectPattern?: string, bodyPattern?: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
-
-        let localVarQueryParameters = new OpenApiHttpParams(this.encoder);
-
-        localVarQueryParameters = this.addToHttpParams(
-            localVarQueryParameters,
-            'fromMonth',
-            <any>fromMonth,
-            QueryParamStyle.Form,
-            true,
-        );
-
-
-        localVarQueryParameters = this.addToHttpParams(
-            localVarQueryParameters,
-            'toMonth',
-            <any>toMonth,
-            QueryParamStyle.Form,
-            true,
-        );
-
-
-        localVarQueryParameters = this.addToHttpParams(
-            localVarQueryParameters,
-            'fromPattern',
-            <any>fromPattern,
-            QueryParamStyle.Form,
-            true,
-        );
-
-
-        localVarQueryParameters = this.addToHttpParams(
-            localVarQueryParameters,
-            'subjectPattern',
-            <any>subjectPattern,
-            QueryParamStyle.Form,
-            true,
-        );
-
-
-        localVarQueryParameters = this.addToHttpParams(
-            localVarQueryParameters,
-            'bodyPattern',
-            <any>bodyPattern,
-            QueryParamStyle.Form,
-            true,
-        );
-
+    public queryMessageIds(mailMessageQueryDTO: MailMessageQueryDTO, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<string>>;
+    public queryMessageIds(mailMessageQueryDTO: MailMessageQueryDTO, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<string>>>;
+    public queryMessageIds(mailMessageQueryDTO: MailMessageQueryDTO, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<Array<string>>>;
+    public queryMessageIds(mailMessageQueryDTO: MailMessageQueryDTO, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (mailMessageQueryDTO === null || mailMessageQueryDTO === undefined) {
+            throw new Error('Required parameter mailMessageQueryDTO was null or undefined when calling queryMessageIds.');
+        }
 
         let localVarHeaders = this.defaultHeaders;
 
@@ -315,6 +271,15 @@ export class MailMessagesService extends BaseService {
         const localVarTransferCache: boolean = options?.transferCache ?? true;
 
 
+        // to determine the Content-Type header
+        const consumes: string[] = [
+            'application/json'
+        ];
+        const httpContentTypeSelected: string | undefined = this.configuration.selectHeaderContentType(consumes);
+        if (httpContentTypeSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Content-Type', httpContentTypeSelected);
+        }
+
         let responseType_: 'text' | 'json' | 'blob' = 'json';
         if (localVarHttpHeaderAcceptSelected) {
             if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
@@ -326,12 +291,78 @@ export class MailMessagesService extends BaseService {
             }
         }
 
-        let localVarPath = `/api/v1/mailing-list-messages/messages`;
+        let localVarPath = `/api/v1/mailing-list-messages/query-ids`;
         const { basePath, withCredentials } = this.configuration;
-        return this.httpClient.request<Array<MailMessageDTO>>('get', `${basePath}${localVarPath}`,
+        return this.httpClient.request<Array<string>>('post', `${basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
-                params: localVarQueryParameters.toHttpParams(),
+                body: mailMessageQueryDTO,
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
+     * List messages matching the given criteria (Data Fetching + Main/Analysis/Development Work/Personal Interest filter criteria of the mailing-list page), capped at the given limit (default 1000)
+     * @endpoint post /api/v1/mailing-list-messages/query
+     * @param mailMessageQueryDTO 
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public queryMessages(mailMessageQueryDTO: MailMessageQueryDTO, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<MailMessageDTO>>;
+    public queryMessages(mailMessageQueryDTO: MailMessageQueryDTO, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<MailMessageDTO>>>;
+    public queryMessages(mailMessageQueryDTO: MailMessageQueryDTO, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<Array<MailMessageDTO>>>;
+    public queryMessages(mailMessageQueryDTO: MailMessageQueryDTO, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (mailMessageQueryDTO === null || mailMessageQueryDTO === undefined) {
+            throw new Error('Required parameter mailMessageQueryDTO was null or undefined when calling queryMessages.');
+        }
+
+        let localVarHeaders = this.defaultHeaders;
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        // to determine the Content-Type header
+        const consumes: string[] = [
+            'application/json'
+        ];
+        const httpContentTypeSelected: string | undefined = this.configuration.selectHeaderContentType(consumes);
+        if (httpContentTypeSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Content-Type', httpContentTypeSelected);
+        }
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/mailing-list-messages/query`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<Array<MailMessageDTO>>('post', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                body: mailMessageQueryDTO,
                 responseType: <any>responseType_,
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
@@ -407,6 +438,58 @@ export class MailMessagesService extends BaseService {
             {
                 context: localVarHttpContext,
                 params: localVarQueryParameters.toHttpParams(),
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
+     * Count of locally-synced messages per \&quot;archived\&quot; (month) partition, and per sender
+     * @endpoint get /api/v1/mailing-list-messages/partition-stats
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public queryPartitionStats(observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<MailMessagePartitionStatsDTO>;
+    public queryPartitionStats(observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<MailMessagePartitionStatsDTO>>;
+    public queryPartitionStats(observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<MailMessagePartitionStatsDTO>>;
+    public queryPartitionStats(observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+
+        let localVarHeaders = this.defaultHeaders;
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/mailing-list-messages/partition-stats`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<MailMessagePartitionStatsDTO>('get', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
                 responseType: <any>responseType_,
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,

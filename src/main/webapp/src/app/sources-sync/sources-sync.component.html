@@ -36,6 +36,19 @@
   </button>
 }
 
+@if (githubLastCallLimits(); as lastCallLimits) {
+  <div class="text-secondary small mt-2 d-flex align-items-center gap-2">
+    <span>
+      GitHub API rate limit (as of last call, refreshed every minute):
+      {{ lastCallLimits.rateLimitRemaining }} remaining, resets at {{ formatInstant(lastCallLimits.rateLimitReset) }}
+      @if (lastCallLimits.retryAfter) {
+        , retry after {{ formatInstant(lastCallLimits.retryAfter) }}
+      }
+    </span>
+    <button class="btn btn-sm btn-outline-secondary" type="button" (click)="refreshGithubLastRateLimit()">Refresh</button>
+  </div>
+}
+
 <H1>Mailing List Sync</H1>
 
 <div class="text-secondary small mb-2">
