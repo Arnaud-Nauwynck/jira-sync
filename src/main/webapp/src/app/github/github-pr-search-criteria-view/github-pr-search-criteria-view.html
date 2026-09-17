@@ -29,6 +29,7 @@
         <input class="form-control" type="text" [(ngModel)]="criteria.pullRequestNumberPattern" (ngModelChange)="onFieldChanged()" placeholder="regex, optional" />
       </div>
       <button class="btn btn-primary" type="button" (click)="onSearch()">Search</button>
+      <ng-content />
     </div>
   </div>
 </div>

@@ -15,6 +15,7 @@
       <app-text-contains-filter label="Key pattern" placeholder="regex, optional"
         [value]="criteria.keyPattern ?? ''" (valueChange)="criteria.keyPattern = $event; onFieldChanged()" />
       <button class="btn btn-primary" type="button" (click)="onSearch()">Search</button>
+      <ng-content />
     </div>
   </div>
 </div>

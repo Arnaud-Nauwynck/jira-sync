@@ -20,12 +20,8 @@ export class IssuesSearchPage implements OnInit {
   // The issue currently shown in the master-detail panel below the grid, or undefined when closed.
   readonly selectedIssue = signal<JiraIssueDTO | undefined>(undefined);
 
-  // Cap passed to the server on a normal search.
+  // Cap passed to the server on a search.
   limit = 5000;
-  // Higher cap used instead of `limit` when the currently selected [fromYear, toYear] range's full
-  // partition data still fits under it: the whole range is then fetched and cached client-side, so
-  // further Main/Analysis/Development Work/Personal Interest criteria tweaks never need a re-fetch.
-  cachedLimit = 10000;
 
   constructor(readonly issuesDataService: IssuesDataService, private router: Router) {}
 
@@ -46,14 +42,7 @@ export class IssuesSearchPage implements OnInit {
   }
 
   search() {
-    this.issuesDataService.query(this.criteriaView.criteria, this.effectiveLimit());
-  }
-
-  /** Uses `cachedLimit` instead of `limit` when the [fromYear, toYear] range's full partition data
-   * (per the partition stats) still fits under it, so the fetch captures the whole range. */
-  private effectiveLimit(): number {
-    const available = this.availableInRange();
-    return available > 0 && available <= this.cachedLimit ? this.cachedLimit : this.limit;
+    this.issuesDataService.query(this.criteriaView.criteria, this.limit);
   }
 
   /** Sum of the "created_year" partition counts falling within the current [fromYear, toYear] criteria. */

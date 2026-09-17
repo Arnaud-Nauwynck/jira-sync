@@ -1,11 +1,11 @@
 <H4>GitHub Pull Requests</H4>
 
-<app-github-pr-search-criteria-view #criteriaView (search)="search()" (criteriaChanged)="listView.onFilterInputsChanged()" />
-
-<app-search-stats-bar
-  [rangeFrom]="criteriaView.criteria.fromYear" [rangeTo]="criteriaView.criteria.toYear"
-  [availableInRange]="availableInRange()" [total]="grandTotal()" [matchingCount]="pullRequestsDataService.pullRequests().length"
-  [(limit)]="limit" [(cachedLimit)]="cachedLimit" />
+<app-github-pr-search-criteria-view #criteriaView (search)="search()" (criteriaChanged)="listView.onFilterInputsChanged()">
+  <app-search-stats-bar
+    [rangeFrom]="criteriaView.criteria.fromYear" [rangeTo]="criteriaView.criteria.toYear"
+    [availableInRange]="availableInRange()" [total]="grandTotal()" [loadedCount]="pullRequestsDataService.pullRequests().length"
+    [(limit)]="limit" />
+</app-github-pr-search-criteria-view>
 
 <app-github-pr-list-view #listView
   [rowData]="pullRequestsDataService.pullRequests()"
