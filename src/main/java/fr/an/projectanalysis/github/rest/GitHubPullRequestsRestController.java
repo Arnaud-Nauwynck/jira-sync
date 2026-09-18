@@ -8,6 +8,7 @@ import fr.an.projectanalysis.github.service.GitHubPullRequestService;
 import fr.an.projectanalysis.util.AbstractRestController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,6 +24,7 @@ import java.util.Collection;
 @RestController
 @RequestMapping(path = "/api/v1/github-pull-requests", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "GitHubPullRequests")
+@Slf4j
 public class GitHubPullRequestsRestController extends AbstractRestController {
 
     private static final String BASE_URL = "/api/v1/github-pull-requests";
@@ -37,7 +39,7 @@ public class GitHubPullRequestsRestController extends AbstractRestController {
     @Operation(summary = "Find a single pull request by its number")
     @GetMapping("/pull-requests/{number}")
     public ResponseEntity<GitHubPullRequestDTO> findPullRequestByNumber(@PathVariable("number") int number) {
-        return withLog("GET", "/pull-requests/" + number, "", () -> {
+        return withLog(log, "GET", "/pull-requests/" + number, "", () -> {
             GitHubPullRequestDTO found = delegate.findByNumber(number);
             return found != null ? ResponseEntity.ok(found) : ResponseEntity.notFound().build();
         });
@@ -47,21 +49,21 @@ public class GitHubPullRequestsRestController extends AbstractRestController {
             + "filter criteria of the github-pull-requests page), capped at the given limit (default 1000)")
     @PostMapping("/query")
     public Collection<GitHubPullRequestDTO> queryPullRequests(@RequestBody GitHubPrQueryDTO query) {
-        return withLog("POST", "/query", "limit=" + (query != null ? query.limit : null),
+        return withLog(log, "POST", "/query", "limit=" + (query != null ? query.limit : null),
                 () -> delegate.queryPullRequests(query));
     }
 
     @Operation(summary = "Same as /query, but returns only the matching PR numbers, without fetching the full pull request objects")
     @PostMapping("/query-ids")
     public Collection<Integer> queryPullRequestIds(@RequestBody GitHubPrQueryDTO query) {
-        return withLog("POST", "/query-ids", "limit=" + (query != null ? query.limit : null),
+        return withLog(log, "POST", "/query-ids", "limit=" + (query != null ? query.limit : null),
                 () -> delegate.queryPullRequestIds(query));
     }
 
     @Operation(summary = "Count of locally-synced pull requests per \"created_year\" partition")
     @GetMapping("/partition-stats")
     public GitHubPrPartitionStatsDTO queryPartitionStats() {
-        return withLog("GET", "/partition-stats", "", delegate::queryPartitionStats);
+        return withLog(log, "GET", "/partition-stats", "", delegate::queryPartitionStats);
     }
 
     @Operation(summary = "Count pull requests created per author, for PRs created between fromYear and toYear (inclusive), optionally filtered by author login")
@@ -72,7 +74,7 @@ public class GitHubPullRequestsRestController extends AbstractRestController {
             @RequestParam(name = "usernamePattern", required = false) String usernamePattern
     ) {
         String paramsText = "fromYear=" + fromYear + "&toYear=" + toYear + "&usernamePattern=" + usernamePattern;
-        return withLog("GET", "/user-pull-request-stats", paramsText,
+        return withLog(log, "GET", "/user-pull-request-stats", paramsText,
                 () -> delegate.queryUserPullRequestStats(fromYear, toYear, usernamePattern));
     }
 

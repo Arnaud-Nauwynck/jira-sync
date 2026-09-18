@@ -25,6 +25,19 @@ export class MailMessagesDataService {
     return this.mailMessagesService.findMessageByMessageId(messageId);
   }
 
+  /** Re-fetches a message by messageId from the server, bypassing the cache, and updates it in the cache if present. */
+  refreshByMessageId(messageId: string): Observable<MailMessageDTO> {
+    const result = this.mailMessagesService.findMessageByMessageId(messageId);
+    result.subscribe((message) => {
+      const messages = this.messages();
+      const index = messages.findIndex((msg) => msg.messageId === messageId);
+      if (index >= 0) {
+        this.messages.set([...messages.slice(0, index), message, ...messages.slice(index + 1)]);
+      }
+    });
+    return result;
+  }
+
   query(criteria: MailMessageCriteriaDTO, limit = DEFAULT_LIMIT) {
     this.mailMessagesService.queryMessages({ criteria, limit })
       .subscribe({

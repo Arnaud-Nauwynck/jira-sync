@@ -11,6 +11,7 @@ import {UserIssueStatList} from './jira/user-issue-stat-list/user-issue-stat-lis
 import {UserPrStatList} from './github/user-pr-stat-list/user-pr-stat-list';
 import {UserMailMessageStatList} from './mailing-list/user-mail-message-stat-list/user-mail-message-stat-list';
 import {GithubRateLimit} from './github/github-rate-limit/github-rate-limit';
+import {EventLogPage} from './event-log/event-log-page/event-log-page';
 
 export const routes: Routes = [
   {path:'issues', component: IssuesSearchPage},
@@ -24,6 +25,7 @@ export const routes: Routes = [
   {path:'user-mail-message-stats', component: UserMailMessageStatList},
   {path:'sources-sync', component: SourcesSync},
   {path:'github-rate-limit', component: GithubRateLimit},
+  {path:'event-log', component: EventLogPage},
   {path:'about', component: About},
 
 ];

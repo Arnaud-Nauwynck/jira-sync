@@ -6,6 +6,7 @@ import fr.an.projectanalysis.github.service.GitHubPullRequestService;
 import fr.an.projectanalysis.util.AbstractRestController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,6 +15,7 @@ import java.util.List;
 @RestController
 @RequestMapping(path = "/api/v1/github-pull-request-annotations", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "GitHubPullRequests")
+@Slf4j
 public class GitHubPullRequestAnnotationRestController extends AbstractRestController {
 
     private static final String BASE_URL = "/api/v1/github-pull-request-annotations";
@@ -32,27 +34,27 @@ public class GitHubPullRequestAnnotationRestController extends AbstractRestContr
             @RequestParam(name = "fromYear", defaultValue = "2020") int fromYear,
             @RequestParam(name = "toYear", defaultValue = "2050") int toYear
     ) {
-        return withLog("GET", "/", "fromYear=" + fromYear + "&toYear=" + toYear,
+        return withLog(log, "GET", "/", "fromYear=" + fromYear + "&toYear=" + toYear,
                 () -> delegate.listPullRequestAnnotations(fromYear, toYear));
     }
 
     @Operation(summary = "Put annotation for pull request")
     @PutMapping()
     public void putAnnotation(@RequestBody GitHubPullRequestAnnotationDTO req) {
-        withLog("PUT", "", "number=" + req.number, () -> delegate.putAnnotation(req.number, req.annotated));
+        withLog(log, "PUT", "", "number=" + req.number, () -> delegate.putAnnotation(req.number, req.annotated));
     }
 
     @Operation(summary = "Put personal interest comment for pull request")
     @PutMapping("/personnal-interrest")
     public void putPersonalInterrestComment(@RequestBody PersonalInterrestPrCommentDTO req) {
-        withLog("PUT", "/personnal-interrest", "number=" + req.number,
+        withLog(log, "PUT", "/personnal-interrest", "number=" + req.number,
                 () -> delegate.putPersonalInterrestComment(req.number, req.personalInterrestComment, req.personalInterrestPriority10));
     }
 
     @Operation(summary = "Delete annotation for pull request")
     @DeleteMapping("/{number}")
     public void removeAnnotation(@PathVariable(name = "number") int number) {
-        withLog("DELETE", "/" + number, "", () -> delegate.removeAnnotation(number));
+        withLog(log, "DELETE", "/" + number, "", () -> delegate.removeAnnotation(number));
     }
 
 }

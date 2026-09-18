@@ -9,6 +9,8 @@ import fr.an.projectanalysis.mailinglist.mapper.SourceMailMessageToAnnotatedMail
 import fr.an.projectanalysis.mailinglist.rest.dtos.MailMessageDTO;
 import fr.an.projectanalysis.mailinglist.rest.dtos.MailMessageExtraFieldsDTO;
 import fr.an.projectanalysis.mailinglist.rest.dtos.SenderCountDTO;
+import fr.an.projectanalysis.service.MailingListChange;
+import fr.an.projectanalysis.service.RecentChangeLogService;
 import jakarta.annotation.Nonnull;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -81,6 +83,12 @@ public class MailMessageRepository {
 
     private final Path baseDir;
 
+    /** Not null when Spring-managed; null when constructed directly by a one-off migration tool,
+     * which should not feed the live "recent activity" feed. */
+    private final RecentChangeLogService changeLogService;
+
+    private final Object changeFileLock = new Object();
+
     /** partition month ("yyyy-MM") -> (Message-ID -> current message), lazily loaded from disk. */
     private final Map<String, Map<String, MailMessageDTO>> partitionCache = new ConcurrentHashMap<>();
 
@@ -121,20 +129,31 @@ public class MailMessageRepository {
     }
 
     @Autowired
-    public MailMessageRepository(MailingListSyncProperties props, ObjectMapper mapper) throws IOException {
-        this(Path.of(props.getMailingListSyncLocalDir()).resolve("messages"), mapper);
+    public MailMessageRepository(MailingListSyncProperties props, ObjectMapper mapper, RecentChangeLogService changeLogService) throws IOException {
+        this(Path.of(props.getMailingListSyncLocalDir()).resolve("messages"), mapper, changeLogService);
     }
 
     public MailMessageRepository(Path baseDir, ObjectMapper mapper) throws IOException {
+        this(baseDir, mapper, null);
+    }
+
+    public MailMessageRepository(Path baseDir, ObjectMapper mapper, RecentChangeLogService changeLogService) throws IOException {
         // dropping null-valued fields on write keeps the persisted ndjson files compact; the
         // injected mapper (used elsewhere, e.g. REST responses) is left untouched.
         this.mapper = mapper.rebuild()
                 .changeDefaultPropertyInclusion(incl -> JsonInclude.Value.ALL_NON_NULL)
                 .build();
         this.baseDir = baseDir;
+        this.changeLogService = changeLogService;
         if (!Files.exists(baseDir)) {
             log.warn("baseDir {} does not exist for mailing-list messages, creating", baseDir);
             Files.createDirectories(baseDir);
+        }
+    }
+
+    private void fireChange(String messageId, String subject, String changeType) {
+        if (changeLogService != null) {
+            changeLogService.addEvent(new MailingListChange(messageId, subject, changeType));
         }
     }
 
@@ -159,9 +178,11 @@ public class MailMessageRepository {
             if (previous == null) {
                 chgRecords.add(new CreateMailMessageChangeRecord(msg));
                 created.add(msg);
+                fireChange(messageId, msg.subject, "create");
             } else {
                 msg.annotated = previous.annotated;
                 chgRecords.add(new UpdateMailMessageChangeRecord(msg));
+                fireChange(messageId, msg.subject, "update");
             }
             mappedMessages.add(msg);
         }
@@ -196,9 +217,11 @@ public class MailMessageRepository {
             ensurePartitionCountsLoaded();
             partitionCounts.merge(partition, 1, Integer::sum);
             senderStats.computeIfAbsent(senderOf(msg), s -> new SenderStats()).addDate(msg.date);
+            fireChange(messageId, msg.subject, "create");
         } else {
             msg.annotated = previous.annotated;
             chgRecord = new UpdateMailMessageChangeRecord(msg);
+            fireChange(messageId, msg.subject, "update");
         }
         appendChange(partition, chgRecord);
         cachedPartition.put(messageId, msg);
@@ -358,6 +381,7 @@ public class MailMessageRepository {
         msg.annotated = annotated;
         String partition = partitionMonthOf(msg);
         appendChange(partition, new UpdateAnnotationMailMessageChangeRecord(messageId, annotated));
+        fireChange(messageId, msg.subject, "updateAnnotation");
     }
 
     public void removeAnnotation(String messageId) {
@@ -365,6 +389,7 @@ public class MailMessageRepository {
         msg.annotated = null;
         String partition = partitionMonthOf(msg);
         appendChange(partition, new RemoveAnnotationMailMessageChangeRecord(messageId));
+        fireChange(messageId, msg.subject, "removeAnnotation");
     }
 
     /** Folds the pending changes log into a fresh compacted snapshot, then clears the changes log
@@ -573,8 +598,10 @@ public class MailMessageRepository {
         }
         try {
             Files.createDirectories(partitionDir(month));
-            Files.writeString(changesFile(month), sb.toString(),
-                    StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+            synchronized (changeFileLock) {
+                Files.writeString(changesFile(month), sb.toString(),
+                        StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+            }
         } catch (IOException e) {
             throw new UncheckedIOException("failed to append changes in " + partitionDirName(month), e);
         }

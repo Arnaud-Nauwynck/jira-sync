@@ -1,3 +1,5 @@
+export * from './changeLog.service';
+import { ChangeLogService } from './changeLog.service';
 export * from './gitHubPullRequests.service';
 import { GitHubPullRequestsService } from './gitHubPullRequests.service';
 export * from './gitHubSync.service';
@@ -10,4 +12,4 @@ export * from './mailMessages.service';
 import { MailMessagesService } from './mailMessages.service';
 export * from './mailingListSync.service';
 import { MailingListSyncService } from './mailingListSync.service';
-export const APIS = [GitHubPullRequestsService, GitHubSyncService, JiraIssuesService, JiraSyncService, MailMessagesService, MailingListSyncService];
+export const APIS = [ChangeLogService, GitHubPullRequestsService, GitHubSyncService, JiraIssuesService, JiraSyncService, MailMessagesService, MailingListSyncService];

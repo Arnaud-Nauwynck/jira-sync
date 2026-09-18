@@ -9,6 +9,8 @@ import fr.an.projectanalysis.jira.mapper.SourceJiraToAnnotatedIssueMapper;
 import fr.an.projectanalysis.jira.rest.dtos.IssueExtraFieldsDTO;
 import fr.an.projectanalysis.jira.rest.dtos.JiraIssueDTO;
 import fr.an.projectanalysis.jira.rest.dtos.YearCountDTO;
+import fr.an.projectanalysis.service.JiraIssueChange;
+import fr.an.projectanalysis.service.RecentChangeLogService;
 import jakarta.annotation.Nonnull;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -73,6 +75,12 @@ public class JiraIssueRepository {
 
     private final Path baseDir;
 
+    private final Object changeFileLock = new Object();
+
+    /** Not null when Spring-managed; null when constructed directly by a one-off migration tool,
+     * which should not feed the live "recent activity" feed. */
+    private final RecentChangeLogService changeLogService;
+
     private int logReloadPartitionThresholdMillis = 0;
 
     /** partition year -> (issue key -> current issue), lazily loaded from disk and kept up to date. */
@@ -113,11 +121,15 @@ public class JiraIssueRepository {
     }
 
     @Autowired
-    public JiraIssueRepository(JiraSyncProperties props, ObjectMapper mapper) throws IOException {
-        this(Path.of(props.getJiraSyncLocalDir()).resolve("issues"), mapper);
+    public JiraIssueRepository(JiraSyncProperties props, ObjectMapper mapper, RecentChangeLogService changeLogService) throws IOException {
+        this(Path.of(props.getJiraSyncLocalDir()).resolve("issues"), mapper, changeLogService);
     }
 
     public JiraIssueRepository(Path baseDir, ObjectMapper mapper) throws IOException {
+        this(baseDir, mapper, null);
+    }
+
+    public JiraIssueRepository(Path baseDir, ObjectMapper mapper, RecentChangeLogService changeLogService) throws IOException {
         // dropping null-valued fields on write, e.g. {"a":null} is persisted as {}, keeps the
         // persisted ndjson files compact; the injected mapper (used elsewhere, e.g. REST responses)
         // is left untouched.
@@ -125,9 +137,16 @@ public class JiraIssueRepository {
                 .changeDefaultPropertyInclusion(incl -> JsonInclude.Value.ALL_NON_NULL)
                 .build();
         this.baseDir = baseDir;
+        this.changeLogService = changeLogService;
         if (! Files.exists(baseDir)) {
             log.warn("baseDir {} does not exist for issues, creating", baseDir);
             Files.createDirectories(baseDir);
+        }
+    }
+
+    private void fireChange(String key, String changeType) {
+        if (changeLogService != null) {
+            changeLogService.addEvent(new JiraIssueChange(key, changeType));
         }
     }
 
@@ -149,9 +168,11 @@ public class JiraIssueRepository {
             chgRecord = new CreateIssueChangeRecord(issue); // may use jiraSourceIssue
             ensurePartitionStatsLoaded();
             partitionStats.computeIfAbsent(year, y -> new PartitionIndexes()).addId(issueNumberOf(key));
+            fireChange(key, "create");
         } else {
             chgRecord = new UpdateSyncIssueChangeRecord(issue); // may use jiraSourceIssue
             issue.annotated = previous.annotated;
+            fireChange(key, "update");
         }
         appendChange(year, chgRecord);
         cachedPartition.put(key, issue);
@@ -571,8 +592,9 @@ public class JiraIssueRepository {
         String line = mapper.writeValueAsString(chgRecord);
         try {
             Files.createDirectories(partitionDir(year));
-            Files.writeString(changesFile(year), line + "\n",
-                    StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+            synchronized(changeFileLock) {
+                Files.writeString(changesFile(year), line + "\n", StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+            }
         } catch (IOException e) {
             throw new UncheckedIOException("failed to append change for " + chgRecord.key() + " in " + partitionDirName(year), e);
         }
@@ -641,6 +663,7 @@ public class JiraIssueRepository {
         issue.setAnnotated(annotated);
         int year = partitionYearOf(issue);
         appendChange(year, new UpdateAnnotationSyncIssueChangeRecord(key, annotated));
+        fireChange(key, "updateAnnotation");
     }
 
     public void removeAnnotation(String key) {
@@ -648,6 +671,7 @@ public class JiraIssueRepository {
         issue.setAnnotated(null);
         int year = partitionYearOf(issue);
         appendChange(year, new RemoveAnnotationSyncIssueChangeRecord(key));
+        fireChange(key, "removeAnnotation");
     }
 
 }

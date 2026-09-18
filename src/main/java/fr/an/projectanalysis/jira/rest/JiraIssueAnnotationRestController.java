@@ -6,6 +6,7 @@ import fr.an.projectanalysis.jira.service.JiraIssueService;
 import fr.an.projectanalysis.util.AbstractRestController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,6 +15,7 @@ import java.util.List;
 @RestController
 @RequestMapping(path="/api/v1/jira-issue-annotations", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "JiraIssues")
+@Slf4j
 public class JiraIssueAnnotationRestController extends AbstractRestController {
 
     private static final String BASE_URL = "/api/v1/jira-issue-annotation";
@@ -32,27 +34,27 @@ public class JiraIssueAnnotationRestController extends AbstractRestController {
             @RequestParam(name="fromYear", defaultValue = "2020") int fromYear,
             @RequestParam(name="toYear", defaultValue = "2050") int toYear
             ) {
-        return withLog("GET", "/", "fromYear=" + fromYear + "&toYear=" + toYear,
+        return withLog(log, "GET", "/", "fromYear=" + fromYear + "&toYear=" + toYear,
                 () -> delegate.listIssueAnnotations(fromYear, toYear));
     }
 
     @Operation(summary = "Put annotation for issue")
     @PutMapping()
     public void putAnnotation(@RequestBody JiraIssueAnnotationDTO req) {
-        withLog("PUT", "", "key=" + req.key, () -> delegate.putAnnotation(req.key, req.annotated));
+        withLog(log, "PUT", "", "key=" + req.key, () -> delegate.putAnnotation(req.key, req.annotated));
     }
 
     @Operation(summary = "Put personal interest comment for issue")
     @PutMapping("/personnal-interrest")
     public void putPersonalInterrestComment(@RequestBody PersonalInterrestCommentDTO req) {
-        withLog("PUT", "/personnal-interrest", "key=" + req.key,
+        withLog(log, "PUT", "/personnal-interrest", "key=" + req.key,
                 () -> delegate.putPersonalInterrestComment(req.key, req.personalInterrestComment, req.personalInterrestPriority10));
     }
 
     @Operation(summary = "Delete annotation for issue")
     @DeleteMapping("/{key}")
     public void putAnnotation(@PathVariable(name="key") String key) {
-        withLog("DELETE", "/" + key, "", () -> delegate.removeAnnotation(key));
+        withLog(log, "DELETE", "/" + key, "", () -> delegate.removeAnnotation(key));
     }
 
 

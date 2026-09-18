@@ -7,6 +7,7 @@ import fr.an.projectanalysis.mailinglist.service.MailingListSyncRunner;
 import fr.an.projectanalysis.util.AbstractRestController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,6 +20,7 @@ import java.util.Collection;
 @RestController
 @RequestMapping(path = "/api/v1/mailing-list-sync", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "MailingListSync")
+@Slf4j
 public class MailingListSyncRestController extends AbstractRestController {
 
     private static final String BASE_URL = "/api/v1/mailing-list-sync";
@@ -35,7 +37,7 @@ public class MailingListSyncRestController extends AbstractRestController {
     @Operation(summary = "Get info about the last successful mailing-list sync run")
     @GetMapping("/last-sync")
     public MailingListSyncStatusDTO getLastSync() {
-        return withLog("GET", "/last-sync", "", () -> {
+        return withLog(log, "GET", "/last-sync", "", () -> {
             MailingListSyncStatusDTO dto = new MailingListSyncStatusDTO();
             dto.lastClosedMonth = mailingListSyncRunner.loadLastClosedMonth();
             return dto;
@@ -50,13 +52,13 @@ public class MailingListSyncRestController extends AbstractRestController {
             @RequestParam(name = "fromPattern", required = false) String fromPattern
     ) {
         String paramsText = "fromYear=" + fromYear + "&toYear=" + toYear + "&fromPattern=" + fromPattern;
-        return withLog("GET", "/user-mail-message-stats", paramsText,
+        return withLog(log, "GET", "/user-mail-message-stats", paramsText,
                 () -> mailMessageService.queryUserMessageStats(fromYear, toYear, fromPattern));
     }
 
     @Operation(summary = "Run the mailing-list synchronization for the configured list/domain")
     @PostMapping("/run-sync-all")
     public void runSyncAll() {
-        withLog("POST", "/run-sync-all", "", mailingListSyncRunner::syncAll);
+        withLog(log, "POST", "/run-sync-all", "", mailingListSyncRunner::syncAll);
     }
 }

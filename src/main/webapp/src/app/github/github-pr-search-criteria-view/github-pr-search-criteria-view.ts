@@ -25,11 +25,12 @@ export class GithubPrSearchCriteriaView {
     fromYear: 2020,
     toYear: 2050,
     draftAvailability: 'any',
-    mergedAvailability: 'any',
+    mergedAvailability: 'no',
     mergeableAvailability: 'any',
     analysisAvailability: 'any',
     developmentWorkAvailability: 'any',
     personalInterrestAvailability: 'any',
+    excludedStates: 'closed',
   };
 
   /** Emitted when the "Search" button is clicked, to re-fetch from the server. */
@@ -50,7 +51,7 @@ export class GithubPrSearchCriteriaView {
 
   // State enum filter: kept locally as a Set for the exclude-buttongroup-filter widget, serialized as CSV onto the criteria.
   stateOptions = ['open', 'closed'];
-  excludedStates = new Set<string>();
+  excludedStates = new Set<string>(['closed']);
 
   // Mergeable state enum filter: kept locally as a Set for the exclude-buttongroup-filter widget,
   // serialized onto the criteria's `mergeableStatePattern` regex field.

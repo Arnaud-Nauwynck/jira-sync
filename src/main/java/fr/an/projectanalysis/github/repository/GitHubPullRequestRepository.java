@@ -9,6 +9,8 @@ import fr.an.projectanalysis.github.mapper.SourceGitHubToAnnotatedPullRequestMap
 import fr.an.projectanalysis.github.rest.dtos.GitHubPullRequestDTO;
 import fr.an.projectanalysis.github.rest.dtos.GitHubPullRequestExtraFieldsDTO;
 import fr.an.projectanalysis.github.rest.dtos.YearCountDTO;
+import fr.an.projectanalysis.service.GithubPRChange;
+import fr.an.projectanalysis.service.RecentChangeLogService;
 import jakarta.annotation.Nonnull;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -70,6 +72,12 @@ public class GitHubPullRequestRepository {
 
     private final Path baseDir;
 
+    /** Not null when Spring-managed; null when constructed directly by a one-off migration tool,
+     * which should not feed the live "recent activity" feed. */
+    private final RecentChangeLogService changeLogService;
+
+    private final Object changeFileLock = new Object();
+
     /** partition year -> (PR number -> current PR), lazily loaded from disk and kept up to date. */
     private final Map<Integer, Map<Integer, GitHubPullRequestDTO>> partitionCache = new ConcurrentHashMap<>();
 
@@ -105,20 +113,31 @@ public class GitHubPullRequestRepository {
     }
 
     @Autowired
-    public GitHubPullRequestRepository(GitHubSyncProperties props, ObjectMapper mapper) throws IOException {
-        this(Path.of(props.getGithubSyncLocalDir()).resolve("pulls"), mapper);
+    public GitHubPullRequestRepository(GitHubSyncProperties props, ObjectMapper mapper, RecentChangeLogService changeLogService) throws IOException {
+        this(Path.of(props.getGithubSyncLocalDir()).resolve("pulls"), mapper, changeLogService);
     }
 
     public GitHubPullRequestRepository(Path baseDir, ObjectMapper mapper) throws IOException {
+        this(baseDir, mapper, null);
+    }
+
+    public GitHubPullRequestRepository(Path baseDir, ObjectMapper mapper, RecentChangeLogService changeLogService) throws IOException {
         // dropping null-valued fields on write keeps the persisted ndjson files compact; the
         // injected mapper (used elsewhere, e.g. REST responses) is left untouched.
         this.mapper = mapper.rebuild()
                 .changeDefaultPropertyInclusion(incl -> JsonInclude.Value.ALL_NON_NULL)
                 .build();
         this.baseDir = baseDir;
+        this.changeLogService = changeLogService;
         if (!Files.exists(baseDir)) {
             log.warn("baseDir {} does not exist for github pulls, creating", baseDir);
             Files.createDirectories(baseDir);
+        }
+    }
+
+    private void fireChange(int number, String changeType) {
+        if (changeLogService != null) {
+            changeLogService.addEvent(new GithubPRChange(number, changeType));
         }
     }
 
@@ -140,9 +159,11 @@ public class GitHubPullRequestRepository {
             chgRecord = new CreatePullRequestChangeRecord(pr);
             ensurePartitionStatsLoaded();
             partitionStats.computeIfAbsent(year, y -> new PartitionIndexes()).addId(number);
+            fireChange(number, "create");
         } else {
             pr.annotated = previous.annotated;
             chgRecord = new UpdatePullRequestChangeRecord(pr);
+            fireChange(number, "update");
         }
         appendChange(year, chgRecord);
         cachedPartition.put(number, pr);
@@ -329,6 +350,7 @@ public class GitHubPullRequestRepository {
         updateCallback.accept(pr);
         int year = partitionYearOf(pr);
         appendChange(year, new UpdatePullRequestChangeRecord(pr));
+        fireChange(number, "update");
     }
 
 
@@ -543,8 +565,10 @@ public class GitHubPullRequestRepository {
         String line = mapper.writeValueAsString(chgRecord);
         try {
             Files.createDirectories(partitionDir(year));
-            Files.writeString(changesFile(year), line + "\n",
-                    StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+            synchronized (changeFileLock) {
+                Files.writeString(changesFile(year), line + "\n",
+                        StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+            }
         } catch (IOException e) {
             throw new UncheckedIOException("failed to append change for #" + chgRecord.number() + " in " + partitionDirName(year), e);
         }

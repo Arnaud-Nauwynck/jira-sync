@@ -8,6 +8,7 @@ import fr.an.projectanalysis.jira.service.JiraIssueService;
 import fr.an.projectanalysis.util.AbstractRestController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,6 +24,7 @@ import java.util.Collection;
 @RestController
 @RequestMapping(path="/api/v1/jira-issues", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "JiraIssues")
+@Slf4j
 public class JiraIssuesRestController extends AbstractRestController {
 
     private static final String BASE_URL = "/api/v1/jira-issues";
@@ -48,14 +50,14 @@ public class JiraIssuesRestController extends AbstractRestController {
         String paramsText = "fromYear=" + fromYear + "&toYear=" + toYear + "&usernamePattern=" + usernamePattern
                 + "&summaryPattern=" + summaryPattern + "&descriptionPattern=" + descriptionPattern
                 + "&commentPattern=" + commentPattern + "&commentAuthorPattern=" + commentAuthorPattern;
-        return withLog("GET", "/user-issue-create-stats", paramsText, () -> delegate.queryUserIssueStats(fromYear, toYear, usernamePattern,
+        return withLog(log, "GET", "/user-issue-create-stats", paramsText, () -> delegate.queryUserIssueStats(fromYear, toYear, usernamePattern,
                 summaryPattern, descriptionPattern, commentPattern, commentAuthorPattern));
     }
 
     @Operation(summary = "Find a single issue by its key")
     @GetMapping("/by-key/{key}")
     public ResponseEntity<JiraIssueDTO> findIssueByKey(@PathVariable("key") String key) {
-        return withLog("GET", "/by-key/" + key, "", () -> {
+        return withLog(log, "GET", "/by-key/" + key, "", () -> {
             JiraIssueDTO found = delegate.findAnnotatedIssueByKey(key);
             return found != null ? ResponseEntity.ok(found) : ResponseEntity.notFound().build();
         });
@@ -65,21 +67,21 @@ public class JiraIssuesRestController extends AbstractRestController {
             + "filter criteria of the issues-list page), capped at the given limit (default 1000)")
     @PostMapping("/query")
     public Collection<JiraIssueDTO> queryIssues(@RequestBody IssuesQueryDTO query) {
-        return withLog("POST", "/query", "limit=" + (query != null ? query.limit : null),
+        return withLog(log, "POST", "/query", "limit=" + (query != null ? query.limit : null),
                 () -> delegate.queryIssues(query));
     }
 
     @Operation(summary = "Same as /query, but returns only the matching issue keys, without fetching the full issue objects")
     @PostMapping("/query-ids")
     public Collection<String> queryIssueIds(@RequestBody IssuesQueryDTO query) {
-        return withLog("POST", "/query-ids", "limit=" + (query != null ? query.limit : null),
+        return withLog(log, "POST", "/query-ids", "limit=" + (query != null ? query.limit : null),
                 () -> delegate.queryIssueIds(query));
     }
 
     @Operation(summary = "Count of locally-synced issues per \"created_year\" partition")
     @GetMapping("/partition-stats")
     public IssuesPartitionStatsDTO queryPartitionStats() {
-        return withLog("GET", "/partition-stats", "", delegate::queryPartitionStats);
+        return withLog(log, "GET", "/partition-stats", "", delegate::queryPartitionStats);
     }
 
 }

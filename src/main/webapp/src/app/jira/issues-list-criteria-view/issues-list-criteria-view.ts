@@ -33,6 +33,7 @@ export class IssuesListCriteriaView {
     analysisAvailability: 'any',
     developmentWorkAvailability: 'any',
     personalInterrestAvailability: 'any',
+    excludedStatuses: 'Resolved,Closed',
   };
 
   /** Emitted when the "Search" button is clicked, to re-fetch from the server. */
@@ -53,7 +54,7 @@ export class IssuesListCriteriaView {
 
   // Status enum filter: kept locally as a Set for the exclude widgets, serialized as CSV onto the criteria.
   statusOptions = ['Open', 'In Progress', 'Reopened', 'Resolved', 'Closed'];
-  excludedStatuses = new Set<string>();
+  excludedStatuses = new Set<string>(['Resolved', 'Closed']);
 
   // Priority enum filter.
   priorityOptions = ['Critical', 'Blocker', 'Major', 'Minor', 'Trivial'];
