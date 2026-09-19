@@ -1,19 +1,22 @@
 package fr.an.projectanalysis.jira.service;
 
-import fr.an.projectanalysis.jira.rest.dtos.IssueExtraFieldsDTO;
 import fr.an.projectanalysis.jira.rest.dtos.IssuesCriteriaDTO;
 import fr.an.projectanalysis.jira.rest.dtos.JiraIssueDTO;
+import fr.an.projectanalysis.util.AnnotatedCritUtils;
 import fr.an.projectanalysis.util.CritUtils;
 
 import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 /**
- * Whether a {@link JiraIssueDTO} matches the Main/Analysis/Development Work/Personal Interest
- * filter criteria of the issues-list page (a null criteria matches everything).
+ * Whether a {@link JiraIssueDTO} matches the Data Fetching + Main/Analysis/Development Work/
+ * Personal Interest filter criteria of the issues-list page (a null criteria matches everything).
  */
 public class JiraIssueCriteria implements Predicate<JiraIssueDTO> {
+
+    private static final String UNKNOWN_USER = "unknown";
 
     private static final String PULL_REQUEST_AVAILABLE_LABEL = "pull-request-available";
 
@@ -31,14 +34,54 @@ public class JiraIssueCriteria implements Predicate<JiraIssueDTO> {
 
     private final IssuesCriteriaDTO c;
 
+    private final Pattern usernamePattern;
+
+    private final Pattern keyPattern;
+
     public JiraIssueCriteria(IssuesCriteriaDTO c) {
         this.c = c;
+        this.usernamePattern = c != null ? CritUtils.compilePattern(c.usernamePattern) : null;
+        this.keyPattern = c != null ? CritUtils.compilePattern(c.keyPattern) : null;
+    }
+
+    /** The issue creator's username, falling back to the reporter, then to {@code "unknown"}, when missing. */
+    public static String creatorOf(JiraIssueDTO issue) {
+        String name = issue.fields != null ? issue.fields.creator : null;
+        if (name == null || name.isBlank()) {
+            name = issue.fields != null ? issue.fields.reporter : null;
+        }
+        return name != null && !name.isBlank() ? name : UNKNOWN_USER;
+    }
+
+    /** The numeric suffix of an issue key (eg 123 in "PROJ-123"), or null when there is none. */
+    public static Integer issueNumberOf(String key) {
+        if (key == null) {
+            return null;
+        }
+        int dashIdx = key.lastIndexOf('-');
+        if (dashIdx < 0 || dashIdx == key.length() - 1) {
+            return null;
+        }
+        try {
+            return Integer.parseInt(key.substring(dashIdx + 1));
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     @Override
     public boolean test(JiraIssueDTO issue) {
         if (c == null) {
             return true;
+        }
+        if (!CritUtils.matchesRegex(usernamePattern, creatorOf(issue))) {
+            return false;
+        }
+        if (!CritUtils.matchesRegex(keyPattern, issue.key)) {
+            return false;
+        }
+        if (!CritUtils.matchesNumberRange(c.fromNumber, c.toNumber, issueNumberOf(issue.key))) {
+            return false;
         }
         JiraIssueDTO.IssueFieldsDTO fields = issue.fields;
         if (!CritUtils.matchesAny(c.summaryContains, fields != null ? fields.summary : null)) {
@@ -81,61 +124,7 @@ public class JiraIssueCriteria implements Predicate<JiraIssueDTO> {
             return false;
         }
 
-        IssueExtraFieldsDTO annotated = issue.annotated;
-        boolean hasAnalysis = annotated != null && annotated.analysisSummary != null && !annotated.analysisSummary.isBlank();
-        if (!CritUtils.matchesAvailability(c.analysisAvailability, hasAnalysis)) {
-            return false;
-        }
-        if (!CritUtils.matchesAny(c.analysisSummaryContains, annotated != null ? annotated.analysisSummary : null)) {
-            return false;
-        }
-        if (!CritUtils.matchesDateRange(c.analysisSummaryUpdatedFrom, c.analysisSummaryUpdatedTo,
-                annotated != null ? annotated.analysisSummaryLastUpdateTime : null)) {
-            return false;
-        }
-        if (!CritUtils.matchesTokensRangeK(c.analysisSummaryMinTokensK, c.analysisSummaryMaxTokensK,
-                annotated != null ? annotated.analysisSummaryTokensConsumed : 0)) {
-            return false;
-        }
-        List<String> analysisExtraPrompts = annotated != null && annotated.analysisUserExtraPrompts != null
-                ? annotated.analysisUserExtraPrompts : List.of();
-        if (!CritUtils.matchesAny(c.analysisUserExtraPromptsContains, analysisExtraPrompts.toArray(String[]::new))) {
-            return false;
-        }
-
-        boolean hasDevWork = annotated != null && annotated.developmentWorkDescribed != null && !annotated.developmentWorkDescribed.isBlank();
-        if (!CritUtils.matchesAvailability(c.developmentWorkAvailability, hasDevWork)) {
-            return false;
-        }
-        if (!CritUtils.matchesAny(c.developmentWorkDescribedContains, annotated != null ? annotated.developmentWorkDescribed : null)) {
-            return false;
-        }
-        if (!CritUtils.matchesDateRange(c.developmentWorkUpdatedFrom, c.developmentWorkUpdatedTo,
-                annotated != null ? annotated.developmentWorkLastUpdateTime : null)) {
-            return false;
-        }
-        if (!CritUtils.matchesTokensRangeK(c.developmentWorkMinTokensK, c.developmentWorkMaxTokensK,
-                annotated != null ? annotated.developmentWorkTokensConsumed : 0)) {
-            return false;
-        }
-        List<String> devWorkExtraPrompts = annotated != null && annotated.developmentWorkUserExtraPrompts != null
-                ? annotated.developmentWorkUserExtraPrompts : List.of();
-        if (!CritUtils.matchesAny(c.developmentWorkUserExtraPromptsContains, devWorkExtraPrompts.toArray(String[]::new))) {
-            return false;
-        }
-
-        boolean hasPersonalInterrest = annotated != null && annotated.personalInterrestComment != null && !annotated.personalInterrestComment.isBlank();
-        if (!CritUtils.matchesAvailability(c.personalInterrestAvailability, hasPersonalInterrest)) {
-            return false;
-        }
-        if (!CritUtils.matchesAny(c.personalInterrestCommentContains, annotated != null ? annotated.personalInterrestComment : null)) {
-            return false;
-        }
-        if (!CritUtils.matchesNumberRange(c.personalInterrestMinPriority, c.personalInterrestMaxPriority,
-                annotated != null ? annotated.personalInterrestPriority10 : null)) {
-            return false;
-        }
-        return true;
+        return AnnotatedCritUtils.matchesAnnotations(c, issue.annotated);
     }
 
     /** Maps a value to itself if it is a known enum option, or to the "others" bucket otherwise (mirrors the Angular type/resolution filters). */

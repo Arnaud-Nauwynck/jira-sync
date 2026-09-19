@@ -4,6 +4,7 @@ import fr.an.projectanalysis.jira.client.JiraApiClient;
 import fr.an.projectanalysis.jira.client.dtos.SourceJiraIssueDTO;
 import fr.an.projectanalysis.jira.configuration.JiraSyncProperties;
 import fr.an.projectanalysis.jira.repository.JiraIssueRepository;
+import fr.an.projectanalysis.util.HttpApiClientUtils;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.slf4j.Logger;
@@ -77,7 +78,7 @@ public class JiraSyncRunner {
         int start = 0;
         while (true) {
             JsonNode page = apiClient.callHttpGet("/rest/api/2/search"
-                    + "?jql=" + JiraApiClient.enc(jql)
+                    + "?jql=" + HttpApiClientUtils.enc(jql)
                     + "&startAt=" + start
                     + "&maxResults=" + props.getMaxResults()
                     + "&fields=*all"

@@ -1,6 +1,8 @@
 ---
 name: check-SOLID-class
 description: Reviews a single Java class in this codebase (src/main/java) against this project's SOLID principles, weighted the way CLAUDE.md defines them - Single Responsibility is the dominant check. Use when asked to check/review/audit a specific class for SOLID compliance, "does this class do too much", or before/after refactoring a large or tangled class.
+model: claude-3-5-opus # or claude-3-5-sonnet, claude-3-opus, etc.
+context: fork # Optional: runs the skill in an isolated subagent
 ---
 
 ## Input

@@ -54,11 +54,19 @@ public class CritUtils {
 
     /** Full-match regex test; a blank pattern always matches, and a null value fails unless the pattern is blank. */
     public static boolean matchesRegex(String patternText, String value) {
-        Pattern pattern = compilePattern(patternText);
-        if (pattern == null) {
-            return true;
-        }
-        return value != null && pattern.matcher(value).matches();
+        return matchesRegex(compilePattern(patternText), value);
+    }
+
+    /** Full-match test against an already-compiled pattern (see {@link #compilePattern(String)}), to
+     * compile once per query instead of once per scanned record; a null pattern always matches. */
+    public static boolean matchesRegex(Pattern pattern, String value) {
+        return pattern == null || (value != null && pattern.matcher(value).matches());
+    }
+
+    /** Substring-search test against an already-compiled pattern (unlike {@link #matchesRegex(Pattern, String)},
+     * the pattern may match anywhere in the value); a null pattern always matches. */
+    public static boolean findsRegex(Pattern pattern, String value) {
+        return pattern == null || (value != null && pattern.matcher(value).find());
     }
 
     /** 'yes' requires present, 'no' requires absent, 'any'/blank/null does not filter. */

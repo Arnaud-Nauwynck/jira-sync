@@ -1,6 +1,7 @@
 package fr.an.projectanalysis.jira.rest.dtos;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import fr.an.projectanalysis.util.AnnotationCriteriaFields;
 import lombok.Data;
 
 /**
@@ -10,7 +11,7 @@ import lombok.Data;
  */
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class IssuesCriteriaDTO {
+public class IssuesCriteriaDTO implements AnnotationCriteriaFields {
 
     // Data fetching criteria
     public Integer fromYear;

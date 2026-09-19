@@ -1,6 +1,7 @@
 package fr.an.projectanalysis.github.rest.dtos;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import fr.an.projectanalysis.util.AnnotationCriteriaFields;
 import lombok.Data;
 
 /**
@@ -11,7 +12,7 @@ import lombok.Data;
  */
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class GitHubPrCriteriaDTO {
+public class GitHubPrCriteriaDTO implements AnnotationCriteriaFields {
 
     // Data fetching criteria
     public Integer fromYear;

@@ -1,6 +1,5 @@
 package fr.an.projectanalysis.jira.service;
 
-import fr.an.projectanalysis.claude.service.ClaudeCodePromptInvokerService;
 import fr.an.projectanalysis.jira.repository.JiraIssueRepository;
 import fr.an.projectanalysis.jira.rest.dtos.IssueExtraFieldsDTO;
 import fr.an.projectanalysis.jira.rest.dtos.IssuesCriteriaDTO;
@@ -11,13 +10,11 @@ import fr.an.projectanalysis.jira.rest.dtos.JiraIssueDTO;
 import fr.an.projectanalysis.jira.rest.dtos.NearbyJiraIssuesDTO;
 import fr.an.projectanalysis.jira.rest.dtos.UserJiraIssueStatsDTO;
 import fr.an.projectanalysis.jira.rest.dtos.YearCountDTO;
-import fr.an.projectanalysis.rest.dtos.ClaudeCodePromptResponseDTO;
+import fr.an.projectanalysis.util.CritUtils;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -32,30 +29,13 @@ import java.util.regex.Pattern;
 @Slf4j
 public class JiraIssueService {
 
-    private static final String UNKNOWN_USER = "unknown";
-
     /** Status names (lower-case) considered "closed", when no resolutiondate is set either (mirrors {@code UserJiraIssueStatsDTO}). */
     private static final Set<String> CLOSED_STATUS_NAMES = Set.of("closed", "done", "resolved");
 
-    /** Tools "/jira-analysis" needs (issue lookup, writing the analysis back to Jira, git-log
-     * correlation, and saving its local markdown report), pre-approved so the headless CLI does
-     * not block on a permission prompt it has no TTY to show. */
-    private static final List<String> CLAUDE_JIRA_ANALYSIS_ALLOWED_TOOLS = List.of(
-            "mcp__annotated-jira__findIssueByKey", //
-            "mcp__annotated-jira__getJiraAnnotationFields", //
-            "mcp__annotated-jira__setJiraAnnotationSummarised", //
-            "Bash", //
-            "Write" // for end result as text files
-    );
-
     private final JiraIssueRepository repository;
 
-    private final ClaudeCodePromptInvokerService claudeCodePromptInvokerService;
-
-    public JiraIssueService(JiraIssueRepository repository,
-                            ClaudeCodePromptInvokerService claudeCodePromptInvokerService) {
+    public JiraIssueService(JiraIssueRepository repository) {
         this.repository = repository;
-        this.claudeCodePromptInvokerService = claudeCodePromptInvokerService;
     }
 
     public Collection<UserJiraIssueStatsDTO> queryUserIssueStats(
@@ -67,20 +47,20 @@ public class JiraIssueService {
             String commentAuthorPatternText
     ) {
         Map<String, UserJiraIssueStatsDTO> tmp = new LinkedHashMap<>();
-        Pattern usernamePattern = compilePattern(usernamePatternText);
-        Pattern summaryPattern = compilePattern(summaryPatternText);
-        Pattern descriptionPattern = compilePattern(descriptionPatternText);
-        Pattern commentPattern = compilePattern(commentPatternText);
-        Pattern commentAuthorPattern = compilePattern(commentAuthorPatternText);
+        Pattern usernamePattern = CritUtils.compilePattern(usernamePatternText);
+        Pattern summaryPattern = CritUtils.compilePattern(summaryPatternText);
+        Pattern descriptionPattern = CritUtils.compilePattern(descriptionPatternText);
+        Pattern commentPattern = CritUtils.compilePattern(commentPatternText);
+        Pattern commentAuthorPattern = CritUtils.compilePattern(commentAuthorPatternText);
         repository.scanIssues(fromYear, toYear, (year, issue) -> {
-            String user = creatorOf(issue);
-            if (usernamePattern != null && !usernamePattern.matcher(user).matches()) {
+            String user = JiraIssueCriteria.creatorOf(issue);
+            if (!CritUtils.matchesRegex(usernamePattern, user)) {
                 return;
             }
-            if (!matchesText(summaryPattern, issue.fields != null ? issue.fields.summary : null)) {
+            if (!CritUtils.findsRegex(summaryPattern, issue.fields != null ? issue.fields.summary : null)) {
                 return;
             }
-            if (!matchesText(descriptionPattern, issue.fields != null ? issue.fields.description : null)) {
+            if (!CritUtils.findsRegex(descriptionPattern, issue.fields != null ? issue.fields.description : null)) {
                 return;
             }
             if (!matchesComments(commentPattern, commentAuthorPattern, issue)) {
@@ -90,14 +70,6 @@ public class JiraIssueService {
             statPerUser.add(year, issue);
         });
         return tmp.values();
-    }
-
-    private static Pattern compilePattern(String patternText) {
-        return (patternText != null && !patternText.isBlank()) ? Pattern.compile(patternText) : null;
-    }
-
-    private static boolean matchesText(Pattern pattern, String text) {
-        return pattern == null || (text != null && pattern.matcher(text).find());
     }
 
     /** True when neither pattern is set, or the issue has at least one comment matching both given patterns. */
@@ -110,9 +82,8 @@ public class JiraIssueService {
             return false;
         }
         for (JiraIssueDTO.IssueCommentDTO comment : comments) {
-            boolean bodyMatches = commentPattern == null || (comment.body != null && commentPattern.matcher(comment.body).find());
-            boolean authorMatches = commentAuthorPattern == null || (comment.author != null && commentAuthorPattern.matcher(comment.author).matches());
-            if (bodyMatches && authorMatches) {
+            if (CritUtils.findsRegex(commentPattern, comment.body)
+                    && CritUtils.matchesRegex(commentAuthorPattern, comment.author)) {
                 return true;
             }
         }
@@ -135,7 +106,7 @@ public class JiraIssueService {
     public NearbyJiraIssuesDTO findNearbyIssues(String key) {
         JiraIssueDTO target = repository.getByKey(key);
         String projectPrefix = projectPrefixOf(key);
-        String author = creatorOf(target);
+        String author = JiraIssueCriteria.creatorOf(target);
         int targetYear = JiraIssueRepository.partitionYearOf(target);
 
         List<Integer> years = repository.findAllPartitionYears();
@@ -160,7 +131,7 @@ public class JiraIssueService {
             for (int i = fromIndex; i >= 0; i--) {
                 JiraIssueDTO issue = issues.get(i);
                 boolean open = isStillOpen(issue);
-                boolean sameAuthor = author.equalsIgnoreCase(creatorOf(issue));
+                boolean sameAuthor = author.equalsIgnoreCase(JiraIssueCriteria.creatorOf(issue));
                 if (dto.prevStillOpen == null && open) {
                     dto.prevStillOpen = issue.key;
                 }
@@ -190,7 +161,7 @@ public class JiraIssueService {
             for (int i = fromIndex; i < issues.size(); i++) {
                 JiraIssueDTO issue = issues.get(i);
                 boolean open = isStillOpen(issue);
-                boolean sameAuthor = author.equalsIgnoreCase(creatorOf(issue));
+                boolean sameAuthor = author.equalsIgnoreCase(JiraIssueCriteria.creatorOf(issue));
                 if (dto.nextStillOpen == null && open) {
                     dto.nextStillOpen = issue.key;
                 }
@@ -216,7 +187,7 @@ public class JiraIssueService {
                 result.add(issue);
             }
         });
-        result.sort(Comparator.comparing(issue -> issueNumberOf(issue.key), Comparator.nullsLast(Comparator.naturalOrder())));
+        result.sort(Comparator.comparing(issue -> JiraIssueCriteria.issueNumberOf(issue.key), Comparator.nullsLast(Comparator.naturalOrder())));
         return result;
     }
 
@@ -249,29 +220,12 @@ public class JiraIssueService {
 
     /** Lists the issues created between fromYear and toYear (inclusive), optionally filtered by creator username. */
     public List<JiraIssueDTO> queryAnnotatedIssues(int fromYear, int toYear, String usernamePatternText) {
-        return queryAnnotatedIssues(fromYear, toYear, usernamePatternText, null, null, null);
-    }
-
-    /** Lists the issues created between fromYear and toYear (inclusive), optionally filtered by creator username,
-     * issue number range (the numeric suffix of the key), and/or a regex on the full issue key. */
-    public List<JiraIssueDTO> queryAnnotatedIssues(int fromYear, int toYear, String usernamePatternText,
-            Integer fromNumber, Integer toNumber, String keyPatternText) {
-        return queryAnnotatedIssues(fromYear, toYear, usernamePatternText, fromNumber, toNumber, keyPatternText, null);
-    }
-
-    /** Same as above, plus the Main/Analysis/Development Work/Personal Interest filter criteria from the issues-list page. */
-    public List<JiraIssueDTO> queryAnnotatedIssues(int fromYear, int toYear, String usernamePatternText,
-            Integer fromNumber, Integer toNumber, String keyPatternText, IssuesCriteriaDTO criteria) {
+        IssuesCriteriaDTO c = new IssuesCriteriaDTO();
+        c.usernamePattern = usernamePatternText;
+        JiraIssueCriteria issueCriteria = new JiraIssueCriteria(c);
         List<JiraIssueDTO> result = new ArrayList<>();
-        Pattern usernamePattern = compilePattern(usernamePatternText);
-        Pattern keyPattern = compilePattern(keyPatternText);
-        JiraIssueCriteria issueCriteria = new JiraIssueCriteria(criteria);
         repository.scanIssues(fromYear, toYear, (year, issue) -> {
-            boolean matches = (usernamePattern == null || usernamePattern.matcher(creatorOf(issue)).matches())
-                    && (keyPattern == null || (issue.key != null && keyPattern.matcher(issue.key).matches()))
-                    && matchesNumberRange(issue.key, fromNumber, toNumber)
-                    && issueCriteria.test(issue);
-            if (matches) {
+            if (issueCriteria.test(issue)) {
                 result.add(issue);
             }
         });
@@ -303,20 +257,12 @@ public class JiraIssueService {
     private List<JiraIssueDTO> queryIssuesMatching(IssuesCriteriaDTO c, int limit) {
         int fromYear = c != null && c.fromYear != null ? c.fromYear : 2020;
         int toYear = c != null && c.toYear != null ? c.toYear : 2050;
-        Pattern usernamePattern = c != null ? compilePattern(c.usernamePattern) : null;
-        Pattern keyPattern = c != null ? compilePattern(c.keyPattern) : null;
-        Integer fromNumber = c != null ? c.fromNumber : null;
-        Integer toNumber = c != null ? c.toNumber : null;
         JiraIssueCriteria issueCriteria = new JiraIssueCriteria(c);
         List<JiraIssueDTO> result = new ArrayList<>();
         // partition pruning: scan from the most recent partition (toYear) backwards, stopping as
         // soon as the limit is reached, so older partitions are never loaded once satisfied.
         repository.scanIssuesFromMostRecent(fromYear, toYear, (year, issue) -> {
-            boolean matches = (usernamePattern == null || usernamePattern.matcher(creatorOf(issue)).matches())
-                    && (keyPattern == null || (issue.key != null && keyPattern.matcher(issue.key).matches()))
-                    && matchesNumberRange(issue.key, fromNumber, toNumber)
-                    && issueCriteria.test(issue);
-            if (matches) {
+            if (issueCriteria.test(issue)) {
                 result.add(issue);
             }
             return result.size() < limit;
@@ -333,48 +279,6 @@ public class JiraIssueService {
         }
         dto.statsPerYear = stats;
         return dto;
-    }
-
-    /** Whether the numeric suffix of the key (eg "123" in "PROJ-123") falls within [fromNumber, toNumber] (inclusive, either bound optional). */
-    private static boolean matchesNumberRange(String key, Integer fromNumber, Integer toNumber) {
-        if (fromNumber == null && toNumber == null) {
-            return true;
-        }
-        Integer number = issueNumberOf(key);
-        if (number == null) {
-            return false;
-        }
-        if (fromNumber != null && number < fromNumber) {
-            return false;
-        }
-        if (toNumber != null && number > toNumber) {
-            return false;
-        }
-        return true;
-    }
-
-    private static Integer issueNumberOf(String key) {
-        if (key == null) {
-            return null;
-        }
-        int dashIdx = key.lastIndexOf('-');
-        if (dashIdx < 0 || dashIdx == key.length() - 1) {
-            return null;
-        }
-        try {
-            return Integer.parseInt(key.substring(dashIdx + 1));
-        } catch (NumberFormatException e) {
-            return null;
-        }
-    }
-
-    /** The issue creator's username, falling back to the reporter, when missing. */
-    private static String creatorOf(JiraIssueDTO issue) {
-        String name = issue.fields != null ? issue.fields.creator : null;
-        if (name == null || name.isBlank()) {
-            name = issue.fields != null ? issue.fields.reporter : null;
-        }
-        return name != null && !name.isBlank() ? name : UNKNOWN_USER;
     }
 
     public List<JiraIssueAnnotationDTO> listIssueAnnotations(int fromYear, int toYear) {
@@ -409,11 +313,6 @@ public class JiraIssueService {
 
     public void removeAnnotation(String key) {
         repository.removeAnnotation(key);
-    }
-
-    public @NonNull ClaudeCodePromptResponseDTO launchClaudeJiraAnalysis(String jiraKey) throws IOException, InterruptedException {
-        return new ClaudeCodePromptResponseDTO(
-                claudeCodePromptInvokerService.invokePrompt("/jira-analysis " + jiraKey, CLAUDE_JIRA_ANALYSIS_ALLOWED_TOOLS));
     }
 
 }

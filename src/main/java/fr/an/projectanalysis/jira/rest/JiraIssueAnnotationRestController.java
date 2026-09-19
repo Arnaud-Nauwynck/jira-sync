@@ -2,6 +2,7 @@ package fr.an.projectanalysis.jira.rest;
 
 import fr.an.projectanalysis.jira.rest.dtos.JiraIssueAnnotationDTO;
 import fr.an.projectanalysis.jira.rest.dtos.PersonalInterrestCommentDTO;
+import fr.an.projectanalysis.jira.service.JiraAnalysisLauncher;
 import fr.an.projectanalysis.jira.service.JiraIssueService;
 import fr.an.projectanalysis.rest.dtos.ClaudeCodePromptResponseDTO;
 import fr.an.projectanalysis.util.AbstractRestController;
@@ -23,9 +24,12 @@ public class JiraIssueAnnotationRestController extends AbstractRestController {
 
     private final JiraIssueService delegate;
 
-    public JiraIssueAnnotationRestController(JiraIssueService delegate) {
+    private final JiraAnalysisLauncher jiraAnalysisLauncher;
+
+    public JiraIssueAnnotationRestController(JiraIssueService delegate, JiraAnalysisLauncher jiraAnalysisLauncher) {
         super(BASE_URL);
         this.delegate = delegate;
+        this.jiraAnalysisLauncher = jiraAnalysisLauncher;
     }
 
 
@@ -62,7 +66,7 @@ public class JiraIssueAnnotationRestController extends AbstractRestController {
     @PostMapping("/launch-claude-jira-analysis")
     public ClaudeCodePromptResponseDTO launchClaudeJiraAnalysis(@RequestParam(name = "jiraKey") String jiraKey) {
         return withLog(log, "POST", "/launch-claude-jira-analysis", "jiraKey=" + jiraKey,
-                () -> delegate.launchClaudeJiraAnalysis(jiraKey));
+                () -> jiraAnalysisLauncher.launchClaudeJiraAnalysis(jiraKey));
     }
 
 }

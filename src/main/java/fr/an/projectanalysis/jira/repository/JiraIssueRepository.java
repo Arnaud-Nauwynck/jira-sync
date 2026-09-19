@@ -11,6 +11,7 @@ import fr.an.projectanalysis.jira.rest.dtos.JiraIssueDTO;
 import fr.an.projectanalysis.jira.rest.dtos.YearCountDTO;
 import fr.an.projectanalysis.service.JiraIssueChange;
 import fr.an.projectanalysis.service.RecentChangeLogService;
+import fr.an.projectanalysis.util.YearPartitionUtils;
 import jakarta.annotation.Nonnull;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,17 +21,11 @@ import org.springframework.stereotype.Component;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.io.UncheckedIOException;
-import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -38,11 +33,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-import java.util.zip.ZipOutputStream;
 
 /**
  * Reads, writes and queries the Jira issues persisted to disk, partitioned by issue creation year
@@ -64,12 +54,8 @@ import java.util.zip.ZipOutputStream;
 @Slf4j
 public class JiraIssueRepository {
 
-    static final String PARTITION_PREFIX = "created_year=";
-    static final int UNKNOWN_YEAR = -1;
-    private static final String SNAPSHOT_FILE = "data.ndjson.zip";
-    private static final String SNAPSHOT_ENTRY = "data.ndjson";
-    private static final String CHANGES_FILE = "changes.ndjson";
-    private static final String STATS_FILE = "data-stats.json";
+    static final int UNKNOWN_YEAR = YearPartitionUtils.UNKNOWN_YEAR;
+    private static final String STATS_FILE = YearPartitionUtils.STATS_FILE;
 
     private final ObjectMapper mapper;
 
@@ -255,31 +241,12 @@ public class JiraIssueRepository {
 
     /** Lists the years of the "created_year=yyyy" partitions currently present on disk. */
     public List<Integer> findAllPartitionYears() {
-        if (!Files.exists(baseDir)) {
-            return List.of();
-        }
-        try (Stream<Path> dirs = Files.list(baseDir)) {
-            return dirs.filter(Files::isDirectory)
-                    .map(p -> p.getFileName().toString())
-                    .filter(name -> name.startsWith(PARTITION_PREFIX))
-                    .map(JiraIssueRepository::parseYear)
-                    .sorted()
-                    .collect(Collectors.toList());
-        } catch (IOException e) {
-            throw new UncheckedIOException("failed to list " + baseDir, e);
-        }
+        return YearPartitionUtils.findAllPartitionYears(baseDir);
     }
 
     /** Lists the partition years within [fromYear, toYear] that currently exist on disk. */
     public List<Integer> findPartitionYearBetween(int fromYear, int toYear) {
-        List<Integer> res = new ArrayList<>();
-        List<Integer> allPartitions = findAllPartitionYears();
-        for (int year : allPartitions) {
-            if (year >= fromYear && year <= toYear) {
-                res.add(year);
-            }
-        }
-        return res;
+        return YearPartitionUtils.findPartitionYearBetween(baseDir, fromYear, toYear);
     }
 
     /** Count, and lowest/highest issue number, per "created_year" partition, from the in-memory stats
@@ -296,18 +263,13 @@ public class JiraIssueRepository {
             return;
         }
         Path statsFile = baseDir.resolve(STATS_FILE);
-        if (Files.exists(statsFile)) {
-            try {
-                String json = Files.readString(statsFile, StandardCharsets.UTF_8);
-                StatsFile loaded = mapper.readValue(json, StatsFile.class);
-                if (loaded.partitionStats != null) {
-                    partitionStats.putAll(loaded.partitionStats);
-                }
-                partitionStatsLoaded = true;
-                return;
-            } catch (Exception e) {
-                log.warn("failed to read {}, recomputing from partitions", statsFile, e);
+        StatsFile loaded = YearPartitionUtils.readJsonFileOrNull(mapper, statsFile, StatsFile.class, log);
+        if (loaded != null) {
+            if (loaded.partitionStats != null) {
+                partitionStats.putAll(loaded.partitionStats);
             }
+            partitionStatsLoaded = true;
+            return;
         }
         for (int year : findAllPartitionYears()) {
             partitionStats.put(year, recomputePartitionStats(year));
@@ -454,25 +416,7 @@ public class JiraIssueRepository {
     }
 
     private void readSnapshot(int year, Map<String, JiraIssueDTO> target) {
-        Path zipFile = snapshotFile(year);
-        if (!Files.exists(zipFile)) {
-            return;
-        }
-        try (ZipInputStream zis = new ZipInputStream(Files.newInputStream(zipFile), StandardCharsets.UTF_8)) {
-            ZipEntry entry = zis.getNextEntry();
-            if (entry == null) {
-                return;
-            }
-            BufferedReader reader = new BufferedReader(new InputStreamReader(zis, StandardCharsets.UTF_8));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (line.isBlank()) continue;
-                JiraIssueDTO issue = mapper.readValue(line, JiraIssueDTO.class);
-                target.put(issue.key, issue);
-            }
-        } catch (IOException e) {
-            throw new UncheckedIOException("failed to read snapshot " + zipFile, e);
-        }
+        YearPartitionUtils.readSnapshot(mapper, baseDir, year, JiraIssueDTO.class, issue -> issue.key, target);
     }
 
     public enum IssueChangeType {
@@ -611,61 +555,19 @@ public class JiraIssueRepository {
     }
 
     private void appendChange(int year, IssueChangeRecord chgRecord) {
-        String appendText = "\n" + mapper.writeValueAsString(chgRecord) + "\n";
-        try {
-            Files.createDirectories(partitionDir(year));
-            synchronized(changeFileLock) {
-                Files.writeString(changesFile(year), appendText, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
-            }
-        } catch (IOException e) {
-            throw new UncheckedIOException("failed to append change for " + chgRecord.key() + " in " + partitionDirName(year), e);
-        }
+        YearPartitionUtils.appendChangeLine(mapper, baseDir, year, chgRecord, changeFileLock, chgRecord.key());
     }
 
     private void writeSnapshot(int year, Collection<JiraIssueDTO> issues) {
-        Path dir = partitionDir(year);
-        Path zipFile = snapshotFile(year);
-        Path tmpFile = dir.resolve(SNAPSHOT_FILE + ".tmp");
-        try {
-            Files.createDirectories(dir);
-            try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(tmpFile), StandardCharsets.UTF_8)) {
-                zos.putNextEntry(new ZipEntry(SNAPSHOT_ENTRY));
-                Writer writer = new OutputStreamWriter(zos, StandardCharsets.UTF_8);
-                for (JiraIssueDTO issue : issues) {
-                    writer.write(mapper.writeValueAsString(issue));
-                    writer.write("\n");
-                }
-                writer.flush();
-                zos.closeEntry();
-            }
-            Files.move(tmpFile, zipFile, StandardCopyOption.REPLACE_EXISTING);
-        } catch (IOException e) {
-            throw new UncheckedIOException("failed to write snapshot for " + partitionDirName(year), e);
-        }
-    }
-
-    private Path partitionDir(int year) {
-        return baseDir.resolve(partitionDirName(year));
-    }
-
-    private Path snapshotFile(int year) {
-        return partitionDir(year).resolve(SNAPSHOT_FILE);
+        YearPartitionUtils.writeSnapshot(mapper, baseDir, year, issues);
     }
 
     private Path changesFile(int year) {
-        return partitionDir(year).resolve(CHANGES_FILE);
+        return YearPartitionUtils.changesFile(baseDir, year);
     }
 
     static String partitionDirName(int year) {
-        return year == UNKNOWN_YEAR ? PARTITION_PREFIX + "unknown" : PARTITION_PREFIX + year;
-    }
-
-    private static int parseYear(String partitionDirName) {
-        try {
-            return Integer.parseInt(partitionDirName.substring(PARTITION_PREFIX.length()));
-        } catch (NumberFormatException e) {
-            return UNKNOWN_YEAR;
-        }
+        return YearPartitionUtils.partitionDirName(year);
     }
 
     /** Streams every issue whose "created_year" partition falls within [fromYear, toYear] to the callback. */

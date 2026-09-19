@@ -31,31 +31,26 @@ public abstract class AbstractRestController {
         this.baseUrl = baseUrl;
     }
 
-    /** Runs {@code action}, logging the endpoint call before and after (with elapsed time). */
+    /** Runs {@code action}, logging the endpoint call at debug level before, and after (with elapsed time). */
     protected <T> T withLogDebug(Logger log, String method, String path, String paramsText, ThrowingSupplier<T> action) {
-        String endpointUrl = baseUrl + path;
-        String endpointCallMsg = "http " + method + " " + endpointUrl + ((paramsText != null && !paramsText.isBlank()) ? " " + paramsText : "");
-        log.debug(endpointCallMsg);
-        long startTime = System.currentTimeMillis();
-        try {
-            T result = action.get();
-            long millis = System.currentTimeMillis() - startTime;
-            if (millis > 300) {
-                log.info("... done " + endpointCallMsg + " (took " + millis + " ms)");
-            }
-            return result;
-        } catch (Exception ex) {
-            long millis = System.currentTimeMillis() - startTime;
-            log.error("... Failed " + endpointCallMsg + " (took " + millis + " ms), rethrowing " + ex.getMessage());
-            throw (ex instanceof RuntimeException re) ? re : new RuntimeException(ex);
-        }
+        return doWithLog(log, false, method, path, paramsText, action);
     }
 
     /** Runs {@code action}, logging the endpoint call before and after (with elapsed time). */
     protected <T> T withLog(Logger log, String method, String path, String paramsText, ThrowingSupplier<T> action) {
+        return doWithLog(log, true, method, path, paramsText, action);
+    }
+
+    /** Only the level of the "call started" line differs between {@link #withLog} and {@link #withLogDebug};
+     * the "done" (when slow) and "Failed" lines are always logged at info/error level. */
+    private <T> T doWithLog(Logger log, boolean infoLevel, String method, String path, String paramsText, ThrowingSupplier<T> action) {
         String endpointUrl = baseUrl + path;
         String endpointCallMsg = "http " + method + " " + endpointUrl + ((paramsText != null && !paramsText.isBlank()) ? " " + paramsText : "");
-        log.info(endpointCallMsg);
+        if (infoLevel) {
+            log.info(endpointCallMsg);
+        } else {
+            log.debug(endpointCallMsg);
+        }
         long startTime = System.currentTimeMillis();
         try {
             T result = action.get();

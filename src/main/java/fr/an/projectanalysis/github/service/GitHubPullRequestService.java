@@ -10,6 +10,7 @@ import fr.an.projectanalysis.github.rest.dtos.GitHubPullRequestExtraFieldsDTO;
 import fr.an.projectanalysis.github.rest.dtos.NearbyGitHubPullRequestsDTO;
 import fr.an.projectanalysis.github.rest.dtos.UserGitHubPullRequestStatsDTO;
 import fr.an.projectanalysis.github.rest.dtos.YearCountDTO;
+import fr.an.projectanalysis.util.CritUtils;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -23,8 +24,6 @@ import java.util.stream.Collectors;
 
 @Component
 public class GitHubPullRequestService {
-
-    private static final String UNKNOWN_USER = "unknown";
 
     private static final int DEFAULT_LIMIT = 1000;
 
@@ -48,7 +47,7 @@ public class GitHubPullRequestService {
      */
     public NearbyGitHubPullRequestsDTO findNearbyPullRequests(int number) {
         GitHubPullRequestDTO target = repository.getByNumber(number);
-        String author = authorOf(target);
+        String author = GitHubPrCriteria.authorOf(target);
 
         List<GitHubPullRequestDTO> allPrs = repository.findAll().stream()
                 .sorted(Comparator.comparingInt(pr -> pr.number))
@@ -69,7 +68,7 @@ public class GitHubPullRequestService {
         for (int i = targetIndex - 1; i >= 0; i--) {
             GitHubPullRequestDTO pr = allPrs.get(i);
             boolean open = isStillOpen(pr);
-            boolean sameAuthor = author.equalsIgnoreCase(authorOf(pr));
+            boolean sameAuthor = author.equalsIgnoreCase(GitHubPrCriteria.authorOf(pr));
             if (dto.prevStillOpen == null && open) {
                 dto.prevStillOpen = pr.number;
             }
@@ -86,7 +85,7 @@ public class GitHubPullRequestService {
         for (int i = targetIndex + 1; i < allPrs.size(); i++) {
             GitHubPullRequestDTO pr = allPrs.get(i);
             boolean open = isStillOpen(pr);
-            boolean sameAuthor = author.equalsIgnoreCase(authorOf(pr));
+            boolean sameAuthor = author.equalsIgnoreCase(GitHubPrCriteria.authorOf(pr));
             if (dto.nextStillOpen == null && open) {
                 dto.nextStillOpen = pr.number;
             }
@@ -109,36 +108,12 @@ public class GitHubPullRequestService {
 
     /** Lists the PRs created between fromYear and toYear (inclusive), optionally filtered by author login. */
     public List<GitHubPullRequestDTO> queryPullRequests(int fromYear, int toYear, String usernamePatternText) {
-        return queryPullRequests(fromYear, toYear, usernamePatternText, null, null, null, null, null, null);
-    }
-
-    /** Lists the PRs created between fromYear and toYear (inclusive), optionally filtered by author login,
-     * PR number range, and/or a regex on the PR number (as text). */
-    public List<GitHubPullRequestDTO> queryPullRequests(int fromYear, int toYear, String usernamePatternText,
-            Integer fromPullRequestNumber, Integer toPullRequestNumber, String pullRequestNumberPatternText) {
-        return queryPullRequests(fromYear, toYear, usernamePatternText,
-                fromPullRequestNumber, toPullRequestNumber, pullRequestNumberPatternText, null, null, null);
-    }
-
-    /** Lists the PRs created between fromYear and toYear (inclusive), optionally filtered by author login,
-     * PR number range, a regex on the PR number (as text), the merged/mergeable tri-state flags, and/or a
-     * regex on the mergeable state (as text). */
-    public List<GitHubPullRequestDTO> queryPullRequests(int fromYear, int toYear, String usernamePatternText,
-            Integer fromPullRequestNumber, Integer toPullRequestNumber, String pullRequestNumberPatternText,
-            Boolean merged, Boolean mergeable, String mergeableStatePatternText) {
+        GitHubPrCriteriaDTO c = new GitHubPrCriteriaDTO();
+        c.usernamePattern = usernamePatternText;
+        GitHubPrCriteria criteria = new GitHubPrCriteria(c);
         List<GitHubPullRequestDTO> result = new ArrayList<>();
-        Pattern usernamePattern = compilePattern(usernamePatternText);
-        Pattern pullRequestNumberPattern = compilePattern(pullRequestNumberPatternText);
-        Pattern mergeableStatePattern = compilePattern(mergeableStatePatternText);
         repository.scanPullRequests(fromYear, toYear, (year, pr) -> {
-            boolean matches = (usernamePattern == null || usernamePattern.matcher(authorOf(pr)).matches())
-                    && (fromPullRequestNumber == null || pr.number >= fromPullRequestNumber)
-                    && (toPullRequestNumber == null || pr.number <= toPullRequestNumber)
-                    && (pullRequestNumberPattern == null || pullRequestNumberPattern.matcher(String.valueOf(pr.number)).matches())
-                    && (merged == null || merged.booleanValue() == pr.merged)
-                    && (mergeable == null || mergeable.equals(pr.mergeable))
-                    && (mergeableStatePattern == null || mergeableStatePattern.matcher(pr.mergeableState != null ? pr.mergeableState : "").matches());
-            if (matches) {
+            if (criteria.test(pr)) {
                 result.add(pr);
             }
         });
@@ -168,21 +143,12 @@ public class GitHubPullRequestService {
     private List<GitHubPullRequestDTO> queryPullRequestsMatching(GitHubPrCriteriaDTO c, int limit) {
         int fromYear = c != null && c.fromYear != null ? c.fromYear : 2020;
         int toYear = c != null && c.toYear != null ? c.toYear : 2050;
-        Pattern usernamePattern = c != null ? compilePattern(c.usernamePattern) : null;
-        Pattern pullRequestNumberPattern = c != null ? compilePattern(c.pullRequestNumberPattern) : null;
-        Integer fromPullRequestNumber = c != null ? c.fromPullRequestNumber : null;
-        Integer toPullRequestNumber = c != null ? c.toPullRequestNumber : null;
         GitHubPrCriteria criteria = new GitHubPrCriteria(c);
         List<GitHubPullRequestDTO> result = new ArrayList<>();
         // partition pruning: scan from the most recent partition (toYear) backwards, stopping as
         // soon as the limit is reached, so older partitions are never loaded once satisfied.
         repository.scanPullRequestsFromMostRecent(fromYear, toYear, (year, pr) -> {
-            boolean matches = (usernamePattern == null || usernamePattern.matcher(authorOf(pr)).matches())
-                    && (fromPullRequestNumber == null || pr.number >= fromPullRequestNumber)
-                    && (toPullRequestNumber == null || pr.number <= toPullRequestNumber)
-                    && (pullRequestNumberPattern == null || pullRequestNumberPattern.matcher(String.valueOf(pr.number)).matches())
-                    && criteria.test(pr);
-            if (matches) {
+            if (criteria.test(pr)) {
                 result.add(pr);
             }
             return result.size() < limit;
@@ -201,23 +167,14 @@ public class GitHubPullRequestService {
         return dto;
     }
 
-    private static Pattern compilePattern(String patternText) {
-        return (patternText != null && !patternText.isBlank()) ? Pattern.compile(patternText) : null;
-    }
-
-    private static String authorOf(GitHubPullRequestDTO pr) {
-        String login = pr.authorLogin;
-        return login != null && !login.isBlank() ? login : UNKNOWN_USER;
-    }
-
     /** Count PRs created per author, for PRs created between fromYear and toYear (inclusive), optionally filtered by author login. */
     public Collection<UserGitHubPullRequestStatsDTO> queryUserPullRequestStats(
             int fromYear, int toYear, String usernamePatternText) {
         Map<String, UserGitHubPullRequestStatsDTO> tmp = new LinkedHashMap<>();
-        Pattern usernamePattern = compilePattern(usernamePatternText);
+        Pattern usernamePattern = CritUtils.compilePattern(usernamePatternText);
         repository.scanPullRequests(fromYear, toYear, (year, pr) -> {
-            String user = authorOf(pr);
-            if (usernamePattern != null && !usernamePattern.matcher(user).matches()) {
+            String user = GitHubPrCriteria.authorOf(pr);
+            if (!CritUtils.matchesRegex(usernamePattern, user)) {
                 return;
             }
             UserGitHubPullRequestStatsDTO statPerUser = tmp.computeIfAbsent(user, UserGitHubPullRequestStatsDTO::new);

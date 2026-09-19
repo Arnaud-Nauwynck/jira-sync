@@ -2,29 +2,49 @@ package fr.an.projectanalysis.mailinglist.service;
 
 import fr.an.projectanalysis.mailinglist.rest.dtos.MailMessageCriteriaDTO;
 import fr.an.projectanalysis.mailinglist.rest.dtos.MailMessageDTO;
-import fr.an.projectanalysis.mailinglist.rest.dtos.MailMessageExtraFieldsDTO;
+import fr.an.projectanalysis.util.AnnotatedCritUtils;
 import fr.an.projectanalysis.util.CritUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 /**
- * Whether a {@link MailMessageDTO} matches the Main/Analysis/Development Work/Personal Interest
- * filter criteria of the mailing-list page (a null criteria matches everything).
+ * Whether a {@link MailMessageDTO} matches the Data Fetching + Main/Analysis/Development Work/
+ * Personal Interest filter criteria of the mailing-list page (a null criteria matches everything).
  */
 public class MailMessageCriteria implements Predicate<MailMessageDTO> {
 
     private final MailMessageCriteriaDTO c;
 
+    /** The "data fetching" patterns are searched anywhere in the value, not full-matched. */
+    private final Pattern fromPattern;
+
+    private final Pattern subjectPattern;
+
+    private final Pattern bodyPattern;
+
     public MailMessageCriteria(MailMessageCriteriaDTO c) {
         this.c = c;
+        this.fromPattern = c != null ? CritUtils.compilePattern(c.fromPattern) : null;
+        this.subjectPattern = c != null ? CritUtils.compilePattern(c.subjectPattern) : null;
+        this.bodyPattern = c != null ? CritUtils.compilePattern(c.bodyPattern) : null;
     }
 
     @Override
     public boolean test(MailMessageDTO msg) {
         if (c == null) {
             return true;
+        }
+        if (!CritUtils.findsRegex(fromPattern, msg.from)) {
+            return false;
+        }
+        if (!CritUtils.findsRegex(subjectPattern, msg.subject)) {
+            return false;
+        }
+        if (!CritUtils.findsRegex(bodyPattern, msg.bodyText)) {
+            return false;
         }
         if (!CritUtils.matchesAny(c.subjectContains, msg.subject)) {
             return false;
@@ -46,61 +66,7 @@ public class MailMessageCriteria implements Predicate<MailMessageDTO> {
             return false;
         }
 
-        MailMessageExtraFieldsDTO annotated = msg.annotated;
-        boolean hasAnalysis = annotated != null && annotated.analysisSummary != null && !annotated.analysisSummary.isBlank();
-        if (!CritUtils.matchesAvailability(c.analysisAvailability, hasAnalysis)) {
-            return false;
-        }
-        if (!CritUtils.matchesAny(c.analysisSummaryContains, annotated != null ? annotated.analysisSummary : null)) {
-            return false;
-        }
-        if (!CritUtils.matchesDateRange(c.analysisSummaryUpdatedFrom, c.analysisSummaryUpdatedTo,
-                annotated != null ? annotated.analysisSummaryLastUpdateTime : null)) {
-            return false;
-        }
-        if (!CritUtils.matchesTokensRangeK(c.analysisSummaryMinTokensK, c.analysisSummaryMaxTokensK,
-                annotated != null ? annotated.analysisSummaryTokensConsumed : 0)) {
-            return false;
-        }
-        List<String> analysisExtraPrompts = annotated != null && annotated.analysisUserExtraPrompts != null
-                ? annotated.analysisUserExtraPrompts : List.of();
-        if (!CritUtils.matchesAny(c.analysisUserExtraPromptsContains, analysisExtraPrompts.toArray(String[]::new))) {
-            return false;
-        }
-
-        boolean hasDevWork = annotated != null && annotated.developmentWorkDescribed != null && !annotated.developmentWorkDescribed.isBlank();
-        if (!CritUtils.matchesAvailability(c.developmentWorkAvailability, hasDevWork)) {
-            return false;
-        }
-        if (!CritUtils.matchesAny(c.developmentWorkDescribedContains, annotated != null ? annotated.developmentWorkDescribed : null)) {
-            return false;
-        }
-        if (!CritUtils.matchesDateRange(c.developmentWorkUpdatedFrom, c.developmentWorkUpdatedTo,
-                annotated != null ? annotated.developmentWorkLastUpdateTime : null)) {
-            return false;
-        }
-        if (!CritUtils.matchesTokensRangeK(c.developmentWorkMinTokensK, c.developmentWorkMaxTokensK,
-                annotated != null ? annotated.developmentWorkTokensConsumed : 0)) {
-            return false;
-        }
-        List<String> devWorkExtraPrompts = annotated != null && annotated.developmentWorkUserExtraPrompts != null
-                ? annotated.developmentWorkUserExtraPrompts : List.of();
-        if (!CritUtils.matchesAny(c.developmentWorkUserExtraPromptsContains, devWorkExtraPrompts.toArray(String[]::new))) {
-            return false;
-        }
-
-        boolean hasPersonalInterrest = annotated != null && annotated.personalInterrestComment != null && !annotated.personalInterrestComment.isBlank();
-        if (!CritUtils.matchesAvailability(c.personalInterrestAvailability, hasPersonalInterrest)) {
-            return false;
-        }
-        if (!CritUtils.matchesAny(c.personalInterrestCommentContains, annotated != null ? annotated.personalInterrestComment : null)) {
-            return false;
-        }
-        if (!CritUtils.matchesNumberRange(c.personalInterrestMinPriority, c.personalInterrestMaxPriority,
-                annotated != null ? annotated.personalInterrestPriority10 : null)) {
-            return false;
-        }
-        return true;
+        return AnnotatedCritUtils.matchesAnnotations(c, msg.annotated);
     }
 
 }

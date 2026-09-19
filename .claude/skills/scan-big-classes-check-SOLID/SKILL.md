@@ -1,6 +1,8 @@
 ---
 name: scan-big-classes-check-SOLID
 description: Scans (src/main/java) for classes over 400 lines of code, lists them by size, then runs the check-SOLID-class review against each to flag Single-Responsibility and other SOLID violations. Use when asked to find oversized classes, audit the codebase for SOLID compliance, or find refactor candidates.
+model: claude-3-5-opus # or claude-3-5-sonnet, claude-3-opus, etc.
+context: fork # Optional: runs the skill in an isolated subagent
 ---
 
 ## Scope

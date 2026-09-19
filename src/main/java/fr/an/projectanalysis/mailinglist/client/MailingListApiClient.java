@@ -3,6 +3,7 @@ package fr.an.projectanalysis.mailinglist.client;
 import fr.an.projectanalysis.mailinglist.client.dtos.SourceMailMessageDTO;
 import fr.an.projectanalysis.mailinglist.configuration.MailingListSyncProperties;
 import fr.an.projectanalysis.mailinglist.mapper.MimeMessageToSourceMailMessageMapper;
+import fr.an.projectanalysis.util.HttpApiClientUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.stream.MimeConfig;
@@ -12,11 +13,9 @@ import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayInputStream;
 import java.net.URI;
-import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -71,9 +70,9 @@ public class MailingListApiClient {
 
     /** Downloads the raw mbox bytes for one calendar month ("yyyy-MM"), or an empty array if none archived. */
     private byte[] fetchMboxBytes(String yearMonth) throws Exception {
-        String pathAndQuery = "/api/mbox.lua?list=" + enc(props.getList())
-                + "&domain=" + enc(props.getDomain())
-                + "&d=" + enc(yearMonth)
+        String pathAndQuery = "/api/mbox.lua?list=" + HttpApiClientUtils.enc(props.getList())
+                + "&domain=" + HttpApiClientUtils.enc(props.getDomain())
+                + "&d=" + HttpApiClientUtils.enc(yearMonth)
                 + "&q=";
         for (int attempt = 1; ; attempt++) {
             HttpRequest.Builder rb = HttpRequest.newBuilder(URI.create(props.getApiBaseUrl() + pathAndQuery))
@@ -89,26 +88,13 @@ public class MailingListApiClient {
             if (sc == 200) return resp.body();
             if (sc == 404) return new byte[0];
             if ((sc == 429 || sc >= 500) && attempt <= 5) {
-                long backoff = retryAfterMs(resp, attempt);
+                long backoff = HttpApiClientUtils.retryAfterMs(resp, attempt);
                 log.warn("HTTP {} on {}, retry {} in {}ms", sc, pathAndQuery, attempt, backoff);
-                sleep(backoff);
+                HttpApiClientUtils.sleep(backoff);
                 continue;
             }
             throw new RuntimeException("HTTP " + sc + " on " + pathAndQuery);
         }
     }
 
-    private static String enc(String s) {
-        return URLEncoder.encode(s, StandardCharsets.UTF_8);
-    }
-
-    private static long retryAfterMs(HttpResponse<?> resp, int attempt) {
-        return resp.headers().firstValue("Retry-After")
-                .map(s -> Long.parseLong(s.trim()) * 1000L)
-                .orElse((long) Math.min(60_000, 1000L * (1L << attempt))); // 2s,4s,8s,...
-    }
-
-    private static void sleep(long ms) {
-        try { Thread.sleep(ms); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
-    }
 }

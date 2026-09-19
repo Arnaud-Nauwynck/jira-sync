@@ -11,6 +11,7 @@ import fr.an.projectanalysis.github.rest.dtos.GitHubPullRequestExtraFieldsDTO;
 import fr.an.projectanalysis.github.rest.dtos.YearCountDTO;
 import fr.an.projectanalysis.service.GithubPRChange;
 import fr.an.projectanalysis.service.RecentChangeLogService;
+import fr.an.projectanalysis.util.YearPartitionUtils;
 import jakarta.annotation.Nonnull;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,17 +19,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.ObjectMapper;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.io.UncheckedIOException;
-import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardOpenOption;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -39,11 +34,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-import java.util.zip.ZipOutputStream;
 
 /**
  * Reads, writes and queries the GitHub pull requests persisted to disk, partitioned by PR
@@ -61,12 +51,8 @@ import java.util.zip.ZipOutputStream;
 @Slf4j
 public class GitHubPullRequestRepository {
 
-    static final String PARTITION_PREFIX = "created_year=";
-    static final int UNKNOWN_YEAR = -1;
-    private static final String SNAPSHOT_FILE = "data.ndjson.zip";
-    private static final String SNAPSHOT_ENTRY = "data.ndjson";
-    private static final String CHANGES_FILE = "changes.ndjson";
-    private static final String STATS_FILE = "data-stats.json";
+    static final int UNKNOWN_YEAR = YearPartitionUtils.UNKNOWN_YEAR;
+    private static final String STATS_FILE = YearPartitionUtils.STATS_FILE;
 
     private final ObjectMapper mapper;
 
@@ -294,30 +280,12 @@ public class GitHubPullRequestRepository {
 
     /** Lists the partition years within [fromYear, toYear] that currently exist on disk. */
     public List<Integer> findPartitionYearBetween(int fromYear, int toYear) {
-        List<Integer> res = new ArrayList<>();
-        for (int year : findAllPartitionYears()) {
-            if (year >= fromYear && year <= toYear) {
-                res.add(year);
-            }
-        }
-        return res;
+        return YearPartitionUtils.findPartitionYearBetween(baseDir, fromYear, toYear);
     }
 
     /** Lists the years of the "created_year=yyyy" partitions currently present on disk. */
     public List<Integer> findAllPartitionYears() {
-        if (!Files.exists(baseDir)) {
-            return List.of();
-        }
-        try (Stream<Path> dirs = Files.list(baseDir)) {
-            return dirs.filter(Files::isDirectory)
-                    .map(p -> p.getFileName().toString())
-                    .filter(name -> name.startsWith(PARTITION_PREFIX))
-                    .map(GitHubPullRequestRepository::parseYear)
-                    .sorted()
-                    .collect(Collectors.toList());
-        } catch (IOException e) {
-            throw new UncheckedIOException("failed to list " + baseDir, e);
-        }
+        return YearPartitionUtils.findAllPartitionYears(baseDir);
     }
 
     /** Count, and lowest/highest PR number, per "created_year" partition, from the in-memory stats
@@ -334,18 +302,13 @@ public class GitHubPullRequestRepository {
             return;
         }
         Path statsFile = baseDir.resolve(STATS_FILE);
-        if (Files.exists(statsFile)) {
-            try {
-                String json = Files.readString(statsFile, StandardCharsets.UTF_8);
-                StatsFile loaded = mapper.readValue(json, StatsFile.class);
-                if (loaded.partitionStats != null) {
-                    partitionStats.putAll(loaded.partitionStats);
-                }
-                partitionStatsLoaded = true;
-                return;
-            } catch (Exception e) {
-                log.warn("failed to read {}, recomputing from partitions", statsFile, e);
+        StatsFile loaded = YearPartitionUtils.readJsonFileOrNull(mapper, statsFile, StatsFile.class, log);
+        if (loaded != null) {
+            if (loaded.partitionStats != null) {
+                partitionStats.putAll(loaded.partitionStats);
             }
+            partitionStatsLoaded = true;
+            return;
         }
         recomputeAllPartitionStats();
         partitionStatsLoaded = true;
@@ -471,25 +434,7 @@ public class GitHubPullRequestRepository {
     }
 
     private void readSnapshot(int year, Map<Integer, GitHubPullRequestDTO> target) {
-        Path zipFile = snapshotFile(year);
-        if (!Files.exists(zipFile)) {
-            return;
-        }
-        try (ZipInputStream zis = new ZipInputStream(Files.newInputStream(zipFile), StandardCharsets.UTF_8)) {
-            ZipEntry entry = zis.getNextEntry();
-            if (entry == null) {
-                return;
-            }
-            BufferedReader reader = new BufferedReader(new InputStreamReader(zis, StandardCharsets.UTF_8));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (line.isBlank()) continue;
-                GitHubPullRequestDTO pr = mapper.readValue(line, GitHubPullRequestDTO.class);
-                target.put(pr.number, pr);
-            }
-        } catch (IOException e) {
-            throw new UncheckedIOException("failed to read snapshot " + zipFile, e);
-        }
+        YearPartitionUtils.readSnapshot(mapper, baseDir, year, GitHubPullRequestDTO.class, pr -> pr.number, target);
     }
 
     public enum PullRequestChangeType {
@@ -597,60 +542,18 @@ public class GitHubPullRequestRepository {
     }
 
     private void appendChange(int year, PullRequestChangeRecord chgRecord) {
-        String appendText = "\n" + mapper.writeValueAsString(chgRecord) + "\n";
-        try {
-            Files.createDirectories(partitionDir(year));
-            synchronized (changeFileLock) {
-                Files.writeString(changesFile(year), appendText, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
-            }
-        } catch (IOException e) {
-            throw new UncheckedIOException("failed to append change for #" + chgRecord.number() + " in " + partitionDirName(year), e);
-        }
+        YearPartitionUtils.appendChangeLine(mapper, baseDir, year, chgRecord, changeFileLock, "#" + chgRecord.number());
     }
 
     private void writeSnapshot(int year, Collection<GitHubPullRequestDTO> prs) {
-        Path dir = partitionDir(year);
-        Path zipFile = snapshotFile(year);
-        Path tmpFile = dir.resolve(SNAPSHOT_FILE + ".tmp");
-        try {
-            Files.createDirectories(dir);
-            try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(tmpFile), StandardCharsets.UTF_8)) {
-                zos.putNextEntry(new ZipEntry(SNAPSHOT_ENTRY));
-                Writer writer = new OutputStreamWriter(zos, StandardCharsets.UTF_8);
-                for (GitHubPullRequestDTO pr : prs) {
-                    writer.write(mapper.writeValueAsString(pr));
-                    writer.write("\n");
-                }
-                writer.flush();
-                zos.closeEntry();
-            }
-            Files.move(tmpFile, zipFile, StandardCopyOption.REPLACE_EXISTING);
-        } catch (IOException e) {
-            throw new UncheckedIOException("failed to write snapshot for " + partitionDirName(year), e);
-        }
-    }
-
-    private Path partitionDir(int year) {
-        return baseDir.resolve(partitionDirName(year));
-    }
-
-    private Path snapshotFile(int year) {
-        return partitionDir(year).resolve(SNAPSHOT_FILE);
+        YearPartitionUtils.writeSnapshot(mapper, baseDir, year, prs);
     }
 
     private Path changesFile(int year) {
-        return partitionDir(year).resolve(CHANGES_FILE);
+        return YearPartitionUtils.changesFile(baseDir, year);
     }
 
     static String partitionDirName(int year) {
-        return year == UNKNOWN_YEAR ? PARTITION_PREFIX + "unknown" : PARTITION_PREFIX + year;
-    }
-
-    private static int parseYear(String partitionDirName) {
-        try {
-            return Integer.parseInt(partitionDirName.substring(PARTITION_PREFIX.length()));
-        } catch (NumberFormatException e) {
-            return UNKNOWN_YEAR;
-        }
+        return YearPartitionUtils.partitionDirName(year);
     }
 }

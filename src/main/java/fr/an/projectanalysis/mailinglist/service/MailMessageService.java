@@ -11,6 +11,7 @@ import fr.an.projectanalysis.mailinglist.rest.dtos.MonthCountDTO;
 import fr.an.projectanalysis.mailinglist.rest.dtos.NearbyMailMessagesDTO;
 import fr.an.projectanalysis.mailinglist.rest.dtos.SenderCountDTO;
 import fr.an.projectanalysis.mailinglist.rest.dtos.UserMailMessageStatsDTO;
+import fr.an.projectanalysis.util.CritUtils;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -101,12 +102,14 @@ public class MailMessageService {
             String fromMonth, String toMonth,
             String fromPatternText, String subjectPatternText, String bodyPatternText
     ) {
+        MailMessageCriteriaDTO c = new MailMessageCriteriaDTO();
+        c.fromPattern = fromPatternText;
+        c.subjectPattern = subjectPatternText;
+        c.bodyPattern = bodyPatternText;
+        MailMessageCriteria messageCriteria = new MailMessageCriteria(c);
         List<MailMessageDTO> result = new ArrayList<>();
-        Pattern fromPattern = compileOrNull(fromPatternText);
-        Pattern subjectPattern = compileOrNull(subjectPatternText);
-        Pattern bodyPattern = compileOrNull(bodyPatternText);
         repository.scanMessages(fromMonth, toMonth, (month, msg) -> {
-            if (matches(fromPattern, msg.from) && matches(subjectPattern, msg.subject) && matches(bodyPattern, msg.bodyText)) {
+            if (messageCriteria.test(msg)) {
                 result.add(msg);
             }
         });
@@ -136,17 +139,12 @@ public class MailMessageService {
     private List<MailMessageDTO> queryMessagesMatching(MailMessageCriteriaDTO c, int limit) {
         String fromMonth = c != null ? c.fromMonth : null;
         String toMonth = c != null ? c.toMonth : null;
-        Pattern fromPattern = c != null ? compileOrNull(c.fromPattern) : null;
-        Pattern subjectPattern = c != null ? compileOrNull(c.subjectPattern) : null;
-        Pattern bodyPattern = c != null ? compileOrNull(c.bodyPattern) : null;
         MailMessageCriteria messageCriteria = new MailMessageCriteria(c);
         List<MailMessageDTO> result = new ArrayList<>();
         // partition pruning: scan from the most recent partition (toMonth) backwards, stopping as
         // soon as the limit is reached, so older partitions are never loaded once satisfied.
         repository.scanMessagesFromMostRecent(fromMonth, toMonth, (month, msg) -> {
-            boolean matches = matches(fromPattern, msg.from) && matches(subjectPattern, msg.subject) && matches(bodyPattern, msg.bodyText)
-                    && messageCriteria.test(msg);
-            if (matches) {
+            if (messageCriteria.test(msg)) {
                 result.add(msg);
             }
             return result.size() < limit;
@@ -170,14 +168,6 @@ public class MailMessageService {
         return dto;
     }
 
-    private static Pattern compileOrNull(String patternText) {
-        return (patternText != null && !patternText.isBlank()) ? Pattern.compile(patternText) : null;
-    }
-
-    private static boolean matches(Pattern pattern, String value) {
-        return pattern == null || (value != null && pattern.matcher(value).find());
-    }
-
     /**
      * Counts messages per sender (the raw {@code From} header), for messages archived between
      * fromYear and toYear (inclusive), optionally filtered by a regex matched (full match) against
@@ -187,12 +177,12 @@ public class MailMessageService {
             int fromYear, int toYear, String fromPatternText
     ) {
         Map<String, UserMailMessageStatsDTO> tmp = new LinkedHashMap<>();
-        Pattern fromPattern = compileOrNull(fromPatternText);
+        Pattern fromPattern = CritUtils.compilePattern(fromPatternText);
         String fromMonth = fromYear + "-01";
         String toMonth = toYear + "-12";
         repository.scanMessages(fromMonth, toMonth, (month, msg) -> {
             String user = senderOf(msg);
-            if (fromPattern != null && !fromPattern.matcher(user).matches()) {
+            if (!CritUtils.matchesRegex(fromPattern, user)) {
                 return;
             }
             UserMailMessageStatsDTO statPerUser = tmp.computeIfAbsent(user, UserMailMessageStatsDTO::new);

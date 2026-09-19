@@ -1,6 +1,7 @@
 package fr.an.projectanalysis.jira.rest.dtos;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import fr.an.projectanalysis.util.AnnotatedExtraFields;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -11,7 +12,7 @@ import java.util.List;
  */
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class IssueExtraFieldsDTO {
+public class IssueExtraFieldsDTO implements AnnotatedExtraFields {
 
     public String analysisSummary;
     public LocalDateTime analysisSummaryLastUpdateTime;
