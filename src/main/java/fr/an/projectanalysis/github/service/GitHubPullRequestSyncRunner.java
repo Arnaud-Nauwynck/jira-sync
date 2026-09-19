@@ -239,7 +239,7 @@ public class GitHubPullRequestSyncRunner {
      */
     public void completeMissingComments() {
         long startMillis = System.currentTimeMillis();
-        int completedCount = 0;
+        int completedTotalCount = 0;
         for (int year : prRepository.findAllPartitionYears()) {
             List<GitHubPullRequestDTO> prs = prRepository.findByPartitionYear(year, pr ->
                     pr.comments != null && pr.comments > 0
@@ -249,6 +249,7 @@ public class GitHubPullRequestSyncRunner {
             }
             log.info("completeMissingComments for year:" + year + ", found " + prs.size() + " to complete");
 
+            int completedCount = 0;
             for (GitHubPullRequestDTO pr : prs) {
                 try {
                     List<SourceGitHubIssueCommentDTO> comments = fetchIssueComments(pr.number, pr.comments);
@@ -266,12 +267,13 @@ public class GitHubPullRequestSyncRunner {
                     log.info("completeMissingComments progress for partition year {}: [{}/{}] PRs completed so far", year, completedCount, prs.size());
                 }
             }
+            completedTotalCount += completedCount;
         }
-        if (completedCount > 0) {
+        if (completedTotalCount > 0) {
             prRepository.compactAll();
         }
         int millis = (int) (System.currentTimeMillis() - startMillis);
-        log.info("done completeMissingComments, completed {} PRs, took {} ms", completedCount, millis);
+        log.info("done completeMissingComments, completed {} PRs, took {} ms", completedTotalCount, millis);
     }
 
     /**
@@ -283,7 +285,7 @@ public class GitHubPullRequestSyncRunner {
      */
     public void completeMissingIssueEvents() {
         long startMillis = System.currentTimeMillis();
-        int completedCount = 0;
+        int completedTotalCount = 0;
         for (int year : prRepository.findAllPartitionYears()) {
             List<GitHubPullRequestDTO> prs = prRepository.findByPartitionYear(year, pr -> pr.issueEventsData == null);
             if (prs.isEmpty()) {
@@ -292,6 +294,7 @@ public class GitHubPullRequestSyncRunner {
             log.info("completeMissingIssueEvents for year:" + year + ", found " + prs.size() + " to complete");
             sleep(syncDelayMs);
 
+            int completedCount = 0;
             for (GitHubPullRequestDTO pr : prs) {
                 try {
                     List<SourceGitHubIssueEventDTO> issueEvents = fetchIssueEvents(pr.number);
@@ -309,12 +312,13 @@ public class GitHubPullRequestSyncRunner {
                     log.info("completeMissingIssueEvents progress for partition year {}: [{}/{}] PRs completed so far", year, completedCount, prs.size());
                 }
             }
+            completedTotalCount += completedCount;
         }
-        if (completedCount > 0) {
+        if (completedTotalCount > 0) {
             prRepository.compactAll();
         }
         int millis = (int) (System.currentTimeMillis() - startMillis);
-        log.info("done completeMissingIssueEvents, completed {} PRs, took {} ms", completedCount, millis);
+        log.info("done completeMissingIssueEvents, completed {} PRs, took {} ms", completedTotalCount, millis);
     }
 
 
@@ -323,7 +327,7 @@ public class GitHubPullRequestSyncRunner {
      */
     public void completeMissingIssueCommits() {
         long startMillis = System.currentTimeMillis();
-        int completedCount = 0;
+        int completedTotalCount = 0;
         for (int year : prRepository.findAllPartitionYears()) {
             List<GitHubPullRequestDTO> prs = prRepository.findByPartitionYear(year, pr ->
                     pr.commits != null && pr.commits > 0 && (pr.issueEventsData == null || pr.commits == pr.issueEventsData.size()));
@@ -333,6 +337,7 @@ public class GitHubPullRequestSyncRunner {
             log.info("completeMissingIssueCommits for year:" + year + ", found " + prs.size() + " to complete");
             sleep(syncDelayMs);
 
+            int completedCount = 0;
             for (GitHubPullRequestDTO pr : prs) {
                 try {
                     List<SourceGitHubIssueEventDTO> issueEvents = fetchIssueEvents(pr.number);
@@ -350,12 +355,13 @@ public class GitHubPullRequestSyncRunner {
                     log.info("completeMissingIssueCommits progress for partition year {}: [{}/{}] PRs completed so far", year, completedCount, prs.size());
                 }
             }
+            completedTotalCount += completedCount;
         }
-        if (completedCount > 0) {
+        if (completedTotalCount > 0) {
             prRepository.compactAll();
         }
         int millis = (int) (System.currentTimeMillis() - startMillis);
-        log.info("done completeMissingIssueCommits, completed {} PRs, took {} ms", completedCount, millis);
+        log.info("done completeMissingIssueCommits, completed {} PRs, took {} ms", completedTotalCount, millis);
     }
 
 

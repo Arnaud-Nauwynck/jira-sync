@@ -596,11 +596,11 @@ public class MailMessageRepository {
         for (MailMessageChangeRecord chgRecord : chgRecords) {
             sb.append(mapper.writeValueAsString(chgRecord)).append("\n");
         }
+        String appendText = sb.toString();
         try {
             Files.createDirectories(partitionDir(month));
             synchronized (changeFileLock) {
-                Files.writeString(changesFile(month), sb.toString(),
-                        StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+                Files.writeString(changesFile(month), appendText, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
             }
         } catch (IOException e) {
             throw new UncheckedIOException("failed to append changes in " + partitionDirName(month), e);

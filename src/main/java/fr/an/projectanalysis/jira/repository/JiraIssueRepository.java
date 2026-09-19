@@ -541,7 +541,9 @@ public class JiraIssueRepository {
         }
         try {
             for (String line : Files.readAllLines(file, StandardCharsets.UTF_8)) {
-                if (line.isBlank()) continue;
+                if (line.isBlank()) {
+                    continue;
+                }
                 IssueChangeRecord rec;
                 try {
                     rec = mapper.readValue(line, IssueChangeRecord.class);
@@ -589,11 +591,11 @@ public class JiraIssueRepository {
     }
 
     private void appendChange(int year, IssueChangeRecord chgRecord) {
-        String line = mapper.writeValueAsString(chgRecord);
+        String appendText = "\n" + mapper.writeValueAsString(chgRecord) + "\n";
         try {
             Files.createDirectories(partitionDir(year));
             synchronized(changeFileLock) {
-                Files.writeString(changesFile(year), line + "\n", StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+                Files.writeString(changesFile(year), appendText, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
             }
         } catch (IOException e) {
             throw new UncheckedIOException("failed to append change for " + chgRecord.key() + " in " + partitionDirName(year), e);

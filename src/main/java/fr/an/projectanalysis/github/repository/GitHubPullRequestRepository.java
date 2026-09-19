@@ -530,7 +530,9 @@ public class GitHubPullRequestRepository {
         }
         try {
             for (String line : Files.readAllLines(file, StandardCharsets.UTF_8)) {
-                if (line.isBlank()) continue;
+                if (line.isBlank()) {
+                    continue;
+                }
                 PullRequestChangeRecord rec;
                 try {
                     rec = mapper.readValue(line, PullRequestChangeRecord.class);
@@ -562,12 +564,11 @@ public class GitHubPullRequestRepository {
     }
 
     private void appendChange(int year, PullRequestChangeRecord chgRecord) {
-        String line = mapper.writeValueAsString(chgRecord);
+        String appendText = "\n" + mapper.writeValueAsString(chgRecord) + "\n";
         try {
             Files.createDirectories(partitionDir(year));
             synchronized (changeFileLock) {
-                Files.writeString(changesFile(year), line + "\n",
-                        StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+                Files.writeString(changesFile(year), appendText, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
             }
         } catch (IOException e) {
             throw new UncheckedIOException("failed to append change for #" + chgRecord.number() + " in " + partitionDirName(year), e);
