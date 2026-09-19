@@ -2,6 +2,7 @@ package fr.an.projectanalysis.service;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import fr.an.projectanalysis.claude.service.ClaudeCodePromptStartChange;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
@@ -14,7 +15,9 @@ import java.time.LocalDateTime;
 @JsonSubTypes({
         @JsonSubTypes.Type(value = JiraIssueChange.class, name = "jiraIssue"),
         @JsonSubTypes.Type(value = GithubPRChange.class, name = "githubPR"),
-        @JsonSubTypes.Type(value = MailingListChange.class, name = "mailingList")
+        @JsonSubTypes.Type(value = MailingListChange.class, name = "mailingList"),
+        @JsonSubTypes.Type(value = ClaudeCodePromptStartChange.class, name = "claudeCodePrompt"),
+        @JsonSubTypes.Type(value = McpToolCallChange.class, name = "mcpToolCall")
 })
 @Getter
 public abstract class ChangeLogEvent {

@@ -39,8 +39,16 @@
 </style>
 
 <div class="module">
-  <div class="module-header">Analysis Summary</div>
+  <div class="module-header d-flex justify-content-between align-items-center">
+    <span>Analysis Summary</span>
+    <button type="button" class="btn btn-sm btn-primary" (click)="launchClaudeAnalysis()" [disabled]="launching() || !jiraKey">
+      {{ launching() ? 'Launching...' : 'Launch Claude Analysis' }}
+    </button>
+  </div>
   <div class="module-content">
+    @if (launchError()) {
+      <div class="text-danger mb-2">Failed to launch: {{ launchError() }}</div>
+    }
     @if (annotated?.analysisSummary) {
       <div class="description">{{ annotated?.analysisSummary }}</div>
       <dl class="side-dl mt-2">

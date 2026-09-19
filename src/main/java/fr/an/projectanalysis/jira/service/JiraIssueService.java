@@ -1,5 +1,6 @@
 package fr.an.projectanalysis.jira.service;
 
+import fr.an.projectanalysis.claude.service.ClaudeCodePromptInvokerService;
 import fr.an.projectanalysis.jira.repository.JiraIssueRepository;
 import fr.an.projectanalysis.jira.rest.dtos.IssueExtraFieldsDTO;
 import fr.an.projectanalysis.jira.rest.dtos.IssuesCriteriaDTO;
@@ -9,10 +10,13 @@ import fr.an.projectanalysis.jira.rest.dtos.JiraIssueAnnotationDTO;
 import fr.an.projectanalysis.jira.rest.dtos.JiraIssueDTO;
 import fr.an.projectanalysis.jira.rest.dtos.UserJiraIssueStatsDTO;
 import fr.an.projectanalysis.jira.rest.dtos.YearCountDTO;
+import fr.an.projectanalysis.rest.dtos.ClaudeCodePromptResponseDTO;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -45,10 +49,25 @@ public class JiraIssueService {
             "Won't Fix", "Won't Do", "Later", "Duplicate", "Resolved", "Not A Bug", "Abandoned", "Auto Closed",
             "WorkAround", "Workaround", "Implemented", "Information Provided", "");
 
+    /** Tools "/jira-analysis" needs (issue lookup, writing the analysis back to Jira, git-log
+     * correlation, and saving its local markdown report), pre-approved so the headless CLI does
+     * not block on a permission prompt it has no TTY to show. */
+    private static final List<String> CLAUDE_JIRA_ANALYSIS_ALLOWED_TOOLS = List.of(
+            "mcp__annotated-jira__findIssueByKey", //
+            "mcp__annotated-jira__getJiraAnnotationFields", //
+            "mcp__annotated-jira__setJiraAnnotationSummarised", //
+            "Bash", //
+            "Write" // for end result as text files
+    );
+
     private final JiraIssueRepository repository;
 
-    public JiraIssueService(JiraIssueRepository repository) {
+    private final ClaudeCodePromptInvokerService claudeCodePromptInvokerService;
+
+    public JiraIssueService(JiraIssueRepository repository,
+                            ClaudeCodePromptInvokerService claudeCodePromptInvokerService) {
         this.repository = repository;
+        this.claudeCodePromptInvokerService = claudeCodePromptInvokerService;
     }
 
     public Collection<UserJiraIssueStatsDTO> queryUserIssueStats(
@@ -479,6 +498,11 @@ public class JiraIssueService {
 
     public void removeAnnotation(String key) {
         repository.removeAnnotation(key);
+    }
+
+    public @NonNull ClaudeCodePromptResponseDTO launchClaudeJiraAnalysis(String jiraKey) throws IOException, InterruptedException {
+        return new ClaudeCodePromptResponseDTO(
+                claudeCodePromptInvokerService.invokePrompt("/jira-analysis " + jiraKey, CLAUDE_JIRA_ANALYSIS_ALLOWED_TOOLS));
     }
 
 }

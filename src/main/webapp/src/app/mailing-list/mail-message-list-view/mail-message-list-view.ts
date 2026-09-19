@@ -3,11 +3,12 @@ import { AgGridAngular } from 'ag-grid-angular';
 import type { ColDef, GridApi, GridReadyEvent, IRowNode } from 'ag-grid-community';
 import { MailMessageCriteriaDTO, MailMessageDTO } from '../../rest';
 import { MailingListCriteria } from '../service/MailingListCriteria';
+import { ResizableHeightDirective } from '../../utils/resizable-height.directive';
 
 /** The ag-grid list of mailing-list messages: column definitions, and the client-side filtering logic
  * driven by the {@link MailMessageCriteriaDTO} criteria (owned by the sibling MailMessageCriteriaView). */
 @Component({
-  imports: [AgGridAngular],
+  imports: [AgGridAngular, ResizableHeightDirective],
   selector: 'app-mail-message-list-view',
   templateUrl: './mail-message-list-view.html',
 })

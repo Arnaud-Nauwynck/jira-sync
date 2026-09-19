@@ -1,5 +1,7 @@
 export * from './annotatedJiraLinkedIssueFieldsDTO';
 export * from './changeLogEvent';
+export * from './claudeCodePromptRequestDTO';
+export * from './claudeCodePromptResponseDTO';
 export * from './getEventsSince200ResponseInner';
 export * from './gitHubIssueCommentDTO';
 export * from './gitHubIssueEventDTO';

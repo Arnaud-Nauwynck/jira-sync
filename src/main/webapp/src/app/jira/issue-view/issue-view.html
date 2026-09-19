@@ -47,7 +47,7 @@
       <li [ngbNavItem]="2">
         <button ngbNavLink>Analysis</button>
         <ng-template ngbNavContent>
-          <app-analysis-issue-view [annotated]="data.annotated" />
+          <app-analysis-issue-view [jiraKey]="data.key" [annotated]="data.annotated" />
         </ng-template>
       </li>
       <li [ngbNavItem]="3">

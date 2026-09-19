@@ -41,6 +41,8 @@ export class IssuesListCriteriaView {
   /** Emitted on every criteria field change, so the grid can instantly re-apply its client-side filter. */
   @Output() readonly criteriaChanged = new EventEmitter<void>();
 
+  // Whole search-criteria panel: collapsible, expanded by default.
+  isCriteriaCollapsed = false;
   // Data fetching panel: collapsible, expanded by default.
   isDataFetchingCollapsed = false;
   // Main criteria panel: collapsible, expanded by default.

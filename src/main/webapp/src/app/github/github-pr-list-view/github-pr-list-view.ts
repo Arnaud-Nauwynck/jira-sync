@@ -3,11 +3,12 @@ import { AgGridAngular } from 'ag-grid-angular';
 import type { CellClickedEvent, ColDef, GridApi, GridReadyEvent, IRowNode } from 'ag-grid-community';
 import { GitHubPrCriteriaDTO, GitHubPullRequestDTO } from '../../rest';
 import { GithubPrCriteria } from '../service/GithubPrCriteria';
+import { ResizableHeightDirective } from '../../utils/resizable-height.directive';
 
 /** The ag-grid list of pull requests: column definitions, and the client-side filtering logic driven
  * by the {@link GitHubPrCriteriaDTO} criteria (owned by the sibling GithubPrSearchCriteriaView). */
 @Component({
-  imports: [AgGridAngular],
+  imports: [AgGridAngular, ResizableHeightDirective],
   selector: 'app-github-pr-list-view',
   templateUrl: './github-pr-list-view.html',
 })

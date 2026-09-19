@@ -4,6 +4,7 @@ import type { CellClickedEvent, ColDef, GridApi, GridReadyEvent, IRowNode } from
 import { IssuesCriteriaDTO, JiraIssueDTO } from '../../rest';
 import {IssueCriteria} from '../service/IssueCriteria';
 import {Crit} from '../../utils/Crit';
+import { ResizableHeightDirective } from '../../utils/resizable-height.directive';
 
 export const OTHER_RESOLUTIONS = '(others)';
 export const OTHER_TYPES = '(others)';
@@ -20,7 +21,7 @@ export const KNOWN_RESOLUTIONS = new Set(['Done', 'Fixed', 'Invalid', 'Incomplet
 /** The ag-grid list of issues: column definitions, and the client-side filtering logic driven by the
  * {@link IssuesCriteriaDTO} criteria (owned by the sibling IssuesListCriteriaView). */
 @Component({
-  imports: [AgGridAngular],
+  imports: [AgGridAngular, ResizableHeightDirective],
   selector: 'app-issues-list-view',
   templateUrl: './issues-list-view.html',
 })

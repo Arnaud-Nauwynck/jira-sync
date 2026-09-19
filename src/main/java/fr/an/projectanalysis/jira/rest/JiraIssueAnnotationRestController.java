@@ -3,6 +3,7 @@ package fr.an.projectanalysis.jira.rest;
 import fr.an.projectanalysis.jira.rest.dtos.JiraIssueAnnotationDTO;
 import fr.an.projectanalysis.jira.rest.dtos.PersonalInterrestCommentDTO;
 import fr.an.projectanalysis.jira.service.JiraIssueService;
+import fr.an.projectanalysis.rest.dtos.ClaudeCodePromptResponseDTO;
 import fr.an.projectanalysis.util.AbstractRestController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -57,5 +58,11 @@ public class JiraIssueAnnotationRestController extends AbstractRestController {
         withLog(log, "DELETE", "/" + key, "", () -> delegate.removeAnnotation(key));
     }
 
+    @Operation(summary = "Launch a claude-code '/jira-analysis' prompt for the given issue")
+    @PostMapping("/launch-claude-jira-analysis")
+    public ClaudeCodePromptResponseDTO launchClaudeJiraAnalysis(@RequestParam(name = "jiraKey") String jiraKey) {
+        return withLog(log, "POST", "/launch-claude-jira-analysis", "jiraKey=" + jiraKey,
+                () -> delegate.launchClaudeJiraAnalysis(jiraKey));
+    }
 
 }
