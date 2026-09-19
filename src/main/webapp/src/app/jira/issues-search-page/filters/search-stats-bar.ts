@@ -17,7 +17,7 @@ import { FormsModule } from '@angular/forms';
       </span>
       <span class="ms-auto d-flex align-items-center gap-1">
         <label class="mb-0" for="limit">Limit</label>
-        <input id="limit" class="form-control form-control-sm app-number-input-sm" type="number"
+        <input id="limit" class="form-control form-control-sm app-number-input-lg" type="number"
                [ngModel]="limit" (ngModelChange)="onLimitChange($event)"/>
       </span>
     </div>

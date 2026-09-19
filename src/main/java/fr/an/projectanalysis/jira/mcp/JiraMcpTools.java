@@ -4,6 +4,7 @@ import fr.an.projectanalysis.jira.repository.JiraIssueRepository;
 import fr.an.projectanalysis.jira.rest.dtos.IssueExtraFieldsDTO;
 import fr.an.projectanalysis.jira.rest.dtos.JiraIssueDTO;
 import fr.an.projectanalysis.jira.rest.dtos.UserJiraIssueStatsDTO;
+import fr.an.projectanalysis.jira.service.JiraIssueCriteria;
 import fr.an.projectanalysis.jira.service.JiraIssueService;
 import fr.an.projectanalysis.jira.service.JiraSyncRunner;
 import fr.an.projectanalysis.service.McpToolCallChange;
@@ -72,8 +73,9 @@ public class JiraMcpTools {
                 fromYear, toYear, usernamePattern, summaryPattern, descriptionPattern, commentPattern, commentAuthorPattern);
         changeLogService.addEvent(new McpToolCallChange("queryUserIssueCreateStats",
                 "fromYear=" + fromYear + "&toYear=" + toYear + "&usernamePattern=" + usernamePattern));
-        return issueService.queryUserIssueStats(fromYear, toYear, usernamePattern,
+        JiraIssueCriteria issueCriteria = JiraIssueCriteria.ofUserStatsPatterns(fromYear, toYear, usernamePattern,
                 summaryPattern, descriptionPattern, commentPattern, commentAuthorPattern);
+        return issueService.queryUserIssueStats(issueCriteria);
     }
 
 //    @Tool(description = "Run the Jira synchronization for the configured project, pulling new/updated issues from the remote Jira server into the local mirror.")

@@ -2,15 +2,17 @@ package fr.an.projectanalysis.mailinglist.service;
 
 import fr.an.projectanalysis.mailinglist.repository.MailMessageRepository;
 import fr.an.projectanalysis.mailinglist.rest.dtos.MailMessageAnnotationDTO;
-import fr.an.projectanalysis.mailinglist.rest.dtos.MailMessageCriteriaDTO;
+import fr.an.projectanalysis.mailinglist.rest.dtos.MailMessageCompareIdsResultDTO;
 import fr.an.projectanalysis.mailinglist.rest.dtos.MailMessageDTO;
 import fr.an.projectanalysis.mailinglist.rest.dtos.MailMessageExtraFieldsDTO;
+import fr.an.projectanalysis.mailinglist.rest.dtos.MailMessageIdAndLastUpdateTimeDTO;
 import fr.an.projectanalysis.mailinglist.rest.dtos.MailMessagePartitionStatsDTO;
-import fr.an.projectanalysis.mailinglist.rest.dtos.MailMessageQueryDTO;
 import fr.an.projectanalysis.mailinglist.rest.dtos.MonthCountDTO;
 import fr.an.projectanalysis.mailinglist.rest.dtos.NearbyMailMessagesDTO;
 import fr.an.projectanalysis.mailinglist.rest.dtos.SenderCountDTO;
 import fr.an.projectanalysis.mailinglist.rest.dtos.UserMailMessageStatsDTO;
+import fr.an.projectanalysis.util.CompareIdsUtils;
+import fr.an.projectanalysis.util.CompareIdsUtils.CompareIdsResult;
 import fr.an.projectanalysis.util.CritUtils;
 import org.springframework.stereotype.Component;
 
@@ -28,8 +30,6 @@ public class MailMessageService {
 
     private static final String UNKNOWN_USER = "unknown";
 
-    private static final int DEFAULT_LIMIT = 1000;
-
     private final MailMessageRepository repository;
 
     public MailMessageService(MailMessageRepository repository) {
@@ -39,6 +39,19 @@ public class MailMessageService {
     /** Finds a single message by its Message-ID, or returns null if not found. */
     public MailMessageDTO findByMessageId(String messageId) {
         return repository.findByMessageId(messageId);
+    }
+
+    /** Finds the messages having the given Message-IDs ("ids"), in the requested order; ids not found locally
+     * are skipped. */
+    public List<MailMessageDTO> findByIds(Collection<String> ids) {
+        List<MailMessageDTO> res = new ArrayList<>(ids.size());
+        for (String id : ids) {
+            MailMessageDTO found = repository.findByMessageId(id);
+            if (found != null) {
+                res.add(found);
+            }
+        }
+        return res;
     }
 
     /**
@@ -56,7 +69,7 @@ public class MailMessageService {
 
         int targetIndex = -1;
         for (int i = 0; i < allMessages.size(); i++) {
-            if (messageId.equals(allMessages.get(i).messageId)) {
+            if (target.messageId.equals(allMessages.get(i).messageId)) {
                 targetIndex = i;
                 break;
             }
@@ -69,10 +82,10 @@ public class MailMessageService {
         for (int i = targetIndex - 1; i >= 0; i--) {
             MailMessageDTO msg = allMessages.get(i);
             if (dto.prevMail == null) {
-                dto.prevMail = msg.messageId;
+                dto.prevMail = msg.id();
             }
             if (dto.prevMailSameSender == null && sender.equalsIgnoreCase(senderOf(msg))) {
-                dto.prevMailSameSender = msg.messageId;
+                dto.prevMailSameSender = msg.id();
             }
             if (dto.prevMail != null && dto.prevMailSameSender != null) {
                 break;
@@ -81,10 +94,10 @@ public class MailMessageService {
         for (int i = targetIndex + 1; i < allMessages.size(); i++) {
             MailMessageDTO msg = allMessages.get(i);
             if (dto.nextMail == null) {
-                dto.nextMail = msg.messageId;
+                dto.nextMail = msg.id();
             }
             if (dto.nextMailSameSender == null && sender.equalsIgnoreCase(senderOf(msg))) {
-                dto.nextMailSameSender = msg.messageId;
+                dto.nextMailSameSender = msg.id();
             }
             if (dto.nextMail != null && dto.nextMailSameSender != null) {
                 break;
@@ -102,12 +115,8 @@ public class MailMessageService {
             String fromMonth, String toMonth,
             String fromPatternText, String subjectPatternText, String bodyPatternText
     ) {
-        MailMessageCriteriaDTO c = new MailMessageCriteriaDTO();
-        c.fromPattern = fromPatternText;
-        c.subjectPattern = subjectPatternText;
-        c.bodyPattern = bodyPatternText;
-        MailMessageCriteria messageCriteria = new MailMessageCriteria(c);
         List<MailMessageDTO> result = new ArrayList<>();
+        MailMessageCriteria messageCriteria = MailMessageCriteria.ofPatterns(fromPatternText, subjectPatternText, bodyPatternText);
         repository.scanMessages(fromMonth, toMonth, (month, msg) -> {
             if (messageCriteria.test(msg)) {
                 result.add(msg);
@@ -117,39 +126,62 @@ public class MailMessageService {
     }
 
     /** Lists the messages matching the given criteria (Data Fetching + Main/Analysis/Development Work/Personal
-     * Interest filter criteria of the mailing-list page), capped at {@code query.limit} (default 1000). */
-    public List<MailMessageDTO> queryMessages(MailMessageQueryDTO query) {
-        return queryMessagesMatching(query != null ? query.criteria : null, limitOf(query));
-    }
-
-    /** Same as {@link #queryMessages(MailMessageQueryDTO)}, but returns only the message ids. */
-    public List<String> queryMessageIds(MailMessageQueryDTO query) {
-        List<MailMessageDTO> matched = queryMessagesMatching(query != null ? query.criteria : null, limitOf(query));
-        List<String> ids = new ArrayList<>(matched.size());
-        for (MailMessageDTO msg : matched) {
-            ids.add(msg.messageId);
-        }
-        return ids;
-    }
-
-    private static int limitOf(MailMessageQueryDTO query) {
-        return (query != null && query.limit != null) ? query.limit : DEFAULT_LIMIT;
-    }
-
-    private List<MailMessageDTO> queryMessagesMatching(MailMessageCriteriaDTO c, int limit) {
-        String fromMonth = c != null ? c.fromMonth : null;
-        String toMonth = c != null ? c.toMonth : null;
-        MailMessageCriteria messageCriteria = new MailMessageCriteria(c);
+     * Interest filter criteria of the mailing-list page), capped at {@code limit}. */
+    public List<MailMessageDTO> queryMessages(MailMessageCriteria messageCriteria, int limit) {
         List<MailMessageDTO> result = new ArrayList<>();
         // partition pruning: scan from the most recent partition (toMonth) backwards, stopping as
         // soon as the limit is reached, so older partitions are never loaded once satisfied.
-        repository.scanMessagesFromMostRecent(fromMonth, toMonth, (month, msg) -> {
+        repository.scanMessagesFromMostRecent(messageCriteria.getFromMonth(), messageCriteria.getToMonth(), (month, msg) -> {
             if (messageCriteria.test(msg)) {
                 result.add(msg);
             }
             return result.size() < limit;
         });
         return result;
+    }
+
+    /** Same as {@link #queryMessages(MailMessageCriteria, int)}, but returns only the message ids. */
+    public List<String> queryMessageIds(MailMessageCriteria messageCriteria, int limit) {
+        List<MailMessageDTO> matched = queryMessages(messageCriteria, limit);
+        List<String> ids = new ArrayList<>(matched.size());
+        for (MailMessageDTO msg : matched) {
+            ids.add(msg.id());
+        }
+        return ids;
+    }
+
+    /** Same as {@link #queryMessageIds(MailMessageCriteria, int)}, but returns for each message its Message-ID
+     * with its last update time, that is its sent date, in epoch milliseconds. */
+    public List<MailMessageIdAndLastUpdateTimeDTO> queryMessageIdAndLastUpdateTimes(MailMessageCriteria messageCriteria, int limit) {
+        List<MailMessageDTO> matched = queryMessages(messageCriteria, limit);
+        List<MailMessageIdAndLastUpdateTimeDTO> res = new ArrayList<>(matched.size());
+        for (MailMessageDTO msg : matched) {
+            long time = (msg.date != null) ? msg.date.toInstant().toEpochMilli() : 0L;
+            res.add(new MailMessageIdAndLastUpdateTimeDTO(msg.id(), time));
+        }
+        return res;
+    }
+
+    /**
+     * Compares the Message-IDs matched by 2 independent criteria: the ids matched by the left criteria only,
+     * by both ("common"), and by the right criteria only. The common ids are only counted, unless
+     * {@code fillCommonIds} is set, in which case they are also listed. Each side is capped at its own
+     * limit, as in {@link #queryMessageIds(MailMessageCriteria, int)}.
+     */
+    public MailMessageCompareIdsResultDTO compareQueryIds(
+            MailMessageCriteria leftCriteria, int leftLimit,
+            MailMessageCriteria rightCriteria, int rightLimit,
+            boolean fillCommonIds) {
+        List<String> leftIds = queryMessageIds(leftCriteria, leftLimit);
+        List<String> rightIds = queryMessageIds(rightCriteria, rightLimit);
+        CompareIdsResult<String> compared = CompareIdsUtils.compareIds(leftIds, rightIds, fillCommonIds);
+
+        MailMessageCompareIdsResultDTO res = new MailMessageCompareIdsResultDTO();
+        res.leftOnlyIds = compared.leftOnlyIds;
+        res.commonIds = compared.commonIds;
+        res.commonCount = compared.commonCount;
+        res.rightOnlyIds = compared.rightOnlyIds;
+        return res;
     }
 
     /** Count of locally-synced messages per "archived" (month) partition. */
@@ -202,7 +234,7 @@ public class MailMessageService {
         repository.scanMessages(fromMonth, toMonth, (month, msg) -> {
             MailMessageExtraFieldsDTO annotated = msg.annotated;
             if (annotated != null) {
-                res.add(new MailMessageAnnotationDTO(msg.messageId, annotated));
+                res.add(new MailMessageAnnotationDTO(msg.id(), annotated));
             }
         });
         return res;

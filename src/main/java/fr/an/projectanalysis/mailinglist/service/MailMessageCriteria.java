@@ -32,6 +32,25 @@ public class MailMessageCriteria implements Predicate<MailMessageDTO> {
         this.bodyPattern = c != null ? CritUtils.compilePattern(c.bodyPattern) : null;
     }
 
+    /** Criteria filtering only on the From/Subject/body regexes (all optional, combined with AND). */
+    public static MailMessageCriteria ofPatterns(String fromPatternText, String subjectPatternText, String bodyPatternText) {
+        MailMessageCriteriaDTO c = new MailMessageCriteriaDTO();
+        c.fromPattern = fromPatternText;
+        c.subjectPattern = subjectPatternText;
+        c.bodyPattern = bodyPatternText;
+        return new MailMessageCriteria(c);
+    }
+
+    /** Earliest "archived" month partition to scan ('yyyy-MM', inclusive), or null when unrestricted. */
+    public String getFromMonth() {
+        return c != null ? c.fromMonth : null;
+    }
+
+    /** Latest "archived" month partition to scan ('yyyy-MM', inclusive), or null when unrestricted. */
+    public String getToMonth() {
+        return c != null ? c.toMonth : null;
+    }
+
     @Override
     public boolean test(MailMessageDTO msg) {
         if (c == null) {

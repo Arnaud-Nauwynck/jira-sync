@@ -19,6 +19,10 @@ public class GitHubPrCriteria implements Predicate<GitHubPullRequestDTO> {
 
     private static final String UNKNOWN_USER = "unknown";
 
+    /** Default "created_year" partition range, when the criteria does not restrict it. */
+    private static final int DEFAULT_FROM_YEAR = 2020;
+    private static final int DEFAULT_TO_YEAR = 2050;
+
     private final GitHubPrCriteriaDTO c;
 
     private final Pattern usernamePattern;
@@ -32,6 +36,23 @@ public class GitHubPrCriteria implements Predicate<GitHubPullRequestDTO> {
         this.usernamePattern = c != null ? CritUtils.compilePattern(c.usernamePattern) : null;
         this.pullRequestNumberPattern = c != null ? CritUtils.compilePattern(c.pullRequestNumberPattern) : null;
         this.mergeableStatePattern = c != null ? CritUtils.compilePattern(c.mergeableStatePattern) : null;
+    }
+
+    /** Criteria filtering only on the author login regex. */
+    public static GitHubPrCriteria ofUsernamePattern(String usernamePatternText) {
+        GitHubPrCriteriaDTO c = new GitHubPrCriteriaDTO();
+        c.usernamePattern = usernamePatternText;
+        return new GitHubPrCriteria(c);
+    }
+
+    /** Earliest "created_year" partition to scan (inclusive), defaulting to {@value #DEFAULT_FROM_YEAR}. */
+    public int getFromYear() {
+        return (c != null && c.fromYear != null) ? c.fromYear : DEFAULT_FROM_YEAR;
+    }
+
+    /** Latest "created_year" partition to scan (inclusive), defaulting to {@value #DEFAULT_TO_YEAR}. */
+    public int getToYear() {
+        return (c != null && c.toYear != null) ? c.toYear : DEFAULT_TO_YEAR;
     }
 
     /** The PR's author login, or {@code "unknown"} if it has none. */

@@ -32,16 +32,70 @@ public class JiraIssueCriteria implements Predicate<JiraIssueDTO> {
             "Won't Fix", "Won't Do", "Later", "Duplicate", "Resolved", "Not A Bug", "Abandoned", "Auto Closed",
             "WorkAround", "Workaround", "Implemented", "Information Provided", "");
 
+    /** Default "created_year" partition range, when the criteria does not restrict it. */
+    private static final int DEFAULT_FROM_YEAR = 2020;
+    private static final int DEFAULT_TO_YEAR = 2050;
+
     private final IssuesCriteriaDTO c;
 
     private final Pattern usernamePattern;
 
     private final Pattern keyPattern;
 
+    private final Pattern summaryPattern;
+
+    private final Pattern descriptionPattern;
+
+    private final Pattern commentPattern;
+
+    private final Pattern commentAuthorPattern;
+
     public JiraIssueCriteria(IssuesCriteriaDTO c) {
         this.c = c;
         this.usernamePattern = c != null ? CritUtils.compilePattern(c.usernamePattern) : null;
         this.keyPattern = c != null ? CritUtils.compilePattern(c.keyPattern) : null;
+        this.summaryPattern = c != null ? CritUtils.compilePattern(c.summaryPattern) : null;
+        this.descriptionPattern = c != null ? CritUtils.compilePattern(c.descriptionPattern) : null;
+        this.commentPattern = c != null ? CritUtils.compilePattern(c.commentPattern) : null;
+        this.commentAuthorPattern = c != null ? CritUtils.compilePattern(c.commentAuthorPattern) : null;
+    }
+
+    /** Criteria filtering only on the creator/reporter username regex. */
+    public static JiraIssueCriteria ofUsernamePattern(String usernamePatternText) {
+        IssuesCriteriaDTO c = new IssuesCriteriaDTO();
+        c.usernamePattern = usernamePatternText;
+        return new JiraIssueCriteria(c);
+    }
+
+    /** Criteria of the per-user issue creation stats: a "created_year" range, plus the creator/summary/
+     * description/comment regexes (all optional, combined with AND). */
+    public static JiraIssueCriteria ofUserStatsPatterns(
+            int fromYear, int toYear,
+            String usernamePatternText,
+            String summaryPatternText,
+            String descriptionPatternText,
+            String commentPatternText,
+            String commentAuthorPatternText
+    ) {
+        IssuesCriteriaDTO c = new IssuesCriteriaDTO();
+        c.fromYear = fromYear;
+        c.toYear = toYear;
+        c.usernamePattern = usernamePatternText;
+        c.summaryPattern = summaryPatternText;
+        c.descriptionPattern = descriptionPatternText;
+        c.commentPattern = commentPatternText;
+        c.commentAuthorPattern = commentAuthorPatternText;
+        return new JiraIssueCriteria(c);
+    }
+
+    /** Earliest "created_year" partition to scan (inclusive), defaulting to {@value #DEFAULT_FROM_YEAR}. */
+    public int getFromYear() {
+        return (c != null && c.fromYear != null) ? c.fromYear : DEFAULT_FROM_YEAR;
+    }
+
+    /** Latest "created_year" partition to scan (inclusive), defaulting to {@value #DEFAULT_TO_YEAR}. */
+    public int getToYear() {
+        return (c != null && c.toYear != null) ? c.toYear : DEFAULT_TO_YEAR;
     }
 
     /** The issue creator's username, falling back to the reporter, then to {@code "unknown"}, when missing. */
@@ -84,6 +138,12 @@ public class JiraIssueCriteria implements Predicate<JiraIssueDTO> {
             return false;
         }
         JiraIssueDTO.IssueFieldsDTO fields = issue.fields;
+        if (!CritUtils.findsRegex(summaryPattern, fields != null ? fields.summary : null)) {
+            return false;
+        }
+        if (!CritUtils.findsRegex(descriptionPattern, fields != null ? fields.description : null)) {
+            return false;
+        }
         if (!CritUtils.matchesAny(c.summaryContains, fields != null ? fields.summary : null)) {
             return false;
         }
@@ -94,6 +154,9 @@ public class JiraIssueCriteria implements Predicate<JiraIssueDTO> {
             return false;
         }
         List<JiraIssueDTO.IssueCommentDTO> comments = fields != null && fields.comments != null ? fields.comments : List.of();
+        if (!matchesCommentPatterns(comments)) {
+            return false;
+        }
         if (!CritUtils.matchesAny(c.commentsContains, comments.stream().map(cm -> cm.body).toArray(String[]::new))) {
             return false;
         }
@@ -125,6 +188,21 @@ public class JiraIssueCriteria implements Predicate<JiraIssueDTO> {
         }
 
         return AnnotatedCritUtils.matchesAnnotations(c, issue.annotated);
+    }
+
+    /** True when neither comment regex is set, or at least one comment matches both of them: the
+     * {@code commentPattern} searched in its body, and the {@code commentAuthorPattern} fully matching its author. */
+    private boolean matchesCommentPatterns(List<JiraIssueDTO.IssueCommentDTO> comments) {
+        if (commentPattern == null && commentAuthorPattern == null) {
+            return true;
+        }
+        for (JiraIssueDTO.IssueCommentDTO comment : comments) {
+            if (CritUtils.findsRegex(commentPattern, comment.body)
+                    && CritUtils.matchesRegex(commentAuthorPattern, comment.author)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** Maps a value to itself if it is a known enum option, or to the "others" bucket otherwise (mirrors the Angular type/resolution filters). */

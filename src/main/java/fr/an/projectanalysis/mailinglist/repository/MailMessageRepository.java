@@ -38,6 +38,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
@@ -131,10 +133,6 @@ public class MailMessageRepository {
     @Autowired
     public MailMessageRepository(MailingListSyncProperties props, ObjectMapper mapper, RecentChangeLogService changeLogService) throws IOException {
         this(Path.of(props.getMailingListSyncLocalDir()).resolve("messages"), mapper, changeLogService);
-    }
-
-    public MailMessageRepository(Path baseDir, ObjectMapper mapper) throws IOException {
-        this(baseDir, mapper, null);
     }
 
     public MailMessageRepository(Path baseDir, ObjectMapper mapper, RecentChangeLogService changeLogService) throws IOException {
@@ -234,7 +232,7 @@ public class MailMessageRepository {
     /** Matches the "{yyyy-MM-dd}-{messageId}" shape that mail-message-search-page.ts's "Open As Page"
      * link builds (see src/main/webapp .../mail-message-search-page.ts), capturing the "yyyy-MM"
      * partition month and the plain Message-ID separately. */
-    private static final java.util.regex.Pattern DATE_PREFIXED_KEY =
+    private static final Pattern DATE_PREFIXED_KEY =
             java.util.regex.Pattern.compile("^(\\d{4}-\\d{2})-\\d{2}-(.+)$");
 
     /**
@@ -244,7 +242,7 @@ public class MailMessageRepository {
      * partition doesn't have it) every partition is scanned, as before.
      */
     public MailMessageDTO findByMessageId(String key) {
-        java.util.regex.Matcher m = DATE_PREFIXED_KEY.matcher(key);
+        Matcher m = DATE_PREFIXED_KEY.matcher(key);
         String messageId = key;
         if (m.matches()) {
             messageId = m.group(2);

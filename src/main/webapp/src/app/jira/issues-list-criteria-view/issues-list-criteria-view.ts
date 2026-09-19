@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { NgbCollapseModule } from '@ng-bootstrap/ng-bootstrap';
 import { IssuesCriteriaDTO } from '../../rest';
@@ -8,6 +8,7 @@ import { DateRangeFilter } from '../issues-search-page/filters/date-range-filter
 import { AvailabilityFilter, AvailabilityFilterComponent } from '../issues-search-page/filters/availability-filter';
 import { ExcludeDropdownFilter, ExcludeFilterOption } from '../issues-search-page/filters/exclude-dropdown-filter';
 import { ExcludeButtonGroupFilter } from '../issues-search-page/filters/exclude-buttongroup-filter';
+import { csvToSet, setToCsv } from '../../utils/csv-set';
 
 const OTHER_RESOLUTIONS = '(others)';
 const OTHER_TYPES = '(others)';
@@ -23,18 +24,17 @@ const OTHER_TYPES = '(others)';
   selector: 'app-issues-list-criteria-view',
   templateUrl: './issues-list-criteria-view.html',
 })
-export class IssuesListCriteriaView {
+export class IssuesListCriteriaView implements OnInit {
 
-  /** Sent as-is to the server (POST .../query), and reused client-side to re-filter already-fetched rows. */
-  readonly criteria: IssuesCriteriaDTO = {
-    fromYear: 2020,
-    toYear: 2050,
-    pullRequestAvailableLabel: 'any',
-    analysisAvailability: 'any',
-    developmentWorkAvailability: 'any',
-    personalInterrestAvailability: 'any',
-    excludedStatuses: 'Resolved,Closed',
-  };
+  /** Owned by the parent page, edited in-place here: sent as-is to the server (POST .../query),
+   * and reused client-side to re-filter already-fetched rows. */
+  @Input({ required: true }) criteria!: IssuesCriteriaDTO;
+
+  /** True while a search is in-flight: disables the "Search" button to avoid re-entrant queries. */
+  @Input() loading = false;
+
+  /** Error of the last failed search, displayed next to the "Search" button, or '' when there is none. */
+  @Input() loadErrorMessage = '';
 
   /** Emitted when the "Search" button is clicked, to re-fetch from the server. */
   @Output() readonly search = new EventEmitter<void>();
@@ -56,7 +56,7 @@ export class IssuesListCriteriaView {
 
   // Status enum filter: kept locally as a Set for the exclude widgets, serialized as CSV onto the criteria.
   statusOptions = ['Open', 'In Progress', 'Reopened', 'Resolved', 'Closed'];
-  excludedStatuses = new Set<string>(['Resolved', 'Closed']);
+  excludedStatuses = new Set<string>();
 
   // Priority enum filter.
   priorityOptions = ['Critical', 'Blocker', 'Major', 'Minor', 'Trivial'];
@@ -98,6 +98,15 @@ export class IssuesListCriteriaView {
   ];
   excludedResolutions = new Set<string>();
 
+  /** Rebuilds the widgets' local Sets from the bound criteria: the criteria outlives this view (it is
+   * held by the data service, and restored from the URL), so the Sets cannot be defaulted blindly. */
+  ngOnInit() {
+    this.excludedStatuses = csvToSet(this.criteria.excludedStatuses);
+    this.excludedPriorities = csvToSet(this.criteria.excludedPriorities);
+    this.excludedTypes = csvToSet(this.criteria.excludedTypes);
+    this.excludedResolutions = csvToSet(this.criteria.excludedResolutions);
+  }
+
   onFieldChanged() {
     this.criteriaChanged.emit();
   }
@@ -108,25 +117,25 @@ export class IssuesListCriteriaView {
 
   onExcludedTypesChange(excluded: Set<string>) {
     this.excludedTypes = excluded;
-    this.criteria.excludedTypes = Array.from(excluded).join(',');
+    this.criteria.excludedTypes = setToCsv(excluded);
     this.onFieldChanged();
   }
 
   onExcludedResolutionsChange(excluded: Set<string>) {
     this.excludedResolutions = excluded;
-    this.criteria.excludedResolutions = Array.from(excluded).join(',');
+    this.criteria.excludedResolutions = setToCsv(excluded);
     this.onFieldChanged();
   }
 
   onExcludedStatusesChange(excluded: Set<string>) {
     this.excludedStatuses = excluded;
-    this.criteria.excludedStatuses = Array.from(excluded).join(',');
+    this.criteria.excludedStatuses = setToCsv(excluded);
     this.onFieldChanged();
   }
 
   onExcludedPrioritiesChange(excluded: Set<string>) {
     this.excludedPriorities = excluded;
-    this.criteria.excludedPriorities = Array.from(excluded).join(',');
+    this.criteria.excludedPriorities = setToCsv(excluded);
     this.onFieldChanged();
   }
 

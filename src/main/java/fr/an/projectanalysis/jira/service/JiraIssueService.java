@@ -2,15 +2,17 @@ package fr.an.projectanalysis.jira.service;
 
 import fr.an.projectanalysis.jira.repository.JiraIssueRepository;
 import fr.an.projectanalysis.jira.rest.dtos.IssueExtraFieldsDTO;
-import fr.an.projectanalysis.jira.rest.dtos.IssuesCriteriaDTO;
+import fr.an.projectanalysis.jira.rest.dtos.IssueIdAndLastUpdateTimeDTO;
+import fr.an.projectanalysis.jira.rest.dtos.IssuesCompareIdsResultDTO;
 import fr.an.projectanalysis.jira.rest.dtos.IssuesPartitionStatsDTO;
-import fr.an.projectanalysis.jira.rest.dtos.IssuesQueryDTO;
 import fr.an.projectanalysis.jira.rest.dtos.JiraIssueAnnotationDTO;
 import fr.an.projectanalysis.jira.rest.dtos.JiraIssueDTO;
 import fr.an.projectanalysis.jira.rest.dtos.NearbyJiraIssuesDTO;
 import fr.an.projectanalysis.jira.rest.dtos.UserJiraIssueStatsDTO;
 import fr.an.projectanalysis.jira.rest.dtos.YearCountDTO;
-import fr.an.projectanalysis.util.CritUtils;
+import fr.an.projectanalysis.util.CompareIdsUtils;
+import fr.an.projectanalysis.util.CompareIdsUtils.CompareIdsResult;
+import fr.an.projectanalysis.util.DateTimeUtils;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.stereotype.Component;
@@ -23,7 +25,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 @Component
 @Slf4j
@@ -38,61 +39,35 @@ public class JiraIssueService {
         this.repository = repository;
     }
 
-    public Collection<UserJiraIssueStatsDTO> queryUserIssueStats(
-            int fromYear, int toYear,
-            String usernamePatternText,
-            String summaryPatternText,
-            String descriptionPatternText,
-            String commentPatternText,
-            String commentAuthorPatternText
-    ) {
+    /** Counts the issues created per user, among those matching the given criteria, within its "created_year" range. */
+    public Collection<UserJiraIssueStatsDTO> queryUserIssueStats(JiraIssueCriteria issueCriteria) {
         Map<String, UserJiraIssueStatsDTO> tmp = new LinkedHashMap<>();
-        Pattern usernamePattern = CritUtils.compilePattern(usernamePatternText);
-        Pattern summaryPattern = CritUtils.compilePattern(summaryPatternText);
-        Pattern descriptionPattern = CritUtils.compilePattern(descriptionPatternText);
-        Pattern commentPattern = CritUtils.compilePattern(commentPatternText);
-        Pattern commentAuthorPattern = CritUtils.compilePattern(commentAuthorPatternText);
-        repository.scanIssues(fromYear, toYear, (year, issue) -> {
+        repository.scanIssues(issueCriteria.getFromYear(), issueCriteria.getToYear(), (year, issue) -> {
+            if (!issueCriteria.test(issue)) {
+                return;
+            }
             String user = JiraIssueCriteria.creatorOf(issue);
-            if (!CritUtils.matchesRegex(usernamePattern, user)) {
-                return;
-            }
-            if (!CritUtils.findsRegex(summaryPattern, issue.fields != null ? issue.fields.summary : null)) {
-                return;
-            }
-            if (!CritUtils.findsRegex(descriptionPattern, issue.fields != null ? issue.fields.description : null)) {
-                return;
-            }
-            if (!matchesComments(commentPattern, commentAuthorPattern, issue)) {
-                return;
-            }
             UserJiraIssueStatsDTO statPerUser = tmp.computeIfAbsent(user, UserJiraIssueStatsDTO::new);
             statPerUser.add(year, issue);
         });
         return tmp.values();
     }
 
-    /** True when neither pattern is set, or the issue has at least one comment matching both given patterns. */
-    private static boolean matchesComments(Pattern commentPattern, Pattern commentAuthorPattern, JiraIssueDTO issue) {
-        if (commentPattern == null && commentAuthorPattern == null) {
-            return true;
-        }
-        List<JiraIssueDTO.IssueCommentDTO> comments = issue.fields != null ? issue.fields.comments : null;
-        if (comments == null) {
-            return false;
-        }
-        for (JiraIssueDTO.IssueCommentDTO comment : comments) {
-            if (CritUtils.findsRegex(commentPattern, comment.body)
-                    && CritUtils.matchesRegex(commentAuthorPattern, comment.author)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     /** Finds a single issue by its key, or returns null if not found. */
     public JiraIssueDTO findAnnotatedIssueByKey(String key) {
         return repository.findByKey(key);
+    }
+
+    /** Finds the issues having the given keys ("ids"), in the requested order; keys not found locally are skipped. */
+    public List<JiraIssueDTO> findIssuesByIds(Collection<String> ids) {
+        List<JiraIssueDTO> res = new ArrayList<>(ids.size());
+        for (String id : ids) {
+            JiraIssueDTO found = repository.findByKey(id);
+            if (found != null) {
+                res.add(found);
+            }
+        }
+        return res;
     }
 
     /**
@@ -220,10 +195,8 @@ public class JiraIssueService {
 
     /** Lists the issues created between fromYear and toYear (inclusive), optionally filtered by creator username. */
     public List<JiraIssueDTO> queryAnnotatedIssues(int fromYear, int toYear, String usernamePatternText) {
-        IssuesCriteriaDTO c = new IssuesCriteriaDTO();
-        c.usernamePattern = usernamePatternText;
-        JiraIssueCriteria issueCriteria = new JiraIssueCriteria(c);
         List<JiraIssueDTO> result = new ArrayList<>();
+        JiraIssueCriteria issueCriteria = JiraIssueCriteria.ofUsernamePattern(usernamePatternText);
         repository.scanIssues(fromYear, toYear, (year, issue) -> {
             if (issueCriteria.test(issue)) {
                 result.add(issue);
@@ -232,17 +205,24 @@ public class JiraIssueService {
         return result;
     }
 
-    private static final int DEFAULT_LIMIT = 1000;
-
     /** Lists the issues matching the given criteria (Data Fetching + Main/Analysis/Development Work/Personal
-     * Interest filter criteria of the issues-list page), capped at {@code query.limit} (default 1000). */
-    public List<JiraIssueDTO> queryIssues(IssuesQueryDTO query) {
-        return queryIssuesMatching(query != null ? query.criteria : null, limitOf(query));
+     * Interest filter criteria of the issues-list page), capped at {@code limit}. */
+    public List<JiraIssueDTO> queryIssues(JiraIssueCriteria issueCriteria, int limit) {
+        List<JiraIssueDTO> result = new ArrayList<>();
+        // partition pruning: scan from the most recent partition (toYear) backwards, stopping as
+        // soon as the limit is reached, so older partitions are never loaded once satisfied.
+        repository.scanIssuesFromMostRecent(issueCriteria.getFromYear(), issueCriteria.getToYear(), (year, issue) -> {
+            if (issueCriteria.test(issue)) {
+                result.add(issue);
+            }
+            return result.size() < limit;
+        });
+        return result;
     }
 
-    /** Same as {@link #queryIssues(IssuesQueryDTO)}, but returns only the issue keys. */
-    public List<String> queryIssueIds(IssuesQueryDTO query) {
-        List<JiraIssueDTO> matched = queryIssuesMatching(query != null ? query.criteria : null, limitOf(query));
+    /** Same as {@link #queryIssues(JiraIssueCriteria, int)}, but returns only the issue keys. */
+    public List<String> queryIssueIds(JiraIssueCriteria issueCriteria, int limit) {
+        List<JiraIssueDTO> matched = queryIssues(issueCriteria, limit);
         List<String> ids = new ArrayList<>(matched.size());
         for (JiraIssueDTO issue : matched) {
             ids.add(issue.key);
@@ -250,24 +230,38 @@ public class JiraIssueService {
         return ids;
     }
 
-    private static int limitOf(IssuesQueryDTO query) {
-        return (query != null && query.limit != null) ? query.limit : DEFAULT_LIMIT;
+    /** Same as {@link #queryIssueIds(JiraIssueCriteria, int)}, but returns for each issue its key with its
+     * last update time, in epoch milliseconds. */
+    public List<IssueIdAndLastUpdateTimeDTO> queryIssueIdAndLastUpdateTimes(JiraIssueCriteria issueCriteria, int limit) {
+        List<JiraIssueDTO> matched = queryIssues(issueCriteria, limit);
+        List<IssueIdAndLastUpdateTimeDTO> res = new ArrayList<>(matched.size());
+        for (JiraIssueDTO issue : matched) {
+            String updated = (issue.fields != null) ? issue.fields.updated : null;
+            res.add(new IssueIdAndLastUpdateTimeDTO(issue.key, DateTimeUtils.toEpochMillisOr0(updated)));
+        }
+        return res;
     }
 
-    private List<JiraIssueDTO> queryIssuesMatching(IssuesCriteriaDTO c, int limit) {
-        int fromYear = c != null && c.fromYear != null ? c.fromYear : 2020;
-        int toYear = c != null && c.toYear != null ? c.toYear : 2050;
-        JiraIssueCriteria issueCriteria = new JiraIssueCriteria(c);
-        List<JiraIssueDTO> result = new ArrayList<>();
-        // partition pruning: scan from the most recent partition (toYear) backwards, stopping as
-        // soon as the limit is reached, so older partitions are never loaded once satisfied.
-        repository.scanIssuesFromMostRecent(fromYear, toYear, (year, issue) -> {
-            if (issueCriteria.test(issue)) {
-                result.add(issue);
-            }
-            return result.size() < limit;
-        });
-        return result;
+    /**
+     * Compares the issue ids matched by 2 independent criteria: the ids matched by the left criteria
+     * only, by both ("common"), and by the right criteria only. The common ids are only counted,
+     * unless {@code fillCommonIds} is set, in which case they are also listed. Each side is capped
+     * at {@code limit}, as in {@link #queryIssueIds(JiraIssueCriteria, int)}.
+     */
+    public IssuesCompareIdsResultDTO compareQueryIds(
+            JiraIssueCriteria leftCriteria, int leftLimit,
+            JiraIssueCriteria rightCriteria, int rightLimit,
+            boolean fillCommonIds) {
+        List<String> leftIds = queryIssueIds(leftCriteria, leftLimit);
+        List<String> rightIds = queryIssueIds(rightCriteria, rightLimit);
+        CompareIdsResult<String> compared = CompareIdsUtils.compareIds(leftIds, rightIds, fillCommonIds);
+
+        IssuesCompareIdsResultDTO res = new IssuesCompareIdsResultDTO();
+        res.leftOnlyIds = compared.leftOnlyIds;
+        res.commonIds = compared.commonIds;
+        res.commonCount = compared.commonCount;
+        res.rightOnlyIds = compared.rightOnlyIds;
+        return res;
     }
 
     /** Count, and lowest/highest issue number, of locally-synced issues per "created_year" partition. */

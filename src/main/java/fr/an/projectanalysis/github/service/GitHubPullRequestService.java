@@ -1,16 +1,19 @@
 package fr.an.projectanalysis.github.service;
 
 import fr.an.projectanalysis.github.repository.GitHubPullRequestRepository;
-import fr.an.projectanalysis.github.rest.dtos.GitHubPrCriteriaDTO;
+import fr.an.projectanalysis.github.rest.dtos.GitHubPrCompareIdsResultDTO;
+import fr.an.projectanalysis.github.rest.dtos.GitHubPrIdAndLastUpdateTimeDTO;
 import fr.an.projectanalysis.github.rest.dtos.GitHubPrPartitionStatsDTO;
-import fr.an.projectanalysis.github.rest.dtos.GitHubPrQueryDTO;
 import fr.an.projectanalysis.github.rest.dtos.GitHubPullRequestAnnotationDTO;
 import fr.an.projectanalysis.github.rest.dtos.GitHubPullRequestDTO;
 import fr.an.projectanalysis.github.rest.dtos.GitHubPullRequestExtraFieldsDTO;
 import fr.an.projectanalysis.github.rest.dtos.NearbyGitHubPullRequestsDTO;
 import fr.an.projectanalysis.github.rest.dtos.UserGitHubPullRequestStatsDTO;
 import fr.an.projectanalysis.github.rest.dtos.YearCountDTO;
+import fr.an.projectanalysis.util.CompareIdsUtils;
+import fr.an.projectanalysis.util.CompareIdsUtils.CompareIdsResult;
 import fr.an.projectanalysis.util.CritUtils;
+import fr.an.projectanalysis.util.DateTimeUtils;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -25,8 +28,6 @@ import java.util.stream.Collectors;
 @Component
 public class GitHubPullRequestService {
 
-    private static final int DEFAULT_LIMIT = 1000;
-
     private static final String OPEN_STATE = "open";
 
     private final GitHubPullRequestRepository repository;
@@ -38,6 +39,19 @@ public class GitHubPullRequestService {
     /** Finds a single PR by its number, or returns null if not found. */
     public GitHubPullRequestDTO findByNumber(int number) {
         return repository.findByNumber(number);
+    }
+
+    /** Finds the pull requests having the given numbers ("ids"), in the requested order; numbers not found
+     * locally are skipped. */
+    public List<GitHubPullRequestDTO> findByIds(Collection<Integer> ids) {
+        List<GitHubPullRequestDTO> res = new ArrayList<>(ids.size());
+        for (Integer id : ids) {
+            GitHubPullRequestDTO found = repository.findByNumber(id);
+            if (found != null) {
+                res.add(found);
+            }
+        }
+        return res;
     }
 
     /**
@@ -108,10 +122,8 @@ public class GitHubPullRequestService {
 
     /** Lists the PRs created between fromYear and toYear (inclusive), optionally filtered by author login. */
     public List<GitHubPullRequestDTO> queryPullRequests(int fromYear, int toYear, String usernamePatternText) {
-        GitHubPrCriteriaDTO c = new GitHubPrCriteriaDTO();
-        c.usernamePattern = usernamePatternText;
-        GitHubPrCriteria criteria = new GitHubPrCriteria(c);
         List<GitHubPullRequestDTO> result = new ArrayList<>();
+        GitHubPrCriteria criteria = GitHubPrCriteria.ofUsernamePattern(usernamePatternText);
         repository.scanPullRequests(fromYear, toYear, (year, pr) -> {
             if (criteria.test(pr)) {
                 result.add(pr);
@@ -121,14 +133,23 @@ public class GitHubPullRequestService {
     }
 
     /** Lists the PRs matching the given criteria (Data Fetching + Main/Analysis/Development Work/Personal
-     * Interest filter criteria of the github-pull-requests page), capped at {@code query.limit} (default 1000). */
-    public List<GitHubPullRequestDTO> queryPullRequests(GitHubPrQueryDTO query) {
-        return queryPullRequestsMatching(query != null ? query.criteria : null, limitOf(query));
+     * Interest filter criteria of the github-pull-requests page), capped at {@code limit}. */
+    public List<GitHubPullRequestDTO> queryPullRequests(GitHubPrCriteria criteria, int limit) {
+        List<GitHubPullRequestDTO> result = new ArrayList<>();
+        // partition pruning: scan from the most recent partition (toYear) backwards, stopping as
+        // soon as the limit is reached, so older partitions are never loaded once satisfied.
+        repository.scanPullRequestsFromMostRecent(criteria.getFromYear(), criteria.getToYear(), (year, pr) -> {
+            if (criteria.test(pr)) {
+                result.add(pr);
+            }
+            return result.size() < limit;
+        });
+        return result;
     }
 
-    /** Same as {@link #queryPullRequests(GitHubPrQueryDTO)}, but returns only the PR numbers. */
-    public List<Integer> queryPullRequestIds(GitHubPrQueryDTO query) {
-        List<GitHubPullRequestDTO> matched = queryPullRequestsMatching(query != null ? query.criteria : null, limitOf(query));
+    /** Same as {@link #queryPullRequests(GitHubPrCriteria, int)}, but returns only the PR numbers. */
+    public List<Integer> queryPullRequestIds(GitHubPrCriteria criteria, int limit) {
+        List<GitHubPullRequestDTO> matched = queryPullRequests(criteria, limit);
         List<Integer> ids = new ArrayList<>(matched.size());
         for (GitHubPullRequestDTO pr : matched) {
             ids.add(pr.number);
@@ -136,24 +157,37 @@ public class GitHubPullRequestService {
         return ids;
     }
 
-    private static int limitOf(GitHubPrQueryDTO query) {
-        return (query != null && query.limit != null) ? query.limit : DEFAULT_LIMIT;
+    /** Same as {@link #queryPullRequestIds(GitHubPrCriteria, int)}, but returns for each pull request its
+     * number with its last update time, in epoch milliseconds. */
+    public List<GitHubPrIdAndLastUpdateTimeDTO> queryPullRequestIdAndLastUpdateTimes(GitHubPrCriteria criteria, int limit) {
+        List<GitHubPullRequestDTO> matched = queryPullRequests(criteria, limit);
+        List<GitHubPrIdAndLastUpdateTimeDTO> res = new ArrayList<>(matched.size());
+        for (GitHubPullRequestDTO pr : matched) {
+            res.add(new GitHubPrIdAndLastUpdateTimeDTO(pr.number, DateTimeUtils.toEpochMillisOr0(pr.updatedAt)));
+        }
+        return res;
     }
 
-    private List<GitHubPullRequestDTO> queryPullRequestsMatching(GitHubPrCriteriaDTO c, int limit) {
-        int fromYear = c != null && c.fromYear != null ? c.fromYear : 2020;
-        int toYear = c != null && c.toYear != null ? c.toYear : 2050;
-        GitHubPrCriteria criteria = new GitHubPrCriteria(c);
-        List<GitHubPullRequestDTO> result = new ArrayList<>();
-        // partition pruning: scan from the most recent partition (toYear) backwards, stopping as
-        // soon as the limit is reached, so older partitions are never loaded once satisfied.
-        repository.scanPullRequestsFromMostRecent(fromYear, toYear, (year, pr) -> {
-            if (criteria.test(pr)) {
-                result.add(pr);
-            }
-            return result.size() < limit;
-        });
-        return result;
+    /**
+     * Compares the PR numbers matched by 2 independent criteria: the numbers matched by the left criteria
+     * only, by both ("common"), and by the right criteria only. The common ids are only counted, unless
+     * {@code fillCommonIds} is set, in which case they are also listed. Each side is capped at its own
+     * limit, as in {@link #queryPullRequestIds(GitHubPrCriteria, int)}.
+     */
+    public GitHubPrCompareIdsResultDTO compareQueryIds(
+            GitHubPrCriteria leftCriteria, int leftLimit,
+            GitHubPrCriteria rightCriteria, int rightLimit,
+            boolean fillCommonIds) {
+        List<Integer> leftIds = queryPullRequestIds(leftCriteria, leftLimit);
+        List<Integer> rightIds = queryPullRequestIds(rightCriteria, rightLimit);
+        CompareIdsResult<Integer> compared = CompareIdsUtils.compareIds(leftIds, rightIds, fillCommonIds);
+
+        GitHubPrCompareIdsResultDTO res = new GitHubPrCompareIdsResultDTO();
+        res.leftOnlyIds = compared.leftOnlyIds;
+        res.commonIds = compared.commonIds;
+        res.commonCount = compared.commonCount;
+        res.rightOnlyIds = compared.rightOnlyIds;
+        return res;
     }
 
     /** Count, and lowest/highest PR number, of locally-synced PRs per "created_year" partition. */

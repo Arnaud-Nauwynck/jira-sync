@@ -1,15 +1,15 @@
 <H4>Mailing List Messages</H4>
 
-<app-mail-message-criteria-view #criteriaView (search)="search()" (criteriaChanged)="listView.onFilterInputsChanged()">
+<app-mail-message-criteria-view [criteria]="criteria" [loading]="loading" [loadErrorMessage]="loadErrorMessage" (search)="search()" (criteriaChanged)="listView.onFilterInputsChanged()">
   <app-search-stats-bar
-    [rangeFrom]="criteriaView.criteria.fromMonth || '…'" [rangeTo]="criteriaView.criteria.toMonth || '…'"
+    [rangeFrom]="criteria.fromMonth || '…'" [rangeTo]="criteria.toMonth || '…'"
     [availableInRange]="availableInRange()" [total]="grandTotal()" [loadedCount]="messagesDataService.messages().length"
     [(limit)]="limit" />
 </app-mail-message-criteria-view>
 
 <app-mail-message-list-view #listView
   [rowData]="messagesDataService.messages()"
-  [criteria]="criteriaView.criteria"
+  [criteria]="criteria"
   (rowSelected)="selectedMessage.set($event)" />
 
 @if (selectedMessage(); as msg) {

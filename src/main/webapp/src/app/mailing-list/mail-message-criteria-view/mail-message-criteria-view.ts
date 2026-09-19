@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { NgbCollapseModule } from '@ng-bootstrap/ng-bootstrap';
 import { MailMessageCriteriaDTO } from '../../rest';
@@ -16,12 +16,15 @@ import { AvailabilityFilter, AvailabilityFilterComponent } from '../../jira/issu
 })
 export class MailMessageCriteriaView {
 
-  /** Sent as-is to the server (POST .../query), and reused client-side to re-filter already-fetched rows. */
-  readonly criteria: MailMessageCriteriaDTO = {
-    analysisAvailability: 'any',
-    developmentWorkAvailability: 'any',
-    personalInterrestAvailability: 'any',
-  };
+  /** Owned by the parent page, edited in-place here: sent as-is to the server (POST .../query),
+   * and reused client-side to re-filter already-fetched rows. */
+  @Input({ required: true }) criteria!: MailMessageCriteriaDTO;
+
+  /** True while a search is in-flight: disables the "Search" button to avoid re-entrant queries. */
+  @Input() loading = false;
+
+  /** Error of the last failed search, displayed next to the "Search" button, or '' when there is none. */
+  @Input() loadErrorMessage = '';
 
   /** Emitted when the "Search" button is clicked, to re-fetch from the server. */
   @Output() readonly search = new EventEmitter<void>();

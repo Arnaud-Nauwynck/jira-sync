@@ -65,4 +65,16 @@ public class MailMessageDTO {
         return annotated;
     }
 
+    /**
+     * Display id combining {@link #messageId} with the "yyyy-MM-dd" prefix of {@link #date} when
+     * known, e.g. {@code "2024-03-15-<abc123@apache.org>"}: more readable / sortable than the raw
+     * Message-ID, and the same "{yyyy-MM-dd}-{messageId}" shape that
+     * {@code MailMessageRepository#findByMessageId} recognizes to infer the partition month and
+     * avoid scanning every partition. Falls back to the plain {@link #messageId} when the date is
+     * unknown.
+     */
+    public String id() {
+        return (date != null) ? date.toLocalDate() + "-" + messageId : messageId;
+    }
+
 }

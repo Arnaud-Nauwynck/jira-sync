@@ -13,8 +13,8 @@ const POLL_INTERVAL_MS = 5000;
  * Polls the server's {@link ChangeLogService} for recent Jira issue / GitHub PR / mailing-list
  * changes, keeps an in-memory rolling window of them (most recent first), and, for each incoming
  * event, refreshes the corresponding entity in whichever *DataService already caches it (so open
- * grids/pages pick up the change without a manual reload). Polling can be suspended/resumed, e.g.
- * while the event-log page is not visible.
+ * grids/pages pick up the change without a manual reload), or invalidates that cache when the entity
+ * is not held yet. Polling can be suspended/resumed, e.g. while the event-log page is not visible.
  */
 @Injectable({ providedIn: 'root' })
 export class EventLogService {
@@ -70,30 +70,44 @@ export class EventLogService {
   }
 
   /** Re-fetches the entity the event refers to, but only when it's already held by the relevant
-   * *DataService cache — no point fetching entities nothing currently displays. */
+   * *DataService cache — no point fetching entities nothing currently displays. An entity held by
+   * none of them is a new one: the result sets of the server changed, so the data service is told
+   * not to compute its next search as a difference with the result it currently holds. */
   private refreshCachedEntity(event: ChangeLogEvent) {
     switch (event.eventType) {
       case 'jiraIssue': {
         const event2 = <JiraIssueChange>event;
         const key = event2.issueKey;
-        if (key && this.issuesDataService.issues().some((issue) => issue.key === key)) {
-          this.issuesDataService.refreshByKey(key).subscribe({ error: (err) => console.error('failed to refresh jira issue', key, err) });
+        if (key) {
+          if (this.issuesDataService.isCached(key)) {
+            this.issuesDataService.refreshByKey(key).subscribe({ error: (err) => console.error('failed to refresh jira issue', key, err) });
+          } else {
+            this.issuesDataService.invalidateDeltaBaseline();
+          }
         }
         break;
       }
       case 'githubPR': {
         const event2 = <GithubPRChange>event;
         const number = event2.number;
-        if (number != null && this.githubPullRequestsDataService.pullRequests().some((pr) => pr.number === number)) {
-          this.githubPullRequestsDataService.refreshByNumber(number).subscribe({ error: (err) => console.error('failed to refresh github PR', number, err) });
+        if (number != null) {
+          if (this.githubPullRequestsDataService.isCached(number)) {
+            this.githubPullRequestsDataService.refreshByNumber(number).subscribe({ error: (err) => console.error('failed to refresh github PR', number, err) });
+          } else {
+            this.githubPullRequestsDataService.invalidateDeltaBaseline();
+          }
         }
         break;
       }
       case 'mailingList': {
         const event2 = <MailingListChange> event;
         const messageId = event2.messageId;
-        if (messageId && this.mailMessagesDataService.messages().some((msg) => msg.messageId === messageId)) {
-          this.mailMessagesDataService.refreshByMessageId(messageId).subscribe({ error: (err) => console.error('failed to refresh mailing-list message', messageId, err) });
+        if (messageId) {
+          if (this.mailMessagesDataService.isCached(messageId)) {
+            this.mailMessagesDataService.refreshByMessageId(messageId).subscribe({ error: (err) => console.error('failed to refresh mailing-list message', messageId, err) });
+          } else {
+            this.mailMessagesDataService.invalidateDeltaBaseline();
+          }
         }
         break;
       }

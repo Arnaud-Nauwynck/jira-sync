@@ -20,6 +20,14 @@ public class IssuesCriteriaDTO implements AnnotationCriteriaFields {
     public Integer fromNumber;
     public Integer toNumber;
     public String keyPattern;
+    /** Regex searched anywhere in the summary (unlike the case-insensitive CSV {@code summaryContains}). */
+    public String summaryPattern;
+    /** Regex searched anywhere in the description (unlike the case-insensitive CSV {@code descriptionContains}). */
+    public String descriptionPattern;
+    /** Regex searched anywhere in a comment body; combined with {@code commentAuthorPattern} on the same comment. */
+    public String commentPattern;
+    /** Regex fully matching a comment author; combined with {@code commentPattern} on the same comment. */
+    public String commentAuthorPattern;
 
     // Main criteria
     public String summaryContains;

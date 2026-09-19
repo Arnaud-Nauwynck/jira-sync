@@ -3,11 +3,12 @@ import {
   provideBrowserGlobalErrorListeners,
   importProvidersFrom,
 } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import { RouteReuseStrategy, provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { routes } from './app.routes';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { provideApi } from './rest/provide-api';
+import { SearchPageRouteReuseStrategy } from './utils/search-page-route-reuse.strategy';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -16,5 +17,6 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(),
     importProvidersFrom(NgbModule),
     provideApi(''),
+    { provide: RouteReuseStrategy, useClass: SearchPageRouteReuseStrategy },
   ],
 };

@@ -19,7 +19,13 @@ import { OpenApiHttpParams, QueryParamStyle } from '../query.params';
 // @ts-ignore
 import { MailMessageAnnotationDTO } from '../model/mailMessageAnnotationDTO';
 // @ts-ignore
+import { MailMessageCompareIdsResultDTO } from '../model/mailMessageCompareIdsResultDTO';
+// @ts-ignore
+import { MailMessageCompareQueryDTO } from '../model/mailMessageCompareQueryDTO';
+// @ts-ignore
 import { MailMessageDTO } from '../model/mailMessageDTO';
+// @ts-ignore
+import { MailMessageIdAndLastUpdateTimeDTO } from '../model/mailMessageIdAndLastUpdateTimeDTO';
 // @ts-ignore
 import { MailMessagePartitionStatsDTO } from '../model/mailMessagePartitionStatsDTO';
 // @ts-ignore
@@ -43,6 +49,138 @@ export class MailMessagesService extends BaseService {
 
     constructor(protected httpClient: HttpClient, @Optional() @Inject(BASE_PATH) basePath: string|string[], @Optional() configuration?: Configuration) {
         super(basePath, configuration);
+    }
+
+    /**
+     * Compares the message ids matched by 2 independent criteria: ids matched by the left criteria only, by both (listed only when fillCommonIds is true, else only counted), and by the right criteria only; each side capped at its own limit (default 1000)
+     * @endpoint post /api/v1/mailing-list-messages/compare-query-ids
+     * @param mailMessageCompareQueryDTO 
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public compareQueryIds(mailMessageCompareQueryDTO: MailMessageCompareQueryDTO, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<MailMessageCompareIdsResultDTO>;
+    public compareQueryIds(mailMessageCompareQueryDTO: MailMessageCompareQueryDTO, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<MailMessageCompareIdsResultDTO>>;
+    public compareQueryIds(mailMessageCompareQueryDTO: MailMessageCompareQueryDTO, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<MailMessageCompareIdsResultDTO>>;
+    public compareQueryIds(mailMessageCompareQueryDTO: MailMessageCompareQueryDTO, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (mailMessageCompareQueryDTO === null || mailMessageCompareQueryDTO === undefined) {
+            throw new Error('Required parameter mailMessageCompareQueryDTO was null or undefined when calling compareQueryIds.');
+        }
+
+        let localVarHeaders = this.defaultHeaders;
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        // to determine the Content-Type header
+        const consumes: string[] = [
+            'application/json'
+        ];
+        const httpContentTypeSelected: string | undefined = this.configuration.selectHeaderContentType(consumes);
+        if (httpContentTypeSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Content-Type', httpContentTypeSelected);
+        }
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/mailing-list-messages/compare-query-ids`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<MailMessageCompareIdsResultDTO>('post', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                body: mailMessageCompareQueryDTO,
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
+     * Find the messages having the given Message-IDs (\&quot;ids\&quot;), returned in the request order; ids not found locally are silently skipped
+     * @endpoint post /api/v1/mailing-list-messages/by-ids
+     * @param requestBody 
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public findByIds(requestBody: Array<string>, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<MailMessageDTO>>;
+    public findByIds(requestBody: Array<string>, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<MailMessageDTO>>>;
+    public findByIds(requestBody: Array<string>, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<Array<MailMessageDTO>>>;
+    public findByIds(requestBody: Array<string>, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (requestBody === null || requestBody === undefined) {
+            throw new Error('Required parameter requestBody was null or undefined when calling findByIds.');
+        }
+
+        let localVarHeaders = this.defaultHeaders;
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        // to determine the Content-Type header
+        const consumes: string[] = [
+            'application/json'
+        ];
+        const httpContentTypeSelected: string | undefined = this.configuration.selectHeaderContentType(consumes);
+        if (httpContentTypeSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Content-Type', httpContentTypeSelected);
+        }
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/mailing-list-messages/by-ids`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<Array<MailMessageDTO>>('post', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                body: requestBody,
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
     }
 
     /**
@@ -301,6 +439,72 @@ export class MailMessagesService extends BaseService {
             {
                 context: localVarHttpContext,
                 body: personalInterrestMailCommentDTO,
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
+     * Same as /query-ids, but returns for each matching message its Message-ID (\&quot;id\&quot;) with its last update time (\&quot;t\&quot;, in epoch milliseconds)
+     * @endpoint post /api/v1/mailing-list-messages/query-id-and-last-update-times
+     * @param mailMessageQueryDTO 
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public queryMessageIdAndLastUpdateTimes(mailMessageQueryDTO: MailMessageQueryDTO, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<MailMessageIdAndLastUpdateTimeDTO>>;
+    public queryMessageIdAndLastUpdateTimes(mailMessageQueryDTO: MailMessageQueryDTO, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<MailMessageIdAndLastUpdateTimeDTO>>>;
+    public queryMessageIdAndLastUpdateTimes(mailMessageQueryDTO: MailMessageQueryDTO, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<Array<MailMessageIdAndLastUpdateTimeDTO>>>;
+    public queryMessageIdAndLastUpdateTimes(mailMessageQueryDTO: MailMessageQueryDTO, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (mailMessageQueryDTO === null || mailMessageQueryDTO === undefined) {
+            throw new Error('Required parameter mailMessageQueryDTO was null or undefined when calling queryMessageIdAndLastUpdateTimes.');
+        }
+
+        let localVarHeaders = this.defaultHeaders;
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        // to determine the Content-Type header
+        const consumes: string[] = [
+            'application/json'
+        ];
+        const httpContentTypeSelected: string | undefined = this.configuration.selectHeaderContentType(consumes);
+        if (httpContentTypeSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Content-Type', httpContentTypeSelected);
+        }
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/mailing-list-messages/query-id-and-last-update-times`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<Array<MailMessageIdAndLastUpdateTimeDTO>>('post', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                body: mailMessageQueryDTO,
                 responseType: <any>responseType_,
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,

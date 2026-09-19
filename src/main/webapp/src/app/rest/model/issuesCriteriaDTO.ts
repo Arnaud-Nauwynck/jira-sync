@@ -16,6 +16,10 @@ export interface IssuesCriteriaDTO {
     fromNumber?: number;
     toNumber?: number;
     keyPattern?: string;
+    summaryPattern?: string;
+    descriptionPattern?: string;
+    commentPattern?: string;
+    commentAuthorPattern?: string;
     summaryContains?: string;
     descriptionContains?: string;
     authorContains?: string;

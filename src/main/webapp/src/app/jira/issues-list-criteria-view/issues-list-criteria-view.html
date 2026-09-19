@@ -19,7 +19,10 @@
             [to]="criteria.toNumber ?? null" (toChange)="criteria.toNumber = $event ?? undefined; onFieldChanged()" />
           <app-text-contains-filter label="Key pattern" placeholder="regex, optional"
             [value]="criteria.keyPattern ?? ''" (valueChange)="criteria.keyPattern = $event; onFieldChanged()" />
-          <button class="btn btn-primary" type="button" (click)="onSearch()">Search</button>
+          <button class="btn btn-primary" type="button" [disabled]="loading" (click)="onSearch()">{{ loading ? 'Searching...' : 'Search' }}</button>
+          @if (loadErrorMessage) {
+            <span class="text-warning small">{{ loadErrorMessage }}</span>
+          }
           <ng-content />
         </div>
       </div>

@@ -17,9 +17,9 @@ public class CritUtils {
         return (patternText != null && !patternText.isBlank()) ? Pattern.compile(patternText) : null;
     }
 
-    /** Whether the (bucketed) value is in the comma-separated excluded list. */
+    /** Whether the (bucketed) value is in the comma-separated excluded list; a null value is never excluded. */
     public static boolean isExcluded(String excludedCsv, String value) {
-        return parseCsvList(excludedCsv).contains(value);
+        return value != null && parseCsvList(excludedCsv).contains(value);
     }
 
     /** True when the CSV filter is blank, or at least one of the given values contains (case-insensitively) one of its comma-separated terms. */

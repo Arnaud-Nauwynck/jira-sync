@@ -1,15 +1,15 @@
 <H4>GitHub Pull Requests</H4>
 
-<app-github-pr-search-criteria-view #criteriaView (search)="search()" (criteriaChanged)="listView.onFilterInputsChanged()">
+<app-github-pr-search-criteria-view [criteria]="criteria" [loading]="loading" [loadErrorMessage]="loadErrorMessage" (search)="search()" (criteriaChanged)="listView.onFilterInputsChanged()">
   <app-search-stats-bar
-    [rangeFrom]="criteriaView.criteria.fromYear" [rangeTo]="criteriaView.criteria.toYear"
+    [rangeFrom]="criteria.fromYear" [rangeTo]="criteria.toYear"
     [availableInRange]="availableInRange()" [total]="grandTotal()" [loadedCount]="pullRequestsDataService.pullRequests().length"
     [(limit)]="limit" />
 </app-github-pr-search-criteria-view>
 
 <app-github-pr-list-view #listView
   [rowData]="pullRequestsDataService.pullRequests()"
-  [criteria]="criteriaView.criteria"
+  [criteria]="criteria"
   (rowSelected)="selectedPullRequest.set($event)" />
 
 @if (selectedPullRequest(); as pr) {
