@@ -1,4 +1,22 @@
 @if (issue(); as data) {
+  <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+    <div class="d-flex flex-wrap gap-2">
+      <button class="btn btn-sm btn-outline-secondary" type="button" title="Previous issue created by the same author"
+        [disabled]="!nearby()?.prevCreatedBySameAuthor" (click)="goToIssue(nearby()?.prevCreatedBySameAuthor)">&laquo; Prev (same author)</button>
+      <button class="btn btn-sm btn-outline-secondary" type="button" title="Previous still-open issue created by the same author"
+        [disabled]="!nearby()?.prevStillOpenCreatedBySameAuthor" (click)="goToIssue(nearby()?.prevStillOpenCreatedBySameAuthor)">&laquo; Prev open (same author)</button>
+      <button class="btn btn-sm btn-outline-secondary" type="button" title="Previous still-open issue"
+        [disabled]="!nearby()?.prevStillOpen" (click)="goToIssue(nearby()?.prevStillOpen)">&laquo; Prev open</button>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      <button class="btn btn-sm btn-outline-secondary" type="button" title="Next still-open issue"
+        [disabled]="!nearby()?.nextStillOpen" (click)="goToIssue(nearby()?.nextStillOpen)">Next open &raquo;</button>
+      <button class="btn btn-sm btn-outline-secondary" type="button" title="Next still-open issue created by the same author"
+        [disabled]="!nearby()?.nextStillOpenCreatedBySameAuthor" (click)="goToIssue(nearby()?.nextStillOpenCreatedBySameAuthor)">Next open (same author) &raquo;</button>
+      <button class="btn btn-sm btn-outline-secondary" type="button" title="Next issue created by the same author"
+        [disabled]="!nearby()?.nextCreatedBySameAuthor" (click)="goToIssue(nearby()?.nextCreatedBySameAuthor)">Next (same author) &raquo;</button>
+    </div>
+  </div>
   <div class="d-flex justify-content-end mb-2">
     <button class="btn btn-outline-secondary btn-sm" type="button" [disabled]="refreshing()" (click)="refresh()">
       {{ refreshing() ? 'Refreshing...' : 'Refresh' }}

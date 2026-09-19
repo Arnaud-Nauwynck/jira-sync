@@ -3,6 +3,7 @@ package fr.an.projectanalysis.jira.rest;
 import fr.an.projectanalysis.jira.rest.dtos.IssuesPartitionStatsDTO;
 import fr.an.projectanalysis.jira.rest.dtos.IssuesQueryDTO;
 import fr.an.projectanalysis.jira.rest.dtos.JiraIssueDTO;
+import fr.an.projectanalysis.jira.rest.dtos.NearbyJiraIssuesDTO;
 import fr.an.projectanalysis.jira.rest.dtos.UserJiraIssueStatsDTO;
 import fr.an.projectanalysis.jira.service.JiraIssueService;
 import fr.an.projectanalysis.util.AbstractRestController;
@@ -61,6 +62,14 @@ public class JiraIssuesRestController extends AbstractRestController {
             JiraIssueDTO found = delegate.findAnnotatedIssueByKey(key);
             return found != null ? ResponseEntity.ok(found) : ResponseEntity.notFound().build();
         });
+    }
+
+    @Operation(summary = "For the issue with the given key, finds the keys of the nearest earlier (\"prev\") and later "
+            + "(\"next\") issue, within the same Jira project, that is still open, still open and created by the same "
+            + "author, or created by the same author (regardless of status)")
+    @GetMapping("/by-key/{key}/nearby")
+    public NearbyJiraIssuesDTO findNearbyIssues(@PathVariable("key") String key) {
+        return withLog(log, "GET", "/by-key/" + key + "/nearby", "", () -> delegate.findNearbyIssues(key));
     }
 
     @Operation(summary = "List issues matching the given criteria (Data Fetching + Main/Analysis/Development Work/Personal Interest "

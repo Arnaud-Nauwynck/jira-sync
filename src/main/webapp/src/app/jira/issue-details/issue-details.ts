@@ -1,7 +1,6 @@
 import { Component, Input, OnChanges, OnInit, SimpleChanges, signal } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
-import { switchMap } from 'rxjs';
-import { JiraIssueDTO } from '../../rest';
+import { ActivatedRoute, Router } from '@angular/router';
+import { JiraIssueDTO, NearbyJiraIssuesDTO } from '../../rest';
 import { IssuesDataService } from '../service/issues-data.service';
 import { IssueView } from '../issue-view/issue-view';
 
@@ -16,6 +15,7 @@ export class IssueDetailsPage implements OnInit, OnChanges {
   @Input() issueKey?: string;
 
   readonly issue = signal<JiraIssueDTO | undefined>(undefined);
+  readonly nearby = signal<NearbyJiraIssuesDTO | undefined>(undefined);
   readonly notFound = signal(false);
   readonly refreshing = signal(false);
 
@@ -23,6 +23,7 @@ export class IssueDetailsPage implements OnInit, OnChanges {
 
   constructor(
     private route: ActivatedRoute,
+    private router: Router,
     private issuesDataService: IssuesDataService,
   ) {}
 
@@ -30,29 +31,31 @@ export class IssueDetailsPage implements OnInit, OnChanges {
     if (this.issueKey) {
       this.loadIssue(this.issueKey);
     } else {
-      this.route.paramMap
-        .pipe(switchMap((params) => {
-          const key = params.get('key')!;
-          this.currentKey = key;
-          return this.issuesDataService.findByKey(key);
-        }))
-        .subscribe({
-          next: (issue) => {
-            this.issue.set(issue);
-            this.notFound.set(false);
-          },
-          error: (err) => {
-            console.error('failed to load issue', err);
-            this.issue.set(undefined);
-            this.notFound.set(true);
-          },
-        });
+      this.route.paramMap.subscribe((params) => {
+        const key = params.get('key');
+        if (key) {
+          this.loadIssue(key);
+        }
+      });
     }
   }
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['issueKey'] && !changes['issueKey'].firstChange && this.issueKey) {
       this.loadIssue(this.issueKey);
+    }
+  }
+
+  /** Navigates the "prev"/"next" toolbar buttons to another issue: reloads in place when embedded
+   * (driven by the `issueKey` @Input, not the route), otherwise navigates the route. */
+  goToIssue(key: string | undefined | null) {
+    if (!key) {
+      return;
+    }
+    if (this.issueKey) {
+      this.loadIssue(key);
+    } else {
+      this.router.navigate(['/issue', key]);
     }
   }
 
@@ -77,6 +80,7 @@ export class IssueDetailsPage implements OnInit, OnChanges {
 
   private loadIssue(key: string) {
     this.currentKey = key;
+    this.nearby.set(undefined);
     this.issuesDataService.findByKey(key).subscribe({
       next: (issue) => {
         this.issue.set(issue);
@@ -87,6 +91,10 @@ export class IssueDetailsPage implements OnInit, OnChanges {
         this.issue.set(undefined);
         this.notFound.set(true);
       },
+    });
+    this.issuesDataService.findNearbyIssues(key).subscribe({
+      next: (nearby) => this.nearby.set(nearby),
+      error: (err) => console.error('failed to load nearby issues', err),
     });
   }
 }

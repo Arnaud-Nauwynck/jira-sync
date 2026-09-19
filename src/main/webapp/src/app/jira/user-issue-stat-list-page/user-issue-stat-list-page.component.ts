@@ -28,9 +28,9 @@ const PER_YEAR_STAT_DEFS: PerYearStatDef[] = [
 @Component({
   imports: [AgGridAngular, FormsModule, IssueDetailsPage],
   selector: 'app-user-issue-stat-list',
-  templateUrl: './user-issue-stat-list.html',
+  templateUrl: './user-issue-stat-list-page.component.html',
 })
-export class UserIssueStatList implements OnInit {
+export class UserIssueStatListPage implements OnInit {
 
   // The issue key currently shown in the master-detail panel below the grid, or undefined when closed.
   readonly selectedIssueKey = signal<string | undefined>(undefined);

@@ -3,6 +3,6 @@ import { Component } from '@angular/core';
 @Component({
   imports: [],
   selector: 'app-about',
-  templateUrl: './about.html',
+  templateUrl: './about-page.component.html',
 })
-export class About {}
+export class AboutPage {}

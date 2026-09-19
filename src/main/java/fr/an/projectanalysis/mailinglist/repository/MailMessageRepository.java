@@ -231,8 +231,28 @@ public class MailMessageRepository {
         return findByMessageId(messageId) != null;
     }
 
-    /** Reads a single message by Message-ID across all partitions, or null if not found. */
-    public MailMessageDTO findByMessageId(String messageId) {
+    /** Matches the "{yyyy-MM-dd}-{messageId}" shape that mail-message-search-page.ts's "Open As Page"
+     * link builds (see src/main/webapp .../mail-message-search-page.ts), capturing the "yyyy-MM"
+     * partition month and the plain Message-ID separately. */
+    private static final java.util.regex.Pattern DATE_PREFIXED_KEY =
+            java.util.regex.Pattern.compile("^(\\d{4}-\\d{2})-\\d{2}-(.+)$");
+
+    /**
+     * Reads a single message by Message-ID, or null if not found. When {@code key} carries the
+     * "{yyyy-MM-dd}-{messageId}" date prefix (see {@link #DATE_PREFIXED_KEY}), the partition month
+     * is inferred from it and only that single partition is loaded; otherwise (or if the hinted
+     * partition doesn't have it) every partition is scanned, as before.
+     */
+    public MailMessageDTO findByMessageId(String key) {
+        java.util.regex.Matcher m = DATE_PREFIXED_KEY.matcher(key);
+        String messageId = key;
+        if (m.matches()) {
+            messageId = m.group(2);
+            MailMessageDTO found = cachedPartitionData(m.group(1)).get(messageId);
+            if (found != null) {
+                return found;
+            }
+        }
         for (String month : findAllPartitionMonths()) {
             MailMessageDTO found = cachedPartitionData(month).get(messageId);
             if (found != null) {
@@ -357,6 +377,30 @@ public class MailMessageRepository {
         for (String month : findPartitionMonthsBetween(fromMonth, toMonth)) {
             for (MailMessageDTO msg : cachedPartitionData(month).values()) {
                 callback.accept(month, msg);
+            }
+        }
+    }
+
+    @FunctionalInterface
+    public interface StoppableMailMessageCallback {
+        /** @return true to keep scanning further messages/partitions, false to stop the scan immediately. */
+        boolean accept(String month, MailMessageDTO msg);
+    }
+
+    /**
+     * Streams messages whose partition month falls within [fromMonth, toMonth], starting from the
+     * most recent partition (toMonth) and working backwards towards fromMonth, stopping as soon as
+     * the callback returns false (e.g. once a result limit is reached). This prunes partitions:
+     * older partitions are never loaded once the callback is satisfied.
+     */
+    public void scanMessagesFromMostRecent(String fromMonth, String toMonth, StoppableMailMessageCallback callback) {
+        List<String> partitions = findPartitionMonthsBetween(fromMonth, toMonth);
+        for (int i = partitions.size() - 1; i >= 0; i--) {
+            String month = partitions.get(i);
+            for (MailMessageDTO msg : cachedPartitionData(month).values()) {
+                if (!callback.accept(month, msg)) {
+                    return;
+                }
             }
         }
     }

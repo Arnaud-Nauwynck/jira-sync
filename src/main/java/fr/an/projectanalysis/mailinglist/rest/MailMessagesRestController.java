@@ -3,6 +3,7 @@ package fr.an.projectanalysis.mailinglist.rest;
 import fr.an.projectanalysis.mailinglist.rest.dtos.MailMessageDTO;
 import fr.an.projectanalysis.mailinglist.rest.dtos.MailMessagePartitionStatsDTO;
 import fr.an.projectanalysis.mailinglist.rest.dtos.MailMessageQueryDTO;
+import fr.an.projectanalysis.mailinglist.rest.dtos.NearbyMailMessagesDTO;
 import fr.an.projectanalysis.mailinglist.service.MailMessageService;
 import fr.an.projectanalysis.util.AbstractRestController;
 import io.swagger.v3.oas.annotations.Operation;
@@ -41,6 +42,13 @@ public class MailMessagesRestController extends AbstractRestController {
             MailMessageDTO found = delegate.findByMessageId(messageId);
             return found != null ? ResponseEntity.ok(found) : ResponseEntity.notFound().build();
         });
+    }
+
+    @Operation(summary = "For the message with the given Message-ID, finds the Message-IDs of the nearest earlier "
+            + "(\"prev\") and later (\"next\") message overall, and the nearest one from the same sender")
+    @GetMapping("/message/nearby")
+    public NearbyMailMessagesDTO findNearbyMessages(@RequestParam("messageId") String messageId) {
+        return withLog(log, "GET", "/message/nearby", "messageId=" + messageId, () -> delegate.findNearbyMessages(messageId));
     }
 
     @Operation(summary = "List messages matching the given criteria (Data Fetching + Main/Analysis/Development Work/Personal Interest "

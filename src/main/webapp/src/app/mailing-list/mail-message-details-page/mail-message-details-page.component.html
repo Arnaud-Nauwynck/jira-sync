@@ -1,0 +1,21 @@
+@if (message(); as data) {
+  <div class="d-flex justify-content-between gap-2 mb-2">
+    <div class="d-flex gap-2">
+      <button class="btn btn-sm btn-outline-secondary" type="button" title="Previous message from the same sender"
+        [disabled]="!nearby()?.prevMailSameSender" (click)="goToMessage(nearby()?.prevMailSameSender)">&laquo; Prev (same sender)</button>
+      <button class="btn btn-sm btn-outline-secondary" type="button" title="Previous message"
+        [disabled]="!nearby()?.prevMail" (click)="goToMessage(nearby()?.prevMail)">&laquo; Prev</button>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-sm btn-outline-secondary" type="button" title="Next message"
+        [disabled]="!nearby()?.nextMail" (click)="goToMessage(nearby()?.nextMail)">Next &raquo;</button>
+      <button class="btn btn-sm btn-outline-secondary" type="button" title="Next message from the same sender"
+        [disabled]="!nearby()?.nextMailSameSender" (click)="goToMessage(nearby()?.nextMailSameSender)">Next (same sender) &raquo;</button>
+    </div>
+  </div>
+  <app-mail-message-view [message]="data" />
+} @else if (notFound()) {
+  <p>Message not found.</p>
+} @else {
+  <p>Loading...</p>
+}

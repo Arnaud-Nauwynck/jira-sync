@@ -35,9 +35,11 @@ export class MailMessageSearchPage implements OnInit {
   }
 
   openDetailAsRoute() {
-    const messageId = this.selectedMessage()?.messageId;
+    const message = this.selectedMessage();
+    const messageId = message?.messageId;
     if (messageId) {
-      this.router.navigate(['/mailing-list-message', messageId]);
+      const day = message?.date?.substring(0, 10);
+      this.router.navigate(['/mailing-list-message', day ? `${day}-${messageId}` : messageId]);
     }
   }
 

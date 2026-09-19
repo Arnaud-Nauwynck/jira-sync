@@ -1,0 +1,30 @@
+@if (pullRequest(); as data) {
+  <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+    <div class="d-flex flex-wrap gap-2">
+      <button class="btn btn-sm btn-outline-secondary" type="button" title="Previous PR created by the same author"
+        [disabled]="!nearby()?.prevCreatedBySameAuthor" (click)="goToPullRequest(nearby()?.prevCreatedBySameAuthor)">&laquo; Prev (same author)</button>
+      <button class="btn btn-sm btn-outline-secondary" type="button" title="Previous still-open PR created by the same author"
+        [disabled]="!nearby()?.prevStillOpenCreatedBySameAuthor" (click)="goToPullRequest(nearby()?.prevStillOpenCreatedBySameAuthor)">&laquo; Prev open (same author)</button>
+      <button class="btn btn-sm btn-outline-secondary" type="button" title="Previous still-open PR"
+        [disabled]="!nearby()?.prevStillOpen" (click)="goToPullRequest(nearby()?.prevStillOpen)">&laquo; Prev open</button>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      <button class="btn btn-sm btn-outline-secondary" type="button" title="Next still-open PR"
+        [disabled]="!nearby()?.nextStillOpen" (click)="goToPullRequest(nearby()?.nextStillOpen)">Next open &raquo;</button>
+      <button class="btn btn-sm btn-outline-secondary" type="button" title="Next still-open PR created by the same author"
+        [disabled]="!nearby()?.nextStillOpenCreatedBySameAuthor" (click)="goToPullRequest(nearby()?.nextStillOpenCreatedBySameAuthor)">Next open (same author) &raquo;</button>
+      <button class="btn btn-sm btn-outline-secondary" type="button" title="Next PR created by the same author"
+        [disabled]="!nearby()?.nextCreatedBySameAuthor" (click)="goToPullRequest(nearby()?.nextCreatedBySameAuthor)">Next (same author) &raquo;</button>
+    </div>
+  </div>
+  <div class="d-flex justify-content-end mb-2">
+    <button class="btn btn-outline-secondary btn-sm" type="button" [disabled]="refreshing()" (click)="refresh()">
+      {{ refreshing() ? 'Refreshing...' : 'Refresh' }}
+    </button>
+  </div>
+  <app-github-pr-view [pullRequest]="data" />
+} @else if (notFound()) {
+  <p>Pull request not found.</p>
+} @else {
+  <p>Loading...</p>
+}

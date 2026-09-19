@@ -8,6 +8,7 @@ import fr.an.projectanalysis.jira.rest.dtos.IssuesPartitionStatsDTO;
 import fr.an.projectanalysis.jira.rest.dtos.IssuesQueryDTO;
 import fr.an.projectanalysis.jira.rest.dtos.JiraIssueAnnotationDTO;
 import fr.an.projectanalysis.jira.rest.dtos.JiraIssueDTO;
+import fr.an.projectanalysis.jira.rest.dtos.NearbyJiraIssuesDTO;
 import fr.an.projectanalysis.jira.rest.dtos.UserJiraIssueStatsDTO;
 import fr.an.projectanalysis.jira.rest.dtos.YearCountDTO;
 import fr.an.projectanalysis.rest.dtos.ClaudeCodePromptResponseDTO;
@@ -17,17 +18,15 @@ import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @Component
 @Slf4j
@@ -35,19 +34,8 @@ public class JiraIssueService {
 
     private static final String UNKNOWN_USER = "unknown";
 
-    private static final String PULL_REQUEST_AVAILABLE_LABEL = "pull-request-available";
-
-    private static final String OTHER_TYPES = "(others)";
-    private static final Set<String> KNOWN_TYPES = Set.of(
-            "Bug", "Improvement", "New Feature", "Story", "Epic", "Sub-task", "Task", "Umbrella", "Question",
-            "Wish", "Test", "Documentation", "IT Help", "Brainstorming", "Dependency upgrade", "Request",
-            "Planned Work", "Github Integration", "RTC", "Blog - New Blog Request");
-
-    private static final String OTHER_RESOLUTIONS = "(others)";
-    private static final Set<String> KNOWN_RESOLUTIONS = Set.of(
-            "Done", "Fixed", "Invalid", "Incomplete", "Cannot Reproduce", "Works for Me", "Not A Problem",
-            "Won't Fix", "Won't Do", "Later", "Duplicate", "Resolved", "Not A Bug", "Abandoned", "Auto Closed",
-            "WorkAround", "Workaround", "Implemented", "Information Provided", "");
+    /** Status names (lower-case) considered "closed", when no resolutiondate is set either (mirrors {@code UserJiraIssueStatsDTO}). */
+    private static final Set<String> CLOSED_STATUS_NAMES = Set.of("closed", "done", "resolved");
 
     /** Tools "/jira-analysis" needs (issue lookup, writing the analysis back to Jira, git-log
      * correlation, and saving its local markdown report), pre-approved so the headless CLI does
@@ -136,6 +124,129 @@ public class JiraIssueService {
         return repository.findByKey(key);
     }
 
+    /**
+     * For the issue with the given key, finds the nearest earlier ("prev") and later ("next")
+     * issue, ordered by issue number within the same Jira project, matching each of 3 independent
+     * criteria: still open, still open and created by the same author, and created by the same
+     * author (regardless of status). Walks the "created_year" partitions one at a time, starting
+     * at the issue's own partition and expanding outward, so only the partitions actually needed
+     * to resolve all 3 criteria on each side are loaded.
+     */
+    public NearbyJiraIssuesDTO findNearbyIssues(String key) {
+        JiraIssueDTO target = repository.getByKey(key);
+        String projectPrefix = projectPrefixOf(key);
+        String author = creatorOf(target);
+        int targetYear = JiraIssueRepository.partitionYearOf(target);
+
+        List<Integer> years = repository.findAllPartitionYears();
+        int targetYearIdx = years.indexOf(targetYear);
+
+        NearbyJiraIssuesDTO dto = new NearbyJiraIssuesDTO();
+        if (targetYearIdx < 0) {
+            return dto;
+        }
+
+        prevLoop:
+        for (int yi = targetYearIdx; yi >= 0; yi--) {
+            List<JiraIssueDTO> issues = sameProjectIssuesInPartitionSorted(years.get(yi), projectPrefix);
+            int fromIndex = issues.size() - 1;
+            if (yi == targetYearIdx) {
+                int targetIndex = indexOfKey(issues, key);
+                if (targetIndex < 0) {
+                    continue;
+                }
+                fromIndex = targetIndex - 1;
+            }
+            for (int i = fromIndex; i >= 0; i--) {
+                JiraIssueDTO issue = issues.get(i);
+                boolean open = isStillOpen(issue);
+                boolean sameAuthor = author.equalsIgnoreCase(creatorOf(issue));
+                if (dto.prevStillOpen == null && open) {
+                    dto.prevStillOpen = issue.key;
+                }
+                if (dto.prevStillOpenCreatedBySameAuthor == null && open && sameAuthor) {
+                    dto.prevStillOpenCreatedBySameAuthor = issue.key;
+                }
+                if (dto.prevCreatedBySameAuthor == null && sameAuthor) {
+                    dto.prevCreatedBySameAuthor = issue.key;
+                }
+                if (dto.prevStillOpen != null && dto.prevStillOpenCreatedBySameAuthor != null && dto.prevCreatedBySameAuthor != null) {
+                    break prevLoop;
+                }
+            }
+        }
+
+        nextLoop:
+        for (int yi = targetYearIdx; yi < years.size(); yi++) {
+            List<JiraIssueDTO> issues = sameProjectIssuesInPartitionSorted(years.get(yi), projectPrefix);
+            int fromIndex = 0;
+            if (yi == targetYearIdx) {
+                int targetIndex = indexOfKey(issues, key);
+                if (targetIndex < 0) {
+                    continue;
+                }
+                fromIndex = targetIndex + 1;
+            }
+            for (int i = fromIndex; i < issues.size(); i++) {
+                JiraIssueDTO issue = issues.get(i);
+                boolean open = isStillOpen(issue);
+                boolean sameAuthor = author.equalsIgnoreCase(creatorOf(issue));
+                if (dto.nextStillOpen == null && open) {
+                    dto.nextStillOpen = issue.key;
+                }
+                if (dto.nextStillOpenCreatedBySameAuthor == null && open && sameAuthor) {
+                    dto.nextStillOpenCreatedBySameAuthor = issue.key;
+                }
+                if (dto.nextCreatedBySameAuthor == null && sameAuthor) {
+                    dto.nextCreatedBySameAuthor = issue.key;
+                }
+                if (dto.nextStillOpen != null && dto.nextStillOpenCreatedBySameAuthor != null && dto.nextCreatedBySameAuthor != null) {
+                    break nextLoop;
+                }
+            }
+        }
+        return dto;
+    }
+
+    /** The issues of a single "created_year" partition belonging to the given project, ordered by issue number. */
+    private List<JiraIssueDTO> sameProjectIssuesInPartitionSorted(int year, String projectPrefix) {
+        List<JiraIssueDTO> result = new ArrayList<>();
+        repository.scanIssues(year, year, (y, issue) -> {
+            if (projectPrefix.equals(projectPrefixOf(issue.key))) {
+                result.add(issue);
+            }
+        });
+        result.sort(Comparator.comparing(issue -> issueNumberOf(issue.key), Comparator.nullsLast(Comparator.naturalOrder())));
+        return result;
+    }
+
+    private static int indexOfKey(List<JiraIssueDTO> issues, String key) {
+        for (int i = 0; i < issues.size(); i++) {
+            if (key.equals(issues.get(i).key)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private static boolean isStillOpen(JiraIssueDTO issue) {
+        JiraIssueDTO.IssueFieldsDTO f = issue.fields;
+        String status = f != null ? f.status : null;
+        String resolutiondate = f != null ? f.resolutiondate : null;
+        boolean closed = (resolutiondate != null && !resolutiondate.isBlank())
+                || (status != null && CLOSED_STATUS_NAMES.contains(status.toLowerCase(Locale.ROOT)));
+        return !closed;
+    }
+
+    /** The Jira project prefix of a key (eg "PROJ" in "PROJ-123"). */
+    private static String projectPrefixOf(String key) {
+        if (key == null) {
+            return "";
+        }
+        int dashIdx = key.lastIndexOf('-');
+        return dashIdx >= 0 ? key.substring(0, dashIdx) : key;
+    }
+
     /** Lists the issues created between fromYear and toYear (inclusive), optionally filtered by creator username. */
     public List<JiraIssueDTO> queryAnnotatedIssues(int fromYear, int toYear, String usernamePatternText) {
         return queryAnnotatedIssues(fromYear, toYear, usernamePatternText, null, null, null);
@@ -154,11 +265,12 @@ public class JiraIssueService {
         List<JiraIssueDTO> result = new ArrayList<>();
         Pattern usernamePattern = compilePattern(usernamePatternText);
         Pattern keyPattern = compilePattern(keyPatternText);
+        JiraIssueCriteria issueCriteria = new JiraIssueCriteria(criteria);
         repository.scanIssues(fromYear, toYear, (year, issue) -> {
             boolean matches = (usernamePattern == null || usernamePattern.matcher(creatorOf(issue)).matches())
                     && (keyPattern == null || (issue.key != null && keyPattern.matcher(issue.key).matches()))
                     && matchesNumberRange(issue.key, fromNumber, toNumber)
-                    && matchesCriteria(criteria, issue);
+                    && issueCriteria.test(issue);
             if (matches) {
                 result.add(issue);
             }
@@ -195,18 +307,19 @@ public class JiraIssueService {
         Pattern keyPattern = c != null ? compilePattern(c.keyPattern) : null;
         Integer fromNumber = c != null ? c.fromNumber : null;
         Integer toNumber = c != null ? c.toNumber : null;
+        JiraIssueCriteria issueCriteria = new JiraIssueCriteria(c);
         List<JiraIssueDTO> result = new ArrayList<>();
-        repository.scanIssues(fromYear, toYear, (year, issue) -> {
-            if (result.size() >= limit) {
-                return;
-            }
+        // partition pruning: scan from the most recent partition (toYear) backwards, stopping as
+        // soon as the limit is reached, so older partitions are never loaded once satisfied.
+        repository.scanIssuesFromMostRecent(fromYear, toYear, (year, issue) -> {
             boolean matches = (usernamePattern == null || usernamePattern.matcher(creatorOf(issue)).matches())
                     && (keyPattern == null || (issue.key != null && keyPattern.matcher(issue.key).matches()))
                     && matchesNumberRange(issue.key, fromNumber, toNumber)
-                    && matchesCriteria(c, issue);
+                    && issueCriteria.test(issue);
             if (matches) {
                 result.add(issue);
             }
+            return result.size() < limit;
         });
         return result;
     }
@@ -220,208 +333,6 @@ public class JiraIssueService {
         }
         dto.statsPerYear = stats;
         return dto;
-    }
-
-    private static boolean matchesCriteria(IssuesCriteriaDTO c, JiraIssueDTO issue) {
-        if (c == null) {
-            return true;
-        }
-        JiraIssueDTO.IssueFieldsDTO fields = issue.fields;
-        if (!matchesAny(c.summaryContains, fields != null ? fields.summary : null)) {
-            return false;
-        }
-        if (!matchesAny(c.descriptionContains, fields != null ? fields.description : null)) {
-            return false;
-        }
-        if (!matchesAny(c.authorContains, fields != null ? fields.creator : null, fields != null ? fields.reporter : null)) {
-            return false;
-        }
-        List<JiraIssueDTO.IssueCommentDTO> comments = fields != null && fields.comments != null ? fields.comments : List.of();
-        if (!matchesAny(c.commentsContains, comments.stream().map(cm -> cm.body).toArray(String[]::new))) {
-            return false;
-        }
-        if (!matchesAny(c.commentAuthorContains, comments.stream().map(cm -> cm.author).toArray(String[]::new))) {
-            return false;
-        }
-        if (isExcluded(c.excludedTypes, bucketedValue(fields != null ? fields.issuetype : null, KNOWN_TYPES, OTHER_TYPES))) {
-            return false;
-        }
-        if (isExcluded(c.excludedResolutions, bucketedValue(fields != null ? fields.resolution : null, KNOWN_RESOLUTIONS, OTHER_RESOLUTIONS))) {
-            return false;
-        }
-        if (isExcluded(c.excludedStatuses, fields != null ? fields.status : null)) {
-            return false;
-        }
-        if (isExcluded(c.excludedPriorities, fields != null ? fields.priority : null)) {
-            return false;
-        }
-        List<String> labels = fields != null && fields.labels != null ? fields.labels : List.of();
-        if (!matchesAny(c.labelsContains, labels.toArray(String[]::new))) {
-            return false;
-        }
-        if (!matchesAvailability(c.pullRequestAvailableLabel, labels.contains(PULL_REQUEST_AVAILABLE_LABEL))) {
-            return false;
-        }
-        List<String> components = fields != null && fields.components != null ? fields.components : List.of();
-        if (!matchesAny(c.componentsContains, components.toArray(String[]::new))) {
-            return false;
-        }
-
-        IssueExtraFieldsDTO annotated = issue.annotated;
-        boolean hasAnalysis = annotated != null && annotated.analysisSummary != null && !annotated.analysisSummary.isBlank();
-        if (!matchesAvailability(c.analysisAvailability, hasAnalysis)) {
-            return false;
-        }
-        if (!matchesAny(c.analysisSummaryContains, annotated != null ? annotated.analysisSummary : null)) {
-            return false;
-        }
-        if (!matchesDateRange(c.analysisSummaryUpdatedFrom, c.analysisSummaryUpdatedTo,
-                annotated != null ? annotated.analysisSummaryLastUpdateTime : null)) {
-            return false;
-        }
-        if (!matchesTokensRangeK(c.analysisSummaryMinTokensK, c.analysisSummaryMaxTokensK,
-                annotated != null ? annotated.analysisSummaryTokensConsumed : 0)) {
-            return false;
-        }
-        List<String> analysisExtraPrompts = annotated != null && annotated.analysisUserExtraPrompts != null
-                ? annotated.analysisUserExtraPrompts : List.of();
-        if (!matchesAny(c.analysisUserExtraPromptsContains, analysisExtraPrompts.toArray(String[]::new))) {
-            return false;
-        }
-
-        boolean hasDevWork = annotated != null && annotated.developmentWorkDescribed != null && !annotated.developmentWorkDescribed.isBlank();
-        if (!matchesAvailability(c.developmentWorkAvailability, hasDevWork)) {
-            return false;
-        }
-        if (!matchesAny(c.developmentWorkDescribedContains, annotated != null ? annotated.developmentWorkDescribed : null)) {
-            return false;
-        }
-        if (!matchesDateRange(c.developmentWorkUpdatedFrom, c.developmentWorkUpdatedTo,
-                annotated != null ? annotated.developmentWorkLastUpdateTime : null)) {
-            return false;
-        }
-        if (!matchesTokensRangeK(c.developmentWorkMinTokensK, c.developmentWorkMaxTokensK,
-                annotated != null ? annotated.developmentWorkTokensConsumed : 0)) {
-            return false;
-        }
-        List<String> devWorkExtraPrompts = annotated != null && annotated.developmentWorkUserExtraPrompts != null
-                ? annotated.developmentWorkUserExtraPrompts : List.of();
-        if (!matchesAny(c.developmentWorkUserExtraPromptsContains, devWorkExtraPrompts.toArray(String[]::new))) {
-            return false;
-        }
-
-        boolean hasPersonalInterrest = annotated != null && annotated.personalInterrestComment != null && !annotated.personalInterrestComment.isBlank();
-        if (!matchesAvailability(c.personalInterrestAvailability, hasPersonalInterrest)) {
-            return false;
-        }
-        if (!matchesAny(c.personalInterrestCommentContains, annotated != null ? annotated.personalInterrestComment : null)) {
-            return false;
-        }
-        if (!matchesNumberRange(c.personalInterrestMinPriority, c.personalInterrestMaxPriority,
-                annotated != null ? annotated.personalInterrestPriority10 : null)) {
-            return false;
-        }
-        return true;
-    }
-
-    /** Maps a value to itself if it is a known enum option, or to the "others" bucket otherwise (mirrors the Angular type/resolution filters). */
-    private static String bucketedValue(String value, Set<String> knownValues, String otherBucket) {
-        String v = value != null ? value : "";
-        return knownValues.contains(v) ? v : otherBucket;
-    }
-
-    /** Whether the (bucketed) value is in the comma-separated excluded list. */
-    private static boolean isExcluded(String excludedCsv, String value) {
-        return parseCsvList(excludedCsv).contains(value);
-    }
-
-    /** True when the CSV filter is blank, or at least one of the given values contains (case-insensitively) one of its comma-separated terms. */
-    private static boolean matchesAny(String csvFilter, String... values) {
-        List<String> terms = parseCsvList(csvFilter);
-        if (terms.isEmpty()) {
-            return true;
-        }
-        for (String value : values) {
-            if (value == null) {
-                continue;
-            }
-            String lower = value.toLowerCase();
-            for (String term : terms) {
-                if (lower.contains(term.toLowerCase())) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    private static List<String> parseCsvList(String csv) {
-        if (csv == null || csv.isBlank()) {
-            return List.of();
-        }
-        return Arrays.stream(csv.split(","))
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
-                .collect(Collectors.toList());
-    }
-
-    /** 'yes' requires present, 'no' requires absent, 'any'/blank/null does not filter. */
-    private static boolean matchesAvailability(String availability, boolean present) {
-        if ("yes".equals(availability)) {
-            return present;
-        }
-        if ("no".equals(availability)) {
-            return !present;
-        }
-        return true;
-    }
-
-    private static boolean matchesDateRange(String fromDate, String toDate, LocalDateTime value) {
-        boolean hasFrom = fromDate != null && !fromDate.isBlank();
-        boolean hasTo = toDate != null && !toDate.isBlank();
-        if (!hasFrom && !hasTo) {
-            return true;
-        }
-        if (value == null) {
-            return false;
-        }
-        if (hasFrom && value.isBefore(LocalDate.parse(fromDate).atStartOfDay())) {
-            return false;
-        }
-        if (hasTo && value.isAfter(LocalDate.parse(toDate).atTime(23, 59, 59))) {
-            return false;
-        }
-        return true;
-    }
-
-    private static boolean matchesNumberRange(Integer min, Integer max, Integer value) {
-        if (min == null && max == null) {
-            return true;
-        }
-        if (value == null) {
-            return false;
-        }
-        if (min != null && value < min) {
-            return false;
-        }
-        if (max != null && value > max) {
-            return false;
-        }
-        return true;
-    }
-
-    /** min/max are expressed in kilo-tokens (thousands); value is the raw token count. */
-    private static boolean matchesTokensRangeK(Integer minK, Integer maxK, int value) {
-        if (minK == null && maxK == null) {
-            return true;
-        }
-        if (minK != null && value < minK * 1000) {
-            return false;
-        }
-        if (maxK != null && value > maxK * 1000) {
-            return false;
-        }
-        return true;
     }
 
     /** Whether the numeric suffix of the key (eg "123" in "PROJ-123") falls within [fromNumber, toNumber] (inclusive, either bound optional). */

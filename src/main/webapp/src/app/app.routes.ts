@@ -2,30 +2,37 @@ import { Routes } from '@angular/router';
 import {IssuesSearchPage} from './jira/issues-search-page/issues-search-page';
 import {IssueDetailsPage} from './jira/issue-details/issue-details';
 import {GithubPrSearchPage} from './github/github-pr-search-page/github-pr-search-page';
-import {GithubPrDetailsPage} from './github/github-pr-details/github-pr-details';
+import {GithubPrDetailsPage} from './github/github-pr-details-page/github-pr-details';
 import {MailMessageSearchPage} from './mailing-list/mail-message-search-page/mail-message-search-page';
-import {MailMessageDetails} from './mailing-list/mail-message-details/mail-message-details';
-import {SourcesSync} from './sources-sync/sources-sync.component';
-import {About} from './about/about';
-import {UserIssueStatList} from './jira/user-issue-stat-list/user-issue-stat-list';
-import {UserPrStatList} from './github/user-pr-stat-list/user-pr-stat-list';
-import {UserMailMessageStatList} from './mailing-list/user-mail-message-stat-list/user-mail-message-stat-list';
-import {GithubRateLimit} from './github/github-rate-limit/github-rate-limit';
+import {MailMessageDetailsPage} from './mailing-list/mail-message-details-page/mail-message-details-page.component';
+import {SourcesSyncPage} from './sources-sync-page/sources-sync.component';
+import {AboutPage} from './about-page/about-page.component';
+import {UserIssueStatListPage} from './jira/user-issue-stat-list-page/user-issue-stat-list-page.component';
+import {UserPrStatListPage} from './github/user-pr-stat-list-page/user-pr-stat-list-page.component';
+import {UserMailMessageStatListPage} from './mailing-list/user-mail-message-stat-list-page/user-mail-message-stat-list-page.component';
+import {GithubRateLimitPage} from './github/github-rate-limit-page/github-rate-limit-page.component';
 import {EventLogPage} from './event-log/event-log-page/event-log-page';
 
 export const routes: Routes = [
+  // Jira
   {path:'issues', component: IssuesSearchPage},
   {path:'issue/:key', component: IssueDetailsPage},
+  {path:'user-issue-stats', component: UserIssueStatListPage},
+
+  // Github Pull-Request
   {path:'github-pull-requests', component: GithubPrSearchPage},
   {path:'github-pull-request/:number', component: GithubPrDetailsPage},
+  {path:'user-pr-stats', component: UserPrStatListPage},
+  {path:'github-rate-limit', component: GithubRateLimitPage},
+
+  // Mailing List
   {path:'mailing-list', component: MailMessageSearchPage},
-  {path:'mailing-list-message/:messageId', component: MailMessageDetails},
-  {path:'user-issue-stats', component: UserIssueStatList},
-  {path:'user-pr-stats', component: UserPrStatList},
-  {path:'user-mail-message-stats', component: UserMailMessageStatList},
-  {path:'sources-sync', component: SourcesSync},
-  {path:'github-rate-limit', component: GithubRateLimit},
+  {path:'mailing-list-message/:messageId', component: MailMessageDetailsPage},
+  {path:'user-mail-message-stats', component: UserMailMessageStatListPage},
+
+  // Misc
+  {path:'sources-sync', component: SourcesSyncPage},
   {path:'event-log', component: EventLogPage},
-  {path:'about', component: About},
+  {path:'about', component: AboutPage},
 
 ];

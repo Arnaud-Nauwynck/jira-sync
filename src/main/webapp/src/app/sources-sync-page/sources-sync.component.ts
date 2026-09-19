@@ -13,7 +13,7 @@ const RATE_LIMIT_REFRESH_MILLIS = 60_000;
   selector: 'app-sources-sync',
   templateUrl: './sources-sync.component.html',
 })
-export class SourcesSync implements OnInit {
+export class SourcesSyncPage implements OnInit {
   showAdvanced = signal(false);
 
   running = signal(false);

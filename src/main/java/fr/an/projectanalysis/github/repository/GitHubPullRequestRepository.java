@@ -173,10 +173,19 @@ public class GitHubPullRequestRepository {
         return findByNumber(number) != null;
     }
 
-    /** Reads a single PR by number across all partitions, or null if not found. */
+    /**
+     * Reads a single PR by number, or null if not found. Uses the per-partition min/max PR-number
+     * index ({@link #partitionStats}) to load (from disk, if not already cached) only the partitions
+     * whose range could contain the number, instead of every partition.
+     */
     public GitHubPullRequestDTO findByNumber(int number) {
-        for (int year : findAllPartitionYears()) {
-            GitHubPullRequestDTO found = cachedPartitionData(year).get(number);
+        ensurePartitionStatsLoaded();
+        for (Map.Entry<Integer, PartitionIndexes> entry : partitionStats.entrySet()) {
+            PartitionIndexes stats = entry.getValue();
+            if (stats.minId == null || stats.maxId == null || number < stats.minId || number > stats.maxId) {
+                continue;
+            }
+            GitHubPullRequestDTO found = cachedPartitionData(entry.getKey()).get(number);
             if (found != null) {
                 return found;
             }
@@ -244,6 +253,30 @@ public class GitHubPullRequestRepository {
         for (int year : findPartitionYearBetween(fromYear, toYear)) {
             for (GitHubPullRequestDTO pr : cachedPartitionData(year).values()) {
                 callback.accept(year, pr);
+            }
+        }
+    }
+
+    @FunctionalInterface
+    public interface StoppablePullRequestCallback {
+        /** @return true to keep scanning further PRs/partitions, false to stop the scan immediately. */
+        boolean accept(int year, GitHubPullRequestDTO pr);
+    }
+
+    /**
+     * Streams PRs whose "created_year" partition falls within [fromYear, toYear], starting from the
+     * most recent partition (toYear) and working backwards towards fromYear, stopping as soon as the
+     * callback returns false (e.g. once a result limit is reached). This prunes partitions: older
+     * partitions are never loaded once the callback is satisfied.
+     */
+    public void scanPullRequestsFromMostRecent(int fromYear, int toYear, StoppablePullRequestCallback callback) {
+        List<Integer> partitions = findPartitionYearBetween(fromYear, toYear);
+        for (int i = partitions.size() - 1; i >= 0; i--) {
+            int year = partitions.get(i);
+            for (GitHubPullRequestDTO pr : cachedPartitionData(year).values()) {
+                if (!callback.accept(year, pr)) {
+                    return;
+                }
             }
         }
     }

@@ -1,5 +1,5 @@
 import {IssuesCriteriaDTO, JiraIssueDTO} from '../../rest';
-import {Crit} from '../../utils/Crit';
+import {Crit, Restrictiveness} from '../../utils/Crit';
 import {
   KNOWN_RESOLUTIONS,
   KNOWN_TYPES,

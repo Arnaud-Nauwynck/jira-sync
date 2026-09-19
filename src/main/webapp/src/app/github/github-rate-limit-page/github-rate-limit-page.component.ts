@@ -14,9 +14,9 @@ interface RateLimitRow {
 @Component({
   imports: [],
   selector: 'app-github-rate-limit',
-  templateUrl: './github-rate-limit.html',
+  templateUrl: './github-rate-limit-page.component.html',
 })
-export class GithubRateLimit implements OnInit {
+export class GithubRateLimitPage implements OnInit {
   loading = signal(false);
   error = signal<string | undefined>(undefined);
   rows = signal<RateLimitRow[]>([]);

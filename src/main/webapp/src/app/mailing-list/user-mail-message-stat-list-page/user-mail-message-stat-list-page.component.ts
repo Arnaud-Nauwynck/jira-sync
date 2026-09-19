@@ -23,9 +23,9 @@ const PER_MONTH_STAT_DEFS: PerMonthStatDef[] = [
 @Component({
   imports: [AgGridAngular, FormsModule],
   selector: 'app-user-mail-message-stat-list',
-  templateUrl: './user-mail-message-stat-list.html',
+  templateUrl: './user-mail-message-stat-list-page.component.html',
 })
-export class UserMailMessageStatList implements OnInit {
+export class UserMailMessageStatListPage implements OnInit {
 
   // The message currently shown in the master-detail panel below the grid, or undefined when closed.
   readonly selectedMessage = signal<MailMessageDTO | undefined>(undefined);

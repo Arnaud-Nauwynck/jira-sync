@@ -31,9 +31,9 @@ const PER_YEAR_STAT_DEFS: PerYearStatDef[] = [
 @Component({
   imports: [AgGridAngular, FormsModule, GithubPrView],
   selector: 'app-user-pr-stat-list',
-  templateUrl: './user-pr-stat-list.html',
+  templateUrl: './user-pr-stat-list-page.component.html',
 })
-export class UserPrStatList implements OnInit {
+export class UserPrStatListPage implements OnInit {
 
   // The pull request currently shown in the master-detail panel below the grid, or undefined when closed.
   readonly selectedPullRequest = signal<GitHubPullRequestDTO | undefined>(undefined);

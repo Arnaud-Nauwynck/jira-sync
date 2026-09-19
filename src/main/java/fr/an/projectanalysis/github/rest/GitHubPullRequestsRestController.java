@@ -3,6 +3,7 @@ package fr.an.projectanalysis.github.rest;
 import fr.an.projectanalysis.github.rest.dtos.GitHubPrPartitionStatsDTO;
 import fr.an.projectanalysis.github.rest.dtos.GitHubPrQueryDTO;
 import fr.an.projectanalysis.github.rest.dtos.GitHubPullRequestDTO;
+import fr.an.projectanalysis.github.rest.dtos.NearbyGitHubPullRequestsDTO;
 import fr.an.projectanalysis.github.rest.dtos.UserGitHubPullRequestStatsDTO;
 import fr.an.projectanalysis.github.service.GitHubPullRequestService;
 import fr.an.projectanalysis.util.AbstractRestController;
@@ -43,6 +44,14 @@ public class GitHubPullRequestsRestController extends AbstractRestController {
             GitHubPullRequestDTO found = delegate.findByNumber(number);
             return found != null ? ResponseEntity.ok(found) : ResponseEntity.notFound().build();
         });
+    }
+
+    @Operation(summary = "For the PR with the given number, finds the numbers of the nearest earlier (\"prev\") and later "
+            + "(\"next\") PR that is still open, still open and created by the same author, or created by the same "
+            + "author (regardless of state)")
+    @GetMapping("/pull-requests/{number}/nearby")
+    public NearbyGitHubPullRequestsDTO findNearbyPullRequests(@PathVariable("number") int number) {
+        return withLog(log, "GET", "/pull-requests/" + number + "/nearby", "", () -> delegate.findNearbyPullRequests(number));
     }
 
     @Operation(summary = "List pull requests matching the given criteria (Data Fetching + Main/Analysis/Development Work/Personal Interest "

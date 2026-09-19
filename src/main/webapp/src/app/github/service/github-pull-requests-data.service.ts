@@ -4,6 +4,7 @@ import { GitHubPullRequestsService } from '../../rest';
 import { GitHubPrCriteriaDTO } from '../../rest';
 import { GitHubPrPartitionStatsDTO } from '../../rest';
 import { GitHubPullRequestDTO } from '../../rest';
+import { NearbyGitHubPullRequestsDTO } from '../../rest';
 
 const DEFAULT_LIMIT = 1000;
 
@@ -12,6 +13,10 @@ export class GithubPullRequestsDataService {
 
   // Row Data: the last fetched pull requests, shared with anyone injecting this service.
   readonly pullRequests = signal<GitHubPullRequestDTO[]>([]);
+
+  // The criteria (and limit) that produced the current `pullRequests` result list.
+  readonly lastCriteria = signal<GitHubPrCriteriaDTO | undefined>(undefined);
+  readonly lastLimit = signal<number>(DEFAULT_LIMIT);
 
   // Count of locally-synced PRs per "created_year" partition, loaded once and used to show how many
   // PRs are available versus how many currently match the search criteria.
@@ -26,6 +31,11 @@ export class GithubPullRequestsDataService {
       return of(cached);
     }
     return this.gitHubPullRequestsService.findPullRequestByNumber(number);
+  }
+
+  /** Finds the numbers of the PRs nearest to the given one (by PR number). */
+  findNearbyPullRequests(number: number): Observable<NearbyGitHubPullRequestsDTO> {
+    return this.gitHubPullRequestsService.findNearbyPullRequests(number);
   }
 
   /** Re-fetches a pull request by number from the server, bypassing the cache, and updates it in the cache if present. */
@@ -46,6 +56,8 @@ export class GithubPullRequestsDataService {
       .subscribe({
         next: (pullRequests) => {
           this.pullRequests.set(pullRequests);
+          this.lastCriteria.set(criteria);
+          this.lastLimit.set(limit);
         },
         error: (err) => {
           console.error('failed to load github pull requests', err)

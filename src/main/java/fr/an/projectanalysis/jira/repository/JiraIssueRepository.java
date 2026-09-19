@@ -194,10 +194,30 @@ public class JiraIssueRepository {
         return mapper;
     }
 
-    /** Reads a single issue by key across all partitions, or null if not found. */
+    /**
+     * Reads a single issue by key, or null if not found. Uses the per-partition min/max issue-number
+     * index ({@link #partitionStats}) to load (from disk, if not already cached) only the partitions
+     * whose range could contain the key's numeric suffix, instead of every partition; falls back to
+     * scanning every partition when the key's numeric suffix can't be parsed.
+     */
     public JiraIssueDTO findByKey(String key) {
-        for (int year : findAllPartitionYears()) {
-            JiraIssueDTO found = cachedPartitionData(year).get(key);
+        Integer number = issueNumberOf(key);
+        if (number == null) {
+            for (int year : findAllPartitionYears()) {
+                JiraIssueDTO found = cachedPartitionData(year).get(key);
+                if (found != null) {
+                    return found;
+                }
+            }
+            return null;
+        }
+        ensurePartitionStatsLoaded();
+        for (Map.Entry<Integer, PartitionIndexes> entry : partitionStats.entrySet()) {
+            PartitionIndexes stats = entry.getValue();
+            if (stats.minId == null || stats.maxId == null || number < stats.minId || number > stats.maxId) {
+                continue;
+            }
+            JiraIssueDTO found = cachedPartitionData(entry.getKey()).get(key);
             if (found != null) {
                 return found;
             }
@@ -392,7 +412,7 @@ public class JiraIssueRepository {
         partitionCache.remove(year);
     }
 
-    static int partitionYearOf(JiraIssueDTO issue) {
+    public static int partitionYearOf(JiraIssueDTO issue) {
         String created = issue.fields != null ? issue.fields.created : null;
         if (created != null && created.length() >= 4) {
             try {
@@ -655,6 +675,31 @@ public class JiraIssueRepository {
             Map<String, JiraIssueDTO> issueByKey = cachedPartitionData(year);
             for (JiraIssueDTO issue : issueByKey.values()) {
                 callback.accept(year, issue);
+            }
+        }
+    }
+
+    @FunctionalInterface
+    public interface StoppableIssueCallback {
+        /** @return true to keep scanning further issues/partitions, false to stop the scan immediately. */
+        boolean accept(int year, JiraIssueDTO issue);
+    }
+
+    /**
+     * Streams issues whose "created_year" partition falls within [fromYear, toYear], starting from
+     * the most recent partition (toYear) and working backwards towards fromYear, stopping as soon as
+     * the callback returns false (e.g. once a result limit is reached). This prunes partitions:
+     * older partitions are never loaded once the callback is satisfied.
+     */
+    public void scanIssuesFromMostRecent(int fromYear, int toYear, StoppableIssueCallback callback) {
+        List<Integer> partitions = findPartitionYearBetween(fromYear, toYear);
+        for (int i = partitions.size() - 1; i >= 0; i--) {
+            int year = partitions.get(i);
+            Map<String, JiraIssueDTO> issueByKey = cachedPartitionData(year);
+            for (JiraIssueDTO issue : issueByKey.values()) {
+                if (!callback.accept(year, issue)) {
+                    return;
+                }
             }
         }
     }
