@@ -68,6 +68,8 @@ export * from './sourceGitHubCommitParentDTO';
 export * from './sourceGitHubCommitStatsDTO';
 export * from './sourceGitHubGitUserDTO';
 export * from './sourceGitHubUserDTO';
+export * from './userActivityMonthStatsDTO';
+export * from './userActivityStatsDTO';
 export * from './userGitHubPullRequestStatsDTO';
 export * from './userIssueCreatePerYearStatsDTO';
 export * from './userJiraIssueStatsDTO';

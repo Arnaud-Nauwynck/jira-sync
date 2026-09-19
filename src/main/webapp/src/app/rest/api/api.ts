@@ -14,4 +14,6 @@ export * from './mailMessages.service';
 import { MailMessagesService } from './mailMessages.service';
 export * from './mailingListSync.service';
 import { MailingListSyncService } from './mailingListSync.service';
-export const APIS = [ChangeLogService, ClaudeCodeService, GitHubPullRequestsService, GitHubSyncService, JiraIssuesService, JiraSyncService, MailMessagesService, MailingListSyncService];
+export * from './userActivityStats.service';
+import { UserActivityStatsService } from './userActivityStats.service';
+export const APIS = [ChangeLogService, ClaudeCodeService, GitHubPullRequestsService, GitHubSyncService, JiraIssuesService, JiraSyncService, MailMessagesService, MailingListSyncService, UserActivityStatsService];

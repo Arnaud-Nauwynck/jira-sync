@@ -10,6 +10,7 @@ import fr.an.projectanalysis.github.rest.dtos.GitHubPullRequestExtraFieldsDTO;
 import fr.an.projectanalysis.github.rest.dtos.NearbyGitHubPullRequestsDTO;
 import fr.an.projectanalysis.github.rest.dtos.UserGitHubPullRequestStatsDTO;
 import fr.an.projectanalysis.github.rest.dtos.YearCountDTO;
+import fr.an.projectanalysis.rest.dtos.UserActivityStatsDTO;
 import fr.an.projectanalysis.util.CompareIdsUtils;
 import fr.an.projectanalysis.util.CompareIdsUtils.CompareIdsResult;
 import fr.an.projectanalysis.util.CritUtils;
@@ -215,6 +216,12 @@ public class GitHubPullRequestService {
             statPerUser.add(year, pr);
         });
         return tmp.values();
+    }
+
+    /** Adds the create/comment/update/merge/close events of the PRs created between fromYear and toYear
+     * (inclusive) into {@code acc}, keyed by the user who performed each event and its month. */
+    public void contributeUserActivityStats(Map<String, UserActivityStatsDTO> acc, int fromYear, int toYear) {
+        repository.scanPullRequests(fromYear, toYear, (year, pr) -> GitHubPullRequestActivityAnalyzer.contribute(acc, pr));
     }
 
     /** Lists the annotations of PRs created between fromYear and toYear (inclusive), skipping un-annotated ones. */

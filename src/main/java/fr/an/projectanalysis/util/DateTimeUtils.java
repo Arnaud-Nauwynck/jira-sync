@@ -34,4 +34,17 @@ public class DateTimeUtils {
         }
     }
 
+    /** "yyyy-MM" calendar month of the given date-time text, or null when it is null, blank, or not parseable. */
+    public static String monthOf(String dateTimeText) {
+        if (dateTimeText == null || dateTimeText.isBlank()) {
+            return null;
+        }
+        try {
+            OffsetDateTime dt = OffsetDateTime.parse(dateTimeText.trim(), ISO_LENIENT_OFFSET_FMT);
+            return String.format("%04d-%02d", dt.getYear(), dt.getMonthValue());
+        } catch (DateTimeParseException ex) {
+            return null;
+        }
+    }
+
 }

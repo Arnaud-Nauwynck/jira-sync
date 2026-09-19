@@ -10,6 +10,7 @@ import fr.an.projectanalysis.jira.rest.dtos.JiraIssueDTO;
 import fr.an.projectanalysis.jira.rest.dtos.NearbyJiraIssuesDTO;
 import fr.an.projectanalysis.jira.rest.dtos.UserJiraIssueStatsDTO;
 import fr.an.projectanalysis.jira.rest.dtos.YearCountDTO;
+import fr.an.projectanalysis.rest.dtos.UserActivityStatsDTO;
 import fr.an.projectanalysis.util.CompareIdsUtils;
 import fr.an.projectanalysis.util.CompareIdsUtils.CompareIdsResult;
 import fr.an.projectanalysis.util.DateTimeUtils;
@@ -51,6 +52,12 @@ public class JiraIssueService {
             statPerUser.add(year, issue);
         });
         return tmp.values();
+    }
+
+    /** Adds the create/comment/update/close events of the issues created between fromYear and toYear
+     * (inclusive) into {@code acc}, keyed by the user who performed each event and its month. */
+    public void contributeUserActivityStats(Map<String, UserActivityStatsDTO> acc, int fromYear, int toYear) {
+        repository.scanIssues(fromYear, toYear, (year, issue) -> JiraIssueActivityAnalyzer.contribute(acc, issue));
     }
 
     /** Finds a single issue by its key, or returns null if not found. */
