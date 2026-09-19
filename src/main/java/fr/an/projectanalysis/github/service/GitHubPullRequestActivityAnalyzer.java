@@ -4,15 +4,15 @@ import fr.an.projectanalysis.github.rest.dtos.GitHubIssueCommentDTO;
 import fr.an.projectanalysis.github.rest.dtos.GitHubIssueEventDTO;
 import fr.an.projectanalysis.github.rest.dtos.GitHubPullRequestDTO;
 import fr.an.projectanalysis.github.rest.dtos.GitHubPullRequestReviewCommentDTO;
-import fr.an.projectanalysis.rest.dtos.UserActivityStatsDTO;
+import fr.an.projectanalysis.rest.dtos.GithubUserActivityStatsDTO;
 import fr.an.projectanalysis.util.DateTimeUtils;
 
 import java.util.Map;
 
 /**
  * Extracts the create/comment/update/merge/close events of a single {@link GitHubPullRequestDTO}
- * and adds them into the per-user, per-month {@link UserActivityStatsDTO} accumulator, keyed by
- * the user who performed each event and the month it occurred in.
+ * and adds them into the per-user, per-month {@link GithubUserActivityStatsDTO} accumulator, keyed
+ * by the user who performed each event and the month it occurred in.
  */
 public final class GitHubPullRequestActivityAnalyzer {
 
@@ -22,7 +22,7 @@ public final class GitHubPullRequestActivityAnalyzer {
     private GitHubPullRequestActivityAnalyzer() {
     }
 
-    public static void contribute(Map<String, UserActivityStatsDTO> acc, GitHubPullRequestDTO pr) {
+    public static void contribute(Map<String, GithubUserActivityStatsDTO> acc, GitHubPullRequestDTO pr) {
         String author = GitHubPrCriteria.authorOf(pr);
 
         String createdMonth = DateTimeUtils.monthOf(pr.createdAt);
@@ -53,7 +53,7 @@ public final class GitHubPullRequestActivityAnalyzer {
         }
     }
 
-    private static void contributeComments(Map<String, UserActivityStatsDTO> acc, GitHubPullRequestDTO pr, String fallbackAuthor) {
+    private static void contributeComments(Map<String, GithubUserActivityStatsDTO> acc, GitHubPullRequestDTO pr, String fallbackAuthor) {
         if (pr.commentsData != null) {
             for (GitHubIssueCommentDTO comment : pr.commentsData) {
                 String month = DateTimeUtils.monthOf(comment.createdAt);
@@ -90,8 +90,8 @@ public final class GitHubPullRequestActivityAnalyzer {
         return (value != null && !value.isBlank()) ? value : fallback;
     }
 
-    private static UserActivityStatsDTO statsOf(Map<String, UserActivityStatsDTO> acc, String user) {
-        return acc.computeIfAbsent(user, UserActivityStatsDTO::new);
+    private static GithubUserActivityStatsDTO statsOf(Map<String, GithubUserActivityStatsDTO> acc, String user) {
+        return acc.computeIfAbsent(user, GithubUserActivityStatsDTO::new);
     }
 
 }

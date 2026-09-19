@@ -4,9 +4,13 @@ import { HighchartsChartComponent } from 'highcharts-angular';
 import type * as Highcharts from 'highcharts';
 import { AgGridAngular } from 'ag-grid-angular';
 import type { ICellRendererAngularComp } from 'ag-grid-angular';
-import type { CellValueChangedEvent, ColDef, ColGroupDef, ICellRendererParams, ValueGetterParams } from 'ag-grid-community';
+import type { CellValueChangedEvent, ColDef, ICellRendererParams, ValueGetterParams } from 'ag-grid-community';
 import { UserActivityStatsService } from '../rest';
-import { UserActivityStatsDTO, UserActivityMonthStatsDTO } from '../rest';
+import {
+  GithubUserActivityStatsDTO,
+  JiraUserActivityStatsDTO,
+  MailMessageUserActivityStatsDTO,
+} from '../rest';
 
 /**
  * Fixed-order categorical palette (see the dataviz skill's references/palette.md): validated
@@ -20,20 +24,22 @@ const GRAY_RAMP_LIGHT: [number, number, number] = [216, 216, 214];
 const GRAY_RAMP_DARK: [number, number, number] = [107, 106, 102];
 const OTHERS_COLOR = '#5b5a56';
 
-interface UserActivityRowDTO {
+interface FieldDef<TKey extends string> {
+  key: TKey;
+  label: string;
+}
+
+interface PanelRowDTO<TKey extends string> {
   rank: number;
   user: string;
   total: number;
   enabledInCharts: boolean;
-  fieldCounts: Partial<Record<ActivityFieldKey, number>>;
+  fieldCounts: Partial<Record<TKey, number>>;
 }
 
-type ActivityFieldKey = keyof Omit<UserActivityMonthStatsDTO, 'month'>;
-
-interface ActivityFieldDef {
-  key: ActivityFieldKey;
-  group: string;
-  label: string;
+interface StatsWithPerMonth {
+  user?: string;
+  perMonth?: { [month: string]: unknown };
 }
 
 @Component({
@@ -49,13 +55,13 @@ interface ActivityFieldDef {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 class ToggleInChartsCellRenderer implements ICellRendererAngularComp {
-  params!: ICellRendererParams<UserActivityRowDTO, boolean>;
+  params!: ICellRendererParams<PanelRowDTO<string>, boolean>;
 
-  agInit(params: ICellRendererParams<UserActivityRowDTO, boolean>): void {
+  agInit(params: ICellRendererParams<PanelRowDTO<string>, boolean>): void {
     this.params = params;
   }
 
-  refresh(params: ICellRendererParams<UserActivityRowDTO, boolean>): boolean {
+  refresh(params: ICellRendererParams<PanelRowDTO<string>, boolean>): boolean {
     this.params = params;
     return true;
   }
@@ -65,123 +71,119 @@ class ToggleInChartsCellRenderer implements ICellRendererAngularComp {
   }
 }
 
-const ACTIVITY_FIELDS: ActivityFieldDef[] = [
-  { key: 'jiraIssueCreatedCount', group: 'Jira', label: 'Created' },
-  { key: 'jiraIssueUpdatedCount', group: 'Jira', label: 'Updated' },
-  { key: 'jiraIssueCommentedCount', group: 'Jira', label: 'Commented' },
-  { key: 'jiraIssueClosedRejectedCount', group: 'Jira', label: 'Closed/Rejected' },
-  { key: 'jiraIssueCloseResolvedCount', group: 'Jira', label: 'Closed/Resolved' },
-  { key: 'githubPullRequestCreatedCount', group: 'GitHub', label: 'PR Created' },
-  { key: 'githubPullRequestUpdatedCount', group: 'GitHub', label: 'PR Updated' },
-  { key: 'githubPullRequestCommentedCount', group: 'GitHub', label: 'PR Commented' },
-  { key: 'githubPullRequestMergedCount', group: 'GitHub', label: 'PR Merged' },
-  { key: 'githubPullRequestClosedCount', group: 'GitHub', label: 'PR Closed' },
-  { key: 'mailMessageSentCount', group: 'Mail', label: 'Sent' },
-  { key: 'mailMessageRepliedCount', group: 'Mail', label: 'Replied' },
-  { key: 'mailMessageVotedCount', group: 'Mail', label: 'Voted' },
+const JIRA_FIELDS: FieldDef<string>[] = [
+  { key: 'jiraIssueCreatedCount', label: 'Created' },
+  { key: 'jiraIssueUpdatedCount', label: 'Updated' },
+  { key: 'jiraIssueCommentedCount', label: 'Commented' },
+  { key: 'jiraIssueClosedRejectedCount', label: 'Closed/Rejected' },
+  { key: 'jiraIssueCloseResolvedCount', label: 'Closed/Resolved' },
 ];
 
-@Component({
-  selector: 'app-user-activity-chart',
-  imports: [FormsModule, HighchartsChartComponent, AgGridAngular],
-  templateUrl: './user-activity-chart-page.component.html',
-})
-export class UserActivityChartPage implements OnInit {
+const GITHUB_FIELDS: FieldDef<string>[] = [
+  { key: 'githubPullRequestCreatedCount', label: 'PR Created' },
+  { key: 'githubPullRequestUpdatedCount', label: 'PR Updated' },
+  { key: 'githubPullRequestCommentedCount', label: 'PR Commented' },
+  { key: 'githubPullRequestMergedCount', label: 'PR Merged' },
+  { key: 'githubPullRequestClosedCount', label: 'PR Closed' },
+];
 
-  fromYear = 2024;
-  toYear = 2030;
+const MAIL_FIELDS: FieldDef<string>[] = [
+  { key: 'mailMessageSentCount', label: 'Sent' },
+  { key: 'mailMessageRepliedCount', label: 'Replied' },
+  { key: 'mailMessageVotedCount', label: 'Voted' },
+];
+
+/** The first 8 ranks get the validated categorical palette; ranks beyond that recede into a
+ * light-to-dark gray ramp instead of generating indistinguishable extra hues. */
+function colorForRank(rank: number, topCount: number): string {
+  if (rank < CATEGORICAL_COLORS.length) {
+    return CATEGORICAL_COLORS[rank];
+  }
+  const tailLength = Math.max(1, topCount - CATEGORICAL_COLORS.length);
+  const t = Math.min(1, (rank - CATEGORICAL_COLORS.length) / tailLength);
+  const [r0, g0, b0] = GRAY_RAMP_LIGHT;
+  const [r1, g1, b1] = GRAY_RAMP_DARK;
+  const r = Math.round(r0 + (r1 - r0) * t);
+  const g = Math.round(g0 + (g1 - g0) * t);
+  const b = Math.round(b0 + (b1 - b0) * t);
+  return `rgb(${r},${g},${b})`;
+}
+
+function monthToUtc(month: string): number {
+  const [year, monthNum] = month.split('-').map((v) => parseInt(v, 10));
+  return Date.UTC(year, (monthNum || 1) - 1, 1);
+}
+
+function fieldValue(obj: unknown, key: string): number {
+  const value = (obj as Record<string, unknown> | undefined)?.[key];
+  return typeof value === 'number' ? value : 0;
+}
+
+interface ChartPanelSpec {
+  key: string;
+  title: string;
+  valueOf: (dto: StatsWithPerMonth, month: string) => number;
+}
+
+/**
+ * Ranking, per-field breakdown grid, and per-month charts for one activity source (Jira, GitHub or
+ * Mail). Kept generic and instantiated once per source because the 3 sources use unrelated user
+ * identities (Jira reporter, GitHub login, mail "From" address) and unrelated field sets, so their
+ * stats can't be merged into a single grid.
+ */
+class ActivityStatsPanel<TStats extends StatsWithPerMonth> {
+
   topN = 10;
+  expanded = false;
 
   fieldCharts = signal<{ key: string; options: Highcharts.Options }[]>([]);
+  rowData = signal<PanelRowDTO<string>[]>([]);
+  colDefs: ColDef<PanelRowDTO<string>>[];
+  enabledFields = signal<Set<string>>(new Set());
 
-  rowData = signal<UserActivityRowDTO[]>([]);
-
-  readonly fieldGroups: { group: string; fields: ActivityFieldDef[] }[] = ['Jira', 'GitHub', 'Mail'].map((group) => ({
-    group,
-    fields: ACTIVITY_FIELDS.filter((f) => f.group === group),
-  }));
-
-  colDefs: (ColDef<UserActivityRowDTO> | ColGroupDef<UserActivityRowDTO>)[] = [
-    { field: 'rank', headerName: '#', width: 70 },
-    { field: 'user', headerName: 'User', minWidth: 180, flex: 1 },
-    {
-      field: 'enabledInCharts',
-      headerName: 'In Charts',
-      width: 100,
-      cellRenderer: ToggleInChartsCellRenderer,
-    },
-    { field: 'total', headerName: 'Total activity', width: 140 },
-    ...this.fieldGroups.map((fieldGroup) => ({
-      headerName: fieldGroup.group,
-      children: [
-        {
-          colId: `group-total-${fieldGroup.group}`,
-          headerName: 'Total',
-          width: 100,
-          valueGetter: (params: ValueGetterParams<UserActivityRowDTO>) =>
-            fieldGroup.fields.reduce((sum, f) => sum + (params.data?.fieldCounts[f.key] ?? 0), 0),
-        },
-        ...fieldGroup.fields.map((field) => ({
-          colId: field.key,
-          headerName: field.label,
-          width: 100,
-          valueGetter: (params: ValueGetterParams<UserActivityRowDTO>) => params.data?.fieldCounts[field.key] ?? 0,
-        })),
-      ],
-    })),
-  ];
-
-  enabledFields = signal<Set<ActivityFieldKey>>(new Set(ACTIVITY_FIELDS.map((f) => f.key)));
-
-  // Per group (Jira/GitHub/Mail): whether any chart panel for the group is shown at all.
-  visibleGroups = signal<Set<string>>(new Set(this.fieldGroups.map((g) => g.group)));
-
-  // Per group (Jira/GitHub/Mail): expanded shows one panel per sub-category, collapsed shows a
-  // single panel aggregating the group's enabled sub-categories.
-  expandedGroups = signal<Set<string>>(
-    new Set()
-    // new Set(this.fieldGroups.map((g) => g.group))
-  );
-
-  private allStats: UserActivityStatsDTO[] = [];
-
-  // Ranking (top N users, "others" bucket, month axis) is independent of which field panels are
-  // shown, so it's computed once per search()/topN change and reused when toggling panels.
+  private allStats: TStats[] = [];
   private top: { user: string; total: number }[] = [];
   private topUsers = new Set<string>();
-  // Which top users currently have their series shown on the charts (toggled via the grid).
   private chartEnabledUsers = new Set<string>();
   private othersCount = 0;
   private months: string[] = [];
-  private byUser = new Map<string, UserActivityStatsDTO>();
+  private byUser = new Map<string, TStats>();
 
-  constructor(private userActivityStatsService: UserActivityStatsService) {}
-
-  ngOnInit() {
-    this.search();
+  constructor(readonly title: string, readonly fields: FieldDef<string>[]) {
+    this.enabledFields.set(new Set(fields.map((f) => f.key)));
+    this.colDefs = [
+      { field: 'rank', headerName: '#', width: 70 },
+      { field: 'user', headerName: 'User', minWidth: 180, flex: 1 },
+      {
+        field: 'enabledInCharts',
+        headerName: 'In Charts',
+        width: 100,
+        cellRenderer: ToggleInChartsCellRenderer,
+      },
+      { field: 'total', headerName: 'Total activity', width: 140 },
+      ...fields.map((field) => ({
+        colId: field.key,
+        headerName: field.label,
+        width: 120,
+        valueGetter: (params: ValueGetterParams<PanelRowDTO<string>>) => params.data?.fieldCounts[field.key] ?? 0,
+      })),
+    ];
   }
 
-  search() {
-    this.userActivityStatsService.queryUserActivityStats(this.fromYear, this.toYear).subscribe({
-      next: (stats) => {
-        this.allStats = stats;
-        this.recomputeRanking();
-      },
-      error: (err) => {
-        console.error('failed to load user activity stats', err);
-      },
-    });
+  setStats(stats: TStats[]) {
+    this.allStats = stats;
+    this.recomputeRanking();
   }
 
   onTopNChanged() {
     this.recomputeRanking();
   }
 
-  isFieldEnabled(key: ActivityFieldKey): boolean {
+  isFieldEnabled(key: string): boolean {
     return this.enabledFields().has(key);
   }
 
-  toggleField(key: ActivityFieldKey) {
+  toggleField(key: string) {
     const next = new Set(this.enabledFields());
     if (next.has(key)) {
       next.delete(key);
@@ -192,37 +194,12 @@ export class UserActivityChartPage implements OnInit {
     this.rebuildFieldCharts();
   }
 
-  isGroupVisible(group: string): boolean {
-    return this.visibleGroups().has(group);
-  }
-
-  toggleGroupVisible(group: string) {
-    const next = new Set(this.visibleGroups());
-    if (next.has(group)) {
-      next.delete(group);
-    } else {
-      next.add(group);
-    }
-    this.visibleGroups.set(next);
+  toggleExpanded() {
+    this.expanded = !this.expanded;
     this.rebuildFieldCharts();
   }
 
-  isGroupExpanded(group: string): boolean {
-    return this.expandedGroups().has(group);
-  }
-
-  toggleGroupExpanded(group: string) {
-    const next = new Set(this.expandedGroups());
-    if (next.has(group)) {
-      next.delete(group);
-    } else {
-      next.add(group);
-    }
-    this.expandedGroups.set(next);
-    this.rebuildFieldCharts();
-  }
-
-  onChartToggleChanged(event: CellValueChangedEvent<UserActivityRowDTO>) {
+  onChartToggleChanged(event: CellValueChangedEvent<PanelRowDTO<string>>) {
     const user = event.data.user;
     if (event.newValue) {
       this.chartEnabledUsers.add(user);
@@ -232,9 +209,17 @@ export class UserActivityChartPage implements OnInit {
     this.rebuildFieldCharts();
   }
 
+  private totalOf(dto: TStats): number {
+    let sum = 0;
+    for (const field of this.fields) {
+      sum += fieldValue(dto, field.key);
+    }
+    return sum;
+  }
+
   private recomputeRanking() {
     const totals = this.allStats
-      .map((dto) => ({ user: dto.user ?? 'unknown', total: totalOf(dto) }))
+      .map((dto) => ({ user: dto.user ?? 'unknown', total: this.totalOf(dto) }))
       .sort((a, b) => b.total - a.total);
 
     const topN = Math.max(1, this.topN || 1);
@@ -248,9 +233,9 @@ export class UserActivityChartPage implements OnInit {
     this.rowData.set(
       this.top.map((t, i) => {
         const dto = this.byUser.get(t.user);
-        const fieldCounts: Partial<Record<ActivityFieldKey, number>> = {};
-        for (const field of ACTIVITY_FIELDS) {
-          fieldCounts[field.key] = dto?.[field.key] ?? 0;
+        const fieldCounts: Partial<Record<string, number>> = {};
+        for (const field of this.fields) {
+          fieldCounts[field.key] = fieldValue(dto, field.key);
         }
         return { rank: i + 1, user: t.user, total: t.total, enabledInCharts: true, fieldCounts };
       })
@@ -261,33 +246,26 @@ export class UserActivityChartPage implements OnInit {
 
   private rebuildFieldCharts() {
     const enabled = this.enabledFields();
-    const specs: ChartPanelSpec[] = [];
-
-    for (const fieldGroup of this.fieldGroups) {
-      if (!this.isGroupVisible(fieldGroup.group)) {
-        continue;
-      }
-      const groupEnabledFields = fieldGroup.fields.filter((f) => enabled.has(f.key));
-      if (groupEnabledFields.length === 0) {
-        continue;
-      }
-      if (this.isGroupExpanded(fieldGroup.group)) {
-        for (const field of groupEnabledFields) {
-          specs.push({
-            key: field.key,
-            title: `${field.group} – ${field.label}`,
-            valueOf: (dto, month) => dto.perMonth?.[month]?.[field.key] ?? 0,
-          });
-        }
-      } else {
-        specs.push({
-          key: fieldGroup.group,
-          title: `${fieldGroup.group} – Total Activities`,
-          valueOf: (dto, month) =>
-            groupEnabledFields.reduce((sum, f) => sum + (dto.perMonth?.[month]?.[f.key] ?? 0), 0),
-        });
-      }
+    const enabledFields = this.fields.filter((f) => enabled.has(f.key));
+    if (enabledFields.length === 0) {
+      this.fieldCharts.set([]);
+      return;
     }
+
+    const specs: ChartPanelSpec[] = this.expanded
+      ? enabledFields.map((field) => ({
+          key: field.key,
+          title: `${this.title} – ${field.label}`,
+          valueOf: (dto, month) => fieldValue(dto.perMonth?.[month], field.key),
+        }))
+      : [
+          {
+            key: this.title,
+            title: `${this.title} – Total Activities`,
+            valueOf: (dto, month) =>
+              enabledFields.reduce((sum, f) => sum + fieldValue(dto.perMonth?.[month], f.key), 0),
+          },
+        ];
 
     this.fieldCharts.set(specs.map((spec) => ({ key: spec.key, options: this.buildChartOptions(spec) })));
   }
@@ -347,37 +325,38 @@ export class UserActivityChartPage implements OnInit {
   }
 }
 
-interface ChartPanelSpec {
-  key: string;
-  title: string;
-  valueOf: (dto: UserActivityStatsDTO, month: string) => number;
-}
+@Component({
+  selector: 'app-user-activity-chart',
+  imports: [FormsModule, HighchartsChartComponent, AgGridAngular],
+  templateUrl: './user-activity-chart-page.component.html',
+})
+export class UserActivityChartPage implements OnInit {
 
-function totalOf(dto: UserActivityStatsDTO): number {
-  let sum = 0;
-  for (const field of ACTIVITY_FIELDS) {
-    sum += dto[field.key] ?? 0;
+  fromYear = 2024;
+  toYear = 2030;
+
+  readonly jiraPanel = new ActivityStatsPanel<JiraUserActivityStatsDTO>('Jira', JIRA_FIELDS);
+  readonly githubPanel = new ActivityStatsPanel<GithubUserActivityStatsDTO>('GitHub', GITHUB_FIELDS);
+  readonly mailPanel = new ActivityStatsPanel<MailMessageUserActivityStatsDTO>('Mail', MAIL_FIELDS);
+
+  readonly panels: ActivityStatsPanel<StatsWithPerMonth>[] = [this.jiraPanel, this.githubPanel, this.mailPanel];
+
+  constructor(private userActivityStatsService: UserActivityStatsService) {}
+
+  ngOnInit() {
+    this.search();
   }
-  return sum;
-}
 
-function monthToUtc(month: string): number {
-  const [year, monthNum] = month.split('-').map((v) => parseInt(v, 10));
-  return Date.UTC(year, (monthNum || 1) - 1, 1);
-}
-
-/** The first 8 ranks get the validated categorical palette; ranks beyond that recede into a
- * light-to-dark gray ramp instead of generating indistinguishable extra hues. */
-function colorForRank(rank: number, topCount: number): string {
-  if (rank < CATEGORICAL_COLORS.length) {
-    return CATEGORICAL_COLORS[rank];
+  search() {
+    this.userActivityStatsService.queryUserActivityStats(this.fromYear, this.toYear).subscribe({
+      next: (result) => {
+        this.jiraPanel.setStats(Object.values(result.jira ?? {}));
+        this.githubPanel.setStats(Object.values(result.github ?? {}));
+        this.mailPanel.setStats(Object.values(result.mail ?? {}));
+      },
+      error: (err) => {
+        console.error('failed to load user activity stats', err);
+      },
+    });
   }
-  const tailLength = Math.max(1, topCount - CATEGORICAL_COLORS.length);
-  const t = Math.min(1, (rank - CATEGORICAL_COLORS.length) / tailLength);
-  const [r0, g0, b0] = GRAY_RAMP_LIGHT;
-  const [r1, g1, b1] = GRAY_RAMP_DARK;
-  const r = Math.round(r0 + (r1 - r0) * t);
-  const g = Math.round(g0 + (g1 - g0) * t);
-  const b = Math.round(b0 + (b1 - b0) * t);
-  return `rgb(${r},${g},${b})`;
 }

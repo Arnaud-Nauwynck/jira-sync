@@ -17,7 +17,7 @@ import { Observable }                                        from 'rxjs';
 import { OpenApiHttpParams, QueryParamStyle } from '../query.params';
 
 // @ts-ignore
-import { UserActivityStatsDTO } from '../model/userActivityStatsDTO';
+import { UserActivityStatsResultDTO } from '../model/userActivityStatsResultDTO';
 
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS }                     from '../variables';
@@ -36,7 +36,7 @@ export class UserActivityStatsService extends BaseService {
     }
 
     /**
-     * Combined per-user, per-month activity stats: jiraIssue{Created|Updated|Commented|ClosedRejected|CloseResolved}, githubPullRequest{Created|Updated|Commented|Merged|Closed}, mailMessage{Sent|Replied|Voted}, for events between fromYear and toYear (inclusive)
+     * Per-user, per-month activity stats for each of the 3 independent sources: jira (jiraIssue{Created|Updated|Commented|ClosedRejected|CloseResolved}), github (githubPullRequest{Created|Updated|Commented|Merged|Closed}), mail (mailMessage{Sent|Replied|Voted}), for events between fromYear and toYear (inclusive)
      * @endpoint get /api/v1/user-activity-stats
      * @param fromYear 
      * @param toYear 
@@ -44,9 +44,9 @@ export class UserActivityStatsService extends BaseService {
      * @param reportProgress flag to report request and response progress.
      * @param options additional options
      */
-    public queryUserActivityStats(fromYear?: number, toYear?: number, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<UserActivityStatsDTO>>;
-    public queryUserActivityStats(fromYear?: number, toYear?: number, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<UserActivityStatsDTO>>>;
-    public queryUserActivityStats(fromYear?: number, toYear?: number, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<Array<UserActivityStatsDTO>>>;
+    public queryUserActivityStats(fromYear?: number, toYear?: number, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<UserActivityStatsResultDTO>;
+    public queryUserActivityStats(fromYear?: number, toYear?: number, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<UserActivityStatsResultDTO>>;
+    public queryUserActivityStats(fromYear?: number, toYear?: number, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<UserActivityStatsResultDTO>>;
     public queryUserActivityStats(fromYear?: number, toYear?: number, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
 
         let localVarQueryParameters = new OpenApiHttpParams(this.encoder);
@@ -96,7 +96,7 @@ export class UserActivityStatsService extends BaseService {
 
         let localVarPath = `/api/v1/user-activity-stats`;
         const { basePath, withCredentials } = this.configuration;
-        return this.httpClient.request<Array<UserActivityStatsDTO>>('get', `${basePath}${localVarPath}`,
+        return this.httpClient.request<UserActivityStatsResultDTO>('get', `${basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
                 params: localVarQueryParameters.toHttpParams(),

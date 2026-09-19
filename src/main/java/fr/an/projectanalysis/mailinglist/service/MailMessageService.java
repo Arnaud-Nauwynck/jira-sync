@@ -11,7 +11,7 @@ import fr.an.projectanalysis.mailinglist.rest.dtos.MonthCountDTO;
 import fr.an.projectanalysis.mailinglist.rest.dtos.NearbyMailMessagesDTO;
 import fr.an.projectanalysis.mailinglist.rest.dtos.SenderCountDTO;
 import fr.an.projectanalysis.mailinglist.rest.dtos.UserMailMessageStatsDTO;
-import fr.an.projectanalysis.rest.dtos.UserActivityStatsDTO;
+import fr.an.projectanalysis.rest.dtos.MailMessageUserActivityStatsDTO;
 import fr.an.projectanalysis.util.CompareIdsUtils;
 import fr.an.projectanalysis.util.CompareIdsUtils.CompareIdsResult;
 import fr.an.projectanalysis.util.CritUtils;
@@ -226,7 +226,7 @@ public class MailMessageService {
 
     /** Adds the sent/replied/voted event of the messages archived between fromMonth and toMonth ("yyyy-MM",
      * inclusive) into {@code acc}, keyed by the sender and the message's archive month. */
-    public void contributeUserActivityStats(Map<String, UserActivityStatsDTO> acc, String fromMonth, String toMonth) {
+    public void contributeUserActivityStats(Map<String, MailMessageUserActivityStatsDTO> acc, String fromMonth, String toMonth) {
         repository.scanMessages(fromMonth, toMonth, (month, msg) -> MailMessageActivityAnalyzer.contribute(acc, month, msg));
     }
 

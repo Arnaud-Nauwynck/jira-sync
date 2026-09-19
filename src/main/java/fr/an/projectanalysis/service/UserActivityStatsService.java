@@ -3,17 +3,14 @@ package fr.an.projectanalysis.service;
 import fr.an.projectanalysis.github.service.GitHubPullRequestService;
 import fr.an.projectanalysis.jira.service.JiraIssueService;
 import fr.an.projectanalysis.mailinglist.service.MailMessageService;
-import fr.an.projectanalysis.rest.dtos.UserActivityStatsDTO;
+import fr.an.projectanalysis.rest.dtos.UserActivityStatsResultDTO;
 import org.springframework.stereotype.Component;
 
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.Map;
-
 /**
- * Combines each source's per-user activity contributions (Jira issue, GitHub pull-request and
- * mailing-list message create/update/comment/close events) into a single per-user, per-month
- * activity view.
+ * Gathers each source's per-user activity contributions (Jira issue, GitHub pull-request and
+ * mailing-list message create/update/comment/close events). The 3 sources are kept as separate
+ * per-user, per-month maps rather than merged into one: each uses its own user identity (Jira
+ * reporter, GitHub login, mail "From" address), which are not cross-mapped to one another.
  */
 @Component
 public class UserActivityStatsService {
@@ -30,15 +27,15 @@ public class UserActivityStatsService {
         this.mailMessageService = mailMessageService;
     }
 
-    /** Combined per-user, per-month activity stats, for events between fromYear and toYear (inclusive). */
-    public Collection<UserActivityStatsDTO> queryUserActivityStats(int fromYear, int toYear) {
-        Map<String, UserActivityStatsDTO> acc = new LinkedHashMap<>();
+    /** Per-user, per-month activity stats for each of the 3 sources, for events between fromYear and toYear (inclusive). */
+    public UserActivityStatsResultDTO queryUserActivityStats(int fromYear, int toYear) {
+        UserActivityStatsResultDTO res = new UserActivityStatsResultDTO();
         String fromMonth = fromYear + "-01";
         String toMonth = toYear + "-12";
-        jiraIssueService.contributeUserActivityStats(acc, fromYear, toYear);
-        gitHubPullRequestService.contributeUserActivityStats(acc, fromYear, toYear);
-        mailMessageService.contributeUserActivityStats(acc, fromMonth, toMonth);
-        return acc.values();
+        jiraIssueService.contributeUserActivityStats(res.jira, fromYear, toYear);
+        gitHubPullRequestService.contributeUserActivityStats(res.github, fromYear, toYear);
+        mailMessageService.contributeUserActivityStats(res.mail, fromMonth, toMonth);
+        return res;
     }
 
 }

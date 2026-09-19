@@ -1,15 +1,15 @@
 package fr.an.projectanalysis.mailinglist.service;
 
 import fr.an.projectanalysis.mailinglist.rest.dtos.MailMessageDTO;
-import fr.an.projectanalysis.rest.dtos.UserActivityStatsDTO;
+import fr.an.projectanalysis.rest.dtos.MailMessageUserActivityStatsDTO;
 
 import java.util.Map;
 import java.util.regex.Pattern;
 
 /**
  * Extracts the sent/replied/voted event of a single {@link MailMessageDTO} and adds it into the
- * per-user, per-month {@link UserActivityStatsDTO} accumulator, keyed by the sender (the raw
- * {@code From} header) and the message's archive month.
+ * per-user, per-month {@link MailMessageUserActivityStatsDTO} accumulator, keyed by the sender
+ * (the raw {@code From} header) and the message's archive month.
  */
 public final class MailMessageActivityAnalyzer {
 
@@ -21,9 +21,9 @@ public final class MailMessageActivityAnalyzer {
     private MailMessageActivityAnalyzer() {
     }
 
-    public static void contribute(Map<String, UserActivityStatsDTO> acc, String month, MailMessageDTO msg) {
+    public static void contribute(Map<String, MailMessageUserActivityStatsDTO> acc, String month, MailMessageDTO msg) {
         String sender = (msg.from != null && !msg.from.isBlank()) ? msg.from : UNKNOWN_USER;
-        UserActivityStatsDTO stats = acc.computeIfAbsent(sender, UserActivityStatsDTO::new);
+        MailMessageUserActivityStatsDTO stats = acc.computeIfAbsent(sender, MailMessageUserActivityStatsDTO::new);
 
         boolean isReply = msg.inReplyTo != null && !msg.inReplyTo.isBlank();
         if (!isReply) {

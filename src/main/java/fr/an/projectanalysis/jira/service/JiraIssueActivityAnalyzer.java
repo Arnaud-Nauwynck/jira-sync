@@ -1,7 +1,7 @@
 package fr.an.projectanalysis.jira.service;
 
 import fr.an.projectanalysis.jira.rest.dtos.JiraIssueDTO;
-import fr.an.projectanalysis.rest.dtos.UserActivityStatsDTO;
+import fr.an.projectanalysis.rest.dtos.JiraUserActivityStatsDTO;
 import fr.an.projectanalysis.util.DateTimeUtils;
 
 import java.util.List;
@@ -11,7 +11,7 @@ import java.util.Set;
 
 /**
  * Extracts the create/comment/update/close events of a single {@link JiraIssueDTO} and adds them
- * into the per-user, per-month {@link UserActivityStatsDTO} accumulator, keyed by the user who
+ * into the per-user, per-month {@link JiraUserActivityStatsDTO} accumulator, keyed by the user who
  * performed each event (creator, comment author, history author) and the month it occurred in.
  */
 public final class JiraIssueActivityAnalyzer {
@@ -30,7 +30,7 @@ public final class JiraIssueActivityAnalyzer {
     private JiraIssueActivityAnalyzer() {
     }
 
-    public static void contribute(Map<String, UserActivityStatsDTO> acc, JiraIssueDTO issue) {
+    public static void contribute(Map<String, JiraUserActivityStatsDTO> acc, JiraIssueDTO issue) {
         JiraIssueDTO.IssueFieldsDTO fields = issue.fields;
         if (fields == null) {
             return;
@@ -54,7 +54,7 @@ public final class JiraIssueActivityAnalyzer {
         contributeHistories(acc, issue, creator);
     }
 
-    private static void contributeHistories(Map<String, UserActivityStatsDTO> acc, JiraIssueDTO issue, String creator) {
+    private static void contributeHistories(Map<String, JiraUserActivityStatsDTO> acc, JiraIssueDTO issue, String creator) {
         List<JiraIssueDTO.IssueHistoryDTO> histories = issue.histories;
         if (histories == null) {
             return;
@@ -110,9 +110,9 @@ public final class JiraIssueActivityAnalyzer {
         return (value != null && !value.isBlank()) ? value : fallback;
     }
 
-    private static UserActivityStatsDTO statsOf(Map<String, UserActivityStatsDTO> acc, String user) {
+    private static JiraUserActivityStatsDTO statsOf(Map<String, JiraUserActivityStatsDTO> acc, String user) {
         String key = (user != null && !user.isBlank()) ? user : UNKNOWN_USER;
-        return acc.computeIfAbsent(key, UserActivityStatsDTO::new);
+        return acc.computeIfAbsent(key, JiraUserActivityStatsDTO::new);
     }
 
 }
