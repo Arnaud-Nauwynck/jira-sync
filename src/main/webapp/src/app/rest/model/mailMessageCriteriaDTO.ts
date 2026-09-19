@@ -15,6 +15,7 @@ export interface MailMessageCriteriaDTO {
     fromPattern?: string;
     subjectPattern?: string;
     bodyPattern?: string;
+    messageIdPattern?: string;
     subjectContains?: string;
     bodyContains?: string;
     fromContains?: string;

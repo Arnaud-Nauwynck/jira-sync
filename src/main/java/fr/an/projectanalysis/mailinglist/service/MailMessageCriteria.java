@@ -25,11 +25,14 @@ public class MailMessageCriteria implements Predicate<MailMessageDTO> {
 
     private final Pattern bodyPattern;
 
+    private final Pattern messageIdPattern;
+
     public MailMessageCriteria(MailMessageCriteriaDTO c) {
         this.c = c;
         this.fromPattern = c != null ? CritUtils.compilePattern(c.fromPattern) : null;
         this.subjectPattern = c != null ? CritUtils.compilePattern(c.subjectPattern) : null;
         this.bodyPattern = c != null ? CritUtils.compilePattern(c.bodyPattern) : null;
+        this.messageIdPattern = c != null ? CritUtils.compilePattern(c.messageIdPattern) : null;
     }
 
     /** Criteria filtering only on the From/Subject/body regexes (all optional, combined with AND). */
@@ -63,6 +66,9 @@ public class MailMessageCriteria implements Predicate<MailMessageDTO> {
             return false;
         }
         if (!CritUtils.findsRegex(bodyPattern, msg.bodyText)) {
+            return false;
+        }
+        if (!CritUtils.findsRegex(messageIdPattern, msg.messageId)) {
             return false;
         }
         if (!CritUtils.matchesAny(c.subjectContains, msg.subject)) {

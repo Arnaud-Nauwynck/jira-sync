@@ -21,6 +21,7 @@ public class MailMessageCriteriaDTO implements AnnotationCriteriaFields {
     public String fromPattern;
     public String subjectPattern;
     public String bodyPattern;
+    public String messageIdPattern;
 
     // Main criteria
     public String subjectContains;

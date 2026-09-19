@@ -29,6 +29,10 @@
             <label class="form-label">Body pattern</label>
             <input class="form-control" type="text" [(ngModel)]="criteria.bodyPattern" (ngModelChange)="onFieldChanged()" placeholder="regex, optional" />
           </div>
+          <div>
+            <label class="form-label">Message-ID pattern</label>
+            <input class="form-control" type="text" [(ngModel)]="criteria.messageIdPattern" (ngModelChange)="onFieldChanged()" placeholder="regex, optional" />
+          </div>
           <button class="btn btn-primary" type="button" [disabled]="loading" (click)="onSearch()">{{ loading ? 'Searching...' : 'Search' }}</button>
           @if (loadErrorMessage) {
             <span class="text-warning small">{{ loadErrorMessage }}</span>
