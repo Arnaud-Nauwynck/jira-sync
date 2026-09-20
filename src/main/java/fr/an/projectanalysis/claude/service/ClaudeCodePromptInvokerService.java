@@ -9,7 +9,10 @@ import tools.jackson.databind.ObjectMapper;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /** Invokes the local {@code claude} CLI (Claude Code) with a one-shot prompt, and returns its
  * {@code --output-format json} response text. */
@@ -23,6 +26,8 @@ public class ClaudeCodePromptInvokerService {
 
     private final ObjectMapper mapper;
 
+    private final Map<Long, ClaudeCodePromptCall> currentClaudeCodePromptCall = new ConcurrentHashMap<>();
+
     public ClaudeCodePromptInvokerService(ClaudeProperties props, RecentChangeLogService changeLogService, ObjectMapper mapper) {
         this.props = props;
         this.changeLogService = changeLogService;
@@ -31,6 +36,11 @@ public class ClaudeCodePromptInvokerService {
 
     public String invokePrompt(String prompt) throws IOException, InterruptedException {
         return invokePrompt(prompt, List.of());
+    }
+
+    /** @return the currently running (not yet completed) claude CLI prompt invocations. */
+    public Collection<ClaudeCodePromptCall> getCurrentCalls() {
+        return currentClaudeCodePromptCall.values();
     }
 
     /** @param allowedTools MCP/built-in tool names to pre-approve (via {@code --allowedTools}), so the
@@ -55,22 +65,39 @@ public class ClaudeCodePromptInvokerService {
         pb.redirectErrorStream(true);
         Process process = pb.start();
         long pid = process.pid();
-        log.info("Launched Claude CLI process pid={}, prompt=\"{}\"", pid, prompt);
+        long id = newCallId();
+        currentClaudeCodePromptCall.put(id, new ClaudeCodePromptCall(id, prompt, allowedTools, startTime, pid));
+        log.info("Launched Claude CLI process id={} pid={}, prompt=\"{}\"", id, pid, prompt);
         changeLogService.addEvent(new ClaudeCodePromptStartChange(startTime, prompt, pid));
 
-        String output = new String(process.getInputStream().readAllBytes());
-        int exitCode = process.waitFor();
-        long endTime = System.currentTimeMillis();
-        if (exitCode != 0) {
-            log.error("Claude CLI process pid={} failed with exit code {}, output: \n{}", pid, exitCode, formatOutput(output, verboseOutput));
+        try {
+            String output = new String(process.getInputStream().readAllBytes());
+            int exitCode = process.waitFor();
+            long endTime = System.currentTimeMillis();
+            if (exitCode != 0) {
+                log.error("Claude CLI process pid={} failed with exit code {}, output: \n{}", pid, exitCode, formatOutput(output, verboseOutput));
+                changeLogService.addEvent(new ClaudeCodePromptEndChange(endTime, exitCode, output, //
+                        startTime, prompt, pid));
+                throw new IOException("Claude CLI exited with code " + exitCode + ": " + output);
+            }
+            log.info("Claude CLI process pid={} succeeded, output: {}", pid, formatOutput(output, verboseOutput));
             changeLogService.addEvent(new ClaudeCodePromptEndChange(endTime, exitCode, output, //
                     startTime, prompt, pid));
-            throw new IOException("Claude CLI exited with code " + exitCode + ": " + output);
+            return output;
+        } finally {
+            currentClaudeCodePromptCall.remove(id);
         }
-        log.info("Claude CLI process pid={} succeeded, output: {}", pid, formatOutput(output, verboseOutput));
-        changeLogService.addEvent(new ClaudeCodePromptEndChange(endTime, exitCode, output, //
-                startTime, prompt, pid));
-        return output;
+    }
+
+    /** Generates a unique call id, using the current time in millis and disambiguating against
+     * ids already tracked in {@link #currentClaudeCodePromptCall} in case two calls start within
+     * the same millisecond. */
+    private long newCallId() {
+        long id = System.currentTimeMillis();
+        while (currentClaudeCodePromptCall.containsKey(id)) {
+            id++;
+        }
+        return id;
     }
 
     /** Pretty-prints {@code output} as JSON when {@code verboseOutput}, falling back to the raw text

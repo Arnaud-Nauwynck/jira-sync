@@ -1,5 +1,6 @@
 export * from './annotatedJiraLinkedIssueFieldsDTO';
 export * from './changeLogEvent';
+export * from './claudeCodePromptCallDTO';
 export * from './claudeCodePromptRequestDTO';
 export * from './claudeCodePromptResponseDTO';
 export * from './claudeCodePromptStartChange';

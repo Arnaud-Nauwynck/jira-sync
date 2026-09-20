@@ -1,17 +1,22 @@
 package fr.an.projectanalysis.claude.rest;
 
+import fr.an.projectanalysis.rest.dtos.ClaudeCodePromptCallDTO;
 import fr.an.projectanalysis.rest.dtos.ClaudeCodePromptRequestDTO;
 import fr.an.projectanalysis.rest.dtos.ClaudeCodePromptResponseDTO;
+import fr.an.projectanalysis.claude.service.ClaudeCodePromptCall;
 import fr.an.projectanalysis.claude.service.ClaudeCodePromptInvokerService;
 import fr.an.projectanalysis.util.AbstractRestController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 /** Exposes {@link ClaudeCodePromptInvokerService} for one-shot prompt invocation of the local claude CLI. */
 @RestController
@@ -36,6 +41,19 @@ public class ClaudeCodePromptRestController extends AbstractRestController {
             String output = delegate.invokePrompt(req.prompt);
             return new ClaudeCodePromptResponseDTO(output);
         });
+    }
+
+    @Operation(summary = "List the claude CLI prompt invocations currently running")
+    @GetMapping("/calls")
+    public List<ClaudeCodePromptCallDTO> getCurrentCalls() {
+        return withLogDebug(log, "GET", "/calls", "", () ->
+                delegate.getCurrentCalls().stream()
+                        .map(ClaudeCodePromptRestController::toDTO)
+                        .toList());
+    }
+
+    private static ClaudeCodePromptCallDTO toDTO(ClaudeCodePromptCall src) {
+        return new ClaudeCodePromptCallDTO(src.getId(), src.getPrompt(), src.getAllowedTools(), src.getStartTime(), src.getPid());
     }
 
 }

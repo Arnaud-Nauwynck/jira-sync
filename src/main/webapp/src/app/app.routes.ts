@@ -13,6 +13,7 @@ import {UserMailMessageStatListPage} from './mailing-list/user-mail-message-stat
 import {GithubRateLimitPage} from './github/github-rate-limit-page/github-rate-limit-page.component';
 import {EventLogPage} from './event-log/event-log-page/event-log-page';
 import {UserActivityChartPage} from './user-activity-chart-page/user-activity-chart-page.component';
+import {ClaudeCodeCallsPage} from './claude/claude-code-calls-page/claude-code-calls-page';
 
 export const routes: Routes = [
   // Jira
@@ -35,6 +36,7 @@ export const routes: Routes = [
   {path:'user-activity-chart', component: UserActivityChartPage},
   {path:'sources-sync', component: SourcesSyncPage},
   {path:'event-log', component: EventLogPage},
+  {path:'claude-code-calls', component: ClaudeCodeCallsPage},
   {path:'about', component: AboutPage},
 
 ];
