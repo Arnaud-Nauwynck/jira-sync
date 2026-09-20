@@ -2,17 +2,14 @@ package fr.an.projectanalysis.github.service;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import fr.an.projectanalysis.github.client.GitHubApiClient;
-import fr.an.projectanalysis.github.client.dtos.SourceGitHubCommitDTO;
+import fr.an.projectanalysis.github.client.dtos.SourceGitHubPullRequestCommitDTO;
 import fr.an.projectanalysis.github.client.dtos.SourceGitHubIssueCommentDTO;
 import fr.an.projectanalysis.github.client.dtos.SourceGitHubIssueEventDTO;
 import fr.an.projectanalysis.github.client.dtos.SourceGitHubPullRequestDTO;
 import fr.an.projectanalysis.github.configuration.GitHubSyncProperties;
 import fr.an.projectanalysis.github.mapper.SourceGitHubToAnnotatedPullRequestMapper;
 import fr.an.projectanalysis.github.repository.GitHubPullRequestRepository;
-import fr.an.projectanalysis.github.rest.dtos.GitHubIssueCommentDTO;
-import fr.an.projectanalysis.github.rest.dtos.GitHubIssueEventDTO;
-import fr.an.projectanalysis.github.rest.dtos.GitHubPullRequestDTO;
-import fr.an.projectanalysis.github.rest.dtos.GitHubPullRequestReviewCommentDTO;
+import fr.an.projectanalysis.github.rest.dtos.*;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.stereotype.Component;
@@ -123,7 +120,8 @@ public class GitHubPullRequestSyncRunner {
                 continue;
             }
             try {
-                SourceGitHubPullRequestDTO pr = fetchGithubPullRequestDetails(number);
+                SourceGitHubPullRequestDTO sourcePr = fetchGithubPullRequestDetails(number);
+                GitHubPullRequestDTO pr = SourceGitHubToAnnotatedPullRequestMapper.from(sourcePr);
 
                 prRepository.save(pr);
                 prChangeCount++;
@@ -175,7 +173,9 @@ public class GitHubPullRequestSyncRunner {
 
         int prChangeCount = 0;
         for (int number : toLoad.keySet()) {
-            SourceGitHubPullRequestDTO pr = fetchGithubPullRequestDetails(number);
+            SourceGitHubPullRequestDTO sourcePr = fetchGithubPullRequestDetails(number);
+            GitHubPullRequestDTO pr = SourceGitHubToAnnotatedPullRequestMapper.from(sourcePr);
+
             prRepository.save(pr);
             prChangeCount++;
             sleep(syncGetByIdDelayMs);
@@ -210,7 +210,12 @@ public class GitHubPullRequestSyncRunner {
                     List<SourceGitHubPullRequestDTO.SourceGitHubReviewCommentDTO> reviewComments =
                             fetchPullRequestReviewComments(pr.number, pr.reviewComments);
                     List<GitHubPullRequestReviewCommentDTO> reviewCommentsData = SourceGitHubToAnnotatedPullRequestMapper.mapReviewComments(reviewComments);
-                    prRepository.mutateIssue(pr.number, pr1 -> pr1.reviewCommentsData = reviewCommentsData);
+                    prRepository.mutateIssue(pr.number, toUpdate -> {
+                        toUpdate.reviewCommentsData = reviewCommentsData;
+                        if (reviewCommentsData != null && reviewCommentsData.size() != pr.comments) {
+                            toUpdate.reviewComments = reviewCommentsData.size(); // workaround: correct source, to avoid re-fetch again
+                        }
+                    });
                 } catch(Exception ex) {
                     log.warn("Failed completeMissingReviewComments in fetchPullRequestReviewComments, for #{} ... ignore, no rethrow!", pr.number, ex);
                     sleep(syncDelayMs);
@@ -254,7 +259,12 @@ public class GitHubPullRequestSyncRunner {
                 try {
                     List<SourceGitHubIssueCommentDTO> comments = fetchIssueComments(pr.number, pr.comments);
                     List<GitHubIssueCommentDTO> commentsData = SourceGitHubToAnnotatedPullRequestMapper.mapComments(comments);
-                    prRepository.mutateIssue(pr.number, pr1 -> pr1.commentsData = commentsData);
+                    prRepository.mutateIssue(pr.number, toUpdate -> {
+                        toUpdate.commentsData = commentsData;
+                        if (commentsData != null && commentsData.size() != pr.comments) {
+                            toUpdate.comments = commentsData.size(); // workaround: correct source, to avoid re-fetch again
+                        }
+                    });
                 } catch(Exception ex) {
                     log.warn("Failed completeMissingComments in fetchIssueComments, for #{} ... ignore, no rethrow!", pr.number, ex);
                     sleep(syncDelayMs);
@@ -298,8 +308,8 @@ public class GitHubPullRequestSyncRunner {
             for (GitHubPullRequestDTO pr : prs) {
                 try {
                     List<SourceGitHubIssueEventDTO> issueEvents = fetchIssueEvents(pr.number);
-                    List<GitHubIssueEventDTO> value = SourceGitHubToAnnotatedPullRequestMapper.mapIssueEvents(issueEvents);
-                    prRepository.mutateIssue(pr.number, pr1 -> pr1.issueEventsData = value);
+                    List<GitHubIssueEventDTO> issueEventsData = SourceGitHubToAnnotatedPullRequestMapper.mapIssueEvents(issueEvents);
+                    prRepository.mutateIssue(pr.number, pr1 -> pr1.issueEventsData = issueEventsData);
                 } catch(Exception ex) {
                     log.warn("Failed completeMissingIssueEvents in fetchIssueEvents, for #{} ... ignore, no rethrow!", pr.number, ex);
                     sleep(syncDelayMs);
@@ -325,24 +335,30 @@ public class GitHubPullRequestSyncRunner {
     /**
      * Backfills {@code commitsData} on PRs already persisted locally that are missing
      */
-    public void completeMissingIssueCommits() {
+    public void completeMissingPullRequestCommits() {
         long startMillis = System.currentTimeMillis();
         int completedTotalCount = 0;
         for (int year : prRepository.findAllPartitionYears()) {
             List<GitHubPullRequestDTO> prs = prRepository.findByPartitionYear(year, pr ->
-                    pr.commits != null && pr.commits > 0 && (pr.issueEventsData == null || pr.commits == pr.issueEventsData.size()));
+                    pr.commits != null && pr.commits > 0 && (pr.commitsData2 == null || pr.commits == pr.commitsData2.size()));
             if (prs.isEmpty()) {
                 continue;
             }
-            log.info("completeMissingIssueCommits for year:" + year + ", found " + prs.size() + " to complete");
+            log.info("complete missing PullRequest Commits for year:" + year + ", found " + prs.size() + " to complete");
             sleep(syncDelayMs);
 
             int completedCount = 0;
             for (GitHubPullRequestDTO pr : prs) {
                 try {
-                    List<SourceGitHubIssueEventDTO> issueEvents = fetchIssueEvents(pr.number);
-                    List<SourceGitHubCommitDTO> commitsData = SourceGitHubToAnnotatedPullRequestMapper.mapIssueCommits(issueEvents);
-                    prRepository.mutateIssue(pr.number, pr1 -> pr1.commitsData = commitsData);
+                    List<SourceGitHubPullRequestCommitDTO> sourceCommitsData = fetchPullRequestCommits(pr.number, pr.commits);
+                    List<GitHubPullRequestCommitDTO> commitsData2 = SourceGitHubToAnnotatedPullRequestMapper.mapCommits(sourceCommitsData);
+                    prRepository.mutateIssue(pr.number, toUpdate -> {
+                        toUpdate.commitsData = null; // clear deprecated field
+                        toUpdate.commitsData2 = commitsData2;
+                        if (commitsData2.size() != pr.commits) {
+                            log.warn("MISMATCH PR #" + pr.number + " expecting " + pr.commits + " commits, got " + commitsData2.size());
+                        }
+                    });
                 } catch(Exception ex) {
                     log.warn("Failed completeMissingIssueCommits in fetchIssueCommits, for #{} ... ignore, no rethrow!", pr.number, ex);
                     sleep(syncDelayMs);
@@ -369,16 +385,23 @@ public class GitHubPullRequestSyncRunner {
         SourceGitHubPullRequestDTO pr = apiClient.callHttpGet(baseRepoApiUrl + "/pulls/" + number, SourceGitHubPullRequestDTO.class);
         if (pr.comments != null && pr.comments > 0) {
             pr.commentsData = fetchIssueComments(number, pr.comments);
+            if (pr.commentsData.size() != pr.comments) {
+                pr.comments = pr.commentsData.size(); // workaround: correct source, to avoid re-fetch again
+            }
         }
         if (pr.reviewComments != null && pr.reviewComments > 0) {
             pr.reviewCommentsData = fetchPullRequestReviewComments(number, pr.reviewComments);
+            if (pr.reviewCommentsData.size() != pr.reviewComments) {
+                pr.reviewComments = pr.reviewCommentsData.size(); // workaround: correct source, to avoid re-fetch again
+            }
         }
         if (pr.commits != null && pr.commits > 0) {
-            // TODO
-            // pr.reviewCommentsData = fetchPullRequestCommits(number, pr.reviewComments);
+            pr.commitsData = fetchPullRequestCommits(pr.number, pr.commits);
+            if (pr.commitsData.size() != pr.commits) {
+                pr.commits = pr.commitsData.size(); // workaround: correct source, to avoid re-fetch again
+            }
         }
-        // TODO
-        // pr.eventsData = fetchPullRequestEvents(number, pr.reviewComments);
+        pr.issueEventsData = fetchIssueEvents(pr.number);
         return pr;
     }
 
@@ -435,6 +458,39 @@ public class GitHubPullRequestSyncRunner {
             log.warn("Unexpected mismatch for Github PR #{}, expecting {} comments, missing 1", number, commentsCount);
         } else if (commentsCount != result.size()) {
             log.warn("Unexpected mismatch for Github PR #{}, expecting {} comments, got {}", number, commentsCount, result.size());
+        }
+        return result;
+    }
+
+
+    /**
+     * http GET "/repos/{owner}/{repo}/pulls/{pull_number}/commits"
+     * see https://docs.github.com/en/rest/pulls/pulls?apiVersion=2026-03-10#list-commits-on-a-pull-request
+     */
+    private List<SourceGitHubPullRequestCommitDTO> fetchPullRequestCommits(int number, int commitsCount) throws Exception {
+        List<SourceGitHubPullRequestCommitDTO> result = new ArrayList<>();
+        int page = 1;
+        int fetchedCount = 0;
+        while (true) {
+            val commits = apiClient.callHttpGet_List(baseRepoApiUrl + "/issues/" + number + "/commits"
+                            + "?per_page=100&page=" + page,
+                    SourceGitHubPullRequestCommitDTO.class);
+            if (commits.isEmpty()) {
+                break;
+            }
+            // TOADD may convert
+            result.addAll(commits);
+            fetchedCount += commits.size();
+            if (fetchedCount >= commitsCount) {
+                break;
+            }
+            page++;
+            sleep(syncGetByIdDelayMs);
+        }
+        if ((1 + commitsCount) == result.size()) {
+            log.warn("Unexpected mismatch for Github PR #{}, expecting {} commits, missing 1", number, commitsCount);
+        } else if (commitsCount != result.size()) {
+            log.warn("Unexpected mismatch for Github PR #{}, expecting {} commits, got {}", number, commitsCount, result.size());
         }
         return result;
     }

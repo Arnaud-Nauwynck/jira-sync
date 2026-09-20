@@ -7,9 +7,12 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
+import { ChangeLogEvent } from './changeLogEvent';
 
 
-export interface ClaudeCodePromptResponseDTO { 
+export interface ClaudeCodePromptBatchStart extends ChangeLogEvent { 
     runningBatchId?: number;
+    prompt?: string;
+    pid?: number;
 }
 

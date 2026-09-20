@@ -9,7 +9,9 @@
  */
 
 
-export interface ClaudeCodePromptResponseDTO { 
-    runningBatchId?: number;
+export interface ClaudeCodePromptCacheCreationDTO { 
+    ephemeral_1h_input_tokens?: number;
+    ephemeral_5m_input_tokens?: number;
+    extraFields?: { [key: string]: any | null; };
 }
 

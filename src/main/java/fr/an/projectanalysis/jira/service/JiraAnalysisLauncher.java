@@ -1,7 +1,8 @@
 package fr.an.projectanalysis.jira.service;
 
 import fr.an.projectanalysis.claude.service.ClaudeCodePromptInvokerService;
-import fr.an.projectanalysis.rest.dtos.ClaudeCodePromptResponseDTO;
+import fr.an.projectanalysis.claude.rest.dto.ClaudeCodePromptResponseDTO;
+import fr.an.projectanalysis.claude.service.ClaudeCodePromptRunningBatch;
 import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Component;
 
@@ -19,6 +20,7 @@ public class JiraAnalysisLauncher {
             "mcp__annotated-jira__findIssueByKey", //
             "mcp__annotated-jira__getJiraAnnotationFields", //
             "mcp__annotated-jira__setJiraAnnotationSummarised", //
+            "mcp__annotated-jira__findPullRequestByNumber", //
             "Bash", //
             "Write" // for end result as text files
     );
@@ -29,9 +31,8 @@ public class JiraAnalysisLauncher {
         this.claudeCodePromptInvokerService = claudeCodePromptInvokerService;
     }
 
-    public @NonNull ClaudeCodePromptResponseDTO launchClaudeJiraAnalysis(String jiraKey) throws IOException, InterruptedException {
-        return new ClaudeCodePromptResponseDTO(
-                claudeCodePromptInvokerService.invokePrompt("/jira-analysis " + jiraKey, CLAUDE_JIRA_ANALYSIS_ALLOWED_TOOLS));
+    public @NonNull ClaudeCodePromptRunningBatch launchClaudeJiraAnalysis(String jiraKey) throws IOException, InterruptedException {
+        return claudeCodePromptInvokerService.invokePrompt("/jira-analysis " + jiraKey, CLAUDE_JIRA_ANALYSIS_ALLOWED_TOOLS);
     }
 
 }

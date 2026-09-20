@@ -70,6 +70,9 @@ public class SourceGitHubPullRequestDTO {
     @JsonProperty("changed_files")
     public Integer changedFiles;
 
+    /** when count 'commits' is set, populated separately by GitHubPullRequestSyncRunner via GET .../issues/{number}/commits, not part of the detail response. */
+    public List<SourceGitHubPullRequestCommitDTO> commitsData;
+
     /** when count 'comments' is set, populated separately by GitHubPullRequestSyncRunner via GET .../issues/{number}/comments, not part of the detail response. */
     public List<SourceGitHubIssueCommentDTO> commentsData;
 

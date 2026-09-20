@@ -1,14 +1,14 @@
 package fr.an.projectanalysis.github.mapper;
 
-import fr.an.projectanalysis.github.client.dtos.SourceGitHubCommitDTO;
 import fr.an.projectanalysis.github.client.dtos.SourceGitHubIssueCommentDTO;
 import fr.an.projectanalysis.github.client.dtos.SourceGitHubIssueEventDTO;
+import fr.an.projectanalysis.github.client.dtos.SourceGitHubPullRequestCommitDTO;
 import fr.an.projectanalysis.github.client.dtos.SourceGitHubPullRequestDTO;
-import fr.an.projectanalysis.github.rest.dtos.GitHubIssueCommentDTO;
-import fr.an.projectanalysis.github.rest.dtos.GitHubIssueEventDTO;
-import fr.an.projectanalysis.github.rest.dtos.GitHubPullRequestDTO;
-import fr.an.projectanalysis.github.rest.dtos.GitHubPullRequestReviewCommentDTO;
+import fr.an.projectanalysis.github.rest.dtos.*;
+import fr.an.projectanalysis.util.LsUtil;
+import lombok.val;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -56,49 +56,27 @@ public class SourceGitHubToAnnotatedPullRequestMapper {
         dest.additions = src.additions;
         dest.deletions = src.deletions;
         dest.changedFiles = src.changedFiles;
+        dest.commitsData2 = mapCommits(src.commitsData);
         dest.reviewCommentsData = mapReviewComments(src.reviewCommentsData);
         dest.commentsData = mapComments(src.commentsData);
         dest.issueEventsData = mapIssueEvents(src.issueEventsData);
         return dest;
     }
 
-    /** Maps the raw review-comment list to its flattened form; also used to backfill PRs missing this data. */
+    public static List<GitHubPullRequestCommitDTO> mapCommits(List<SourceGitHubPullRequestCommitDTO> src) {
+        return LsUtil.mapOrNull(src, SourceGitHubToAnnotatedPullRequestMapper::toPullRequestCommitDTO);
+    }
+
     public static List<GitHubPullRequestReviewCommentDTO> mapReviewComments(List<SourceGitHubPullRequestDTO.SourceGitHubReviewCommentDTO> src) {
-        return src == null ? null
-                : src.stream()
-                        .map(SourceGitHubToAnnotatedPullRequestMapper::reviewComment)
-                        .collect(Collectors.toList());
+        return LsUtil.mapOrNull(src, SourceGitHubToAnnotatedPullRequestMapper::reviewComment);
     }
 
-    /** Maps the raw issue-comment list to its flattened form; also used to backfill PRs missing this data. */
     public static List<GitHubIssueCommentDTO> mapComments(List<SourceGitHubIssueCommentDTO> src) {
-        return src == null ? null
-                : src.stream()
-                        .map(SourceGitHubToAnnotatedPullRequestMapper::comment)
-                        .collect(Collectors.toList());
+        return LsUtil.mapOrNull(src, SourceGitHubToAnnotatedPullRequestMapper::comment);
     }
 
-    /** Maps the raw issue-event list to its flattened form; also used to backfill PRs missing this data. */
     public static List<GitHubIssueEventDTO> mapIssueEvents(List<SourceGitHubIssueEventDTO> src) {
-        return src == null ? null
-                : src.stream()
-                        .map(SourceGitHubToAnnotatedPullRequestMapper::issueEvent)
-                        .collect(Collectors.toList());
-    }
-
-    /**
-     * Derives minimal commit references from issue-timeline events that carry a {@code commitId}
-     * (e.g. "referenced", "closed", "merged", "head_ref_force_pushed" events). Note this only
-     * captures the commit sha/htmlUrl embedded in the timeline event, not the full commit detail
-     * (message, author, stats, files) — that requires the dedicated
-     * GET /pulls/{number}/commits endpoint.
-     */
-    public static List<SourceGitHubCommitDTO> mapIssueCommits(List<SourceGitHubIssueEventDTO> src) {
-        return src == null ? null
-                : src.stream()
-                        .filter(e -> e.commitId != null)
-                        .map(SourceGitHubToAnnotatedPullRequestMapper::issueEventCommit)
-                        .collect(Collectors.toList());
+        return LsUtil.mapOrNull(src, SourceGitHubToAnnotatedPullRequestMapper::issueEvent);
     }
 
     private static String login(SourceGitHubPullRequestDTO.SourceGitHubUserDTO user) {
@@ -116,6 +94,37 @@ public class SourceGitHubToAnnotatedPullRequestMapper {
     private static List<String> logins(List<SourceGitHubPullRequestDTO.SourceGitHubUserDTO> users) {
         return users == null ? null
                 : users.stream().map(SourceGitHubToAnnotatedPullRequestMapper::login).collect(Collectors.toList());
+    }
+
+    private static GitHubPullRequestCommitDTO toPullRequestCommitDTO(SourceGitHubPullRequestCommitDTO src) {
+        GitHubPullRequestCommitDTO res = new GitHubPullRequestCommitDTO();
+        res.sha = src.sha;
+        res.author = toLoginOrNull(src.author);
+        res.committer = toLoginOrNull(src.committer);
+        res.message = (src.commit != null)? src.commit.message : null;
+        res.commentCount = (src.commit != null)? src.commit.commentCount : null;
+        val parentShas = LsUtil.map(LsUtil.emptyIfNull(src.getParents()), x -> x.sha);
+        int parentShasCount = parentShas.size();
+        res.parentSha0 = (parentShasCount > 0)? parentShas.get(0) : null;
+        res.parentShaOthers = (parentShasCount <= 1)? null : new ArrayList<>(parentShas.subList(1, parentShasCount));
+        val srcStats = src.stats;
+        res.additions = (srcStats != null)? srcStats.additions : null;
+        res.deletions = (srcStats != null)? srcStats.deletions : null;
+        res.total = (srcStats != null)? srcStats.total : null;
+        res.files = LsUtil.mapOrNull(src.files, SourceGitHubToAnnotatedPullRequestMapper::toPullRequestCommitFileDTO);
+        return res;
+    }
+
+    private static GitHubPullRequestCommitDTO.GitHubCommitFileDTO toPullRequestCommitFileDTO(SourceGitHubPullRequestCommitDTO.SourceGitHubCommitFileDTO src) {
+        val res = new GitHubPullRequestCommitDTO.GitHubCommitFileDTO();
+        res.filename = src.filename;
+        res.status = src.status;
+        res.additions = src.additions;
+        res.deletions = src.deletions;
+        res.changes = src.changes;
+        res.patch = src.patch;
+        res.previousFilename = src.previousFilename;
+        return res;
     }
 
     private static GitHubPullRequestReviewCommentDTO reviewComment(SourceGitHubPullRequestDTO.SourceGitHubReviewCommentDTO c) {
@@ -194,10 +203,14 @@ public class SourceGitHubToAnnotatedPullRequestMapper {
         return d;
     }
 
-    private static SourceGitHubCommitDTO issueEventCommit(SourceGitHubIssueEventDTO e) {
-        SourceGitHubCommitDTO d = new SourceGitHubCommitDTO();
+    private static SourceGitHubPullRequestCommitDTO issueEventCommit(SourceGitHubIssueEventDTO e) {
+        SourceGitHubPullRequestCommitDTO d = new SourceGitHubPullRequestCommitDTO();
         d.sha = e.commitId;
         d.htmlUrl = e.commitUrl;
         return d;
+    }
+
+    private static String toLoginOrNull(SourceGitHubPullRequestCommitDTO.SourceGitHubUserDTO src) {
+        return (src != null)? src.login : null;
     }
 }

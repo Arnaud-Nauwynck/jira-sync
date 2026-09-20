@@ -13,7 +13,8 @@ import {UserMailMessageStatListPage} from './mailing-list/user-mail-message-stat
 import {GithubRateLimitPage} from './github/github-rate-limit-page/github-rate-limit-page.component';
 import {EventLogPage} from './event-log/event-log-page/event-log-page';
 import {UserActivityChartPage} from './user-activity-chart-page/user-activity-chart-page.component';
-import {ClaudeCodeCallsPage} from './claude/claude-code-calls-page/claude-code-calls-page';
+import {ClaudeCodeRunningBatchesPage} from './claude/claude-code-running-batches-page/claude-code-running-batches-page';
+import {ClaudeCodeBatchesPage} from './claude/claude-code-batches-page/claude-code-batches-page';
 
 export const routes: Routes = [
   // Jira
@@ -36,7 +37,8 @@ export const routes: Routes = [
   {path:'user-activity-chart', component: UserActivityChartPage},
   {path:'sources-sync', component: SourcesSyncPage},
   {path:'event-log', component: EventLogPage},
-  {path:'claude-code-calls', component: ClaudeCodeCallsPage},
+  {path:'claude-code-calls', component: ClaudeCodeRunningBatchesPage},
+  {path:'claude-code-prompt-batches', component: ClaudeCodeBatchesPage},
   {path:'about', component: AboutPage},
 
 ];

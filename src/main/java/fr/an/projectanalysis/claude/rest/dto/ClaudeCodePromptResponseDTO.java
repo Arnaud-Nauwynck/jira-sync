@@ -1,4 +1,4 @@
-package fr.an.projectanalysis.rest.dtos;
+package fr.an.projectanalysis.claude.rest.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
@@ -11,6 +11,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor @AllArgsConstructor
 public class ClaudeCodePromptResponseDTO {
 
-    public String output;
+    public long runningBatchId;
 
 }

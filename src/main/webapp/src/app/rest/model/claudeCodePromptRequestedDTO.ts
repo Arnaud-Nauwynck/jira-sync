@@ -9,7 +9,10 @@
  */
 
 
-export interface ClaudeCodePromptResponseDTO { 
-    runningBatchId?: number;
+export interface ClaudeCodePromptRequestedDTO { 
+    background?: number;
+    foreground?: number;
+    unset?: number;
+    extraFields?: { [key: string]: any | null; };
 }
 

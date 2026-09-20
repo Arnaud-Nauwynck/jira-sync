@@ -9,7 +9,10 @@
  */
 
 
-export interface ClaudeCodePromptResponseDTO { 
-    runningBatchId?: number;
+export interface ClaudeCodePromptKilledDTO { 
+    parent?: number;
+    user?: number;
+    system?: number;
+    extraFields?: { [key: string]: any | null; };
 }
 

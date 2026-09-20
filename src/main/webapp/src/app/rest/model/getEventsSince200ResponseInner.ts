@@ -10,13 +10,13 @@
 import { GithubPRChange } from './githubPRChange';
 import { JiraIssueChange } from './jiraIssueChange';
 import { MailingListChange } from './mailingListChange';
-import { ClaudeCodePromptStartChange } from './claudeCodePromptStartChange';
 import { McpToolCallChange } from './mcpToolCallChange';
+import { ClaudeCodePromptBatchStart } from './claudeCodePromptBatchStart';
 
 
 /**
  * @type GetEventsSince200ResponseInner
  * @export
  */
-export type GetEventsSince200ResponseInner = ClaudeCodePromptStartChange | GithubPRChange | JiraIssueChange | MailingListChange | McpToolCallChange;
+export type GetEventsSince200ResponseInner = ClaudeCodePromptBatchStart | GithubPRChange | JiraIssueChange | MailingListChange | McpToolCallChange;
 

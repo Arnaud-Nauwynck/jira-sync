@@ -11,4 +11,7 @@ public class ClaudeProperties {
 
     private String workingDir;
 
+    /** Root dir where finished prompt invocations are persisted (see {@code ClaudeCodePromptBatchRepository}). */
+    private String promptBatchLocalDir = "claude-prompt-batches";
+
 }

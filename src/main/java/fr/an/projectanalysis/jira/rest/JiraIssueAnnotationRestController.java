@@ -4,11 +4,12 @@ import fr.an.projectanalysis.jira.rest.dtos.JiraIssueAnnotationDTO;
 import fr.an.projectanalysis.jira.rest.dtos.PersonalInterrestCommentDTO;
 import fr.an.projectanalysis.jira.service.JiraAnalysisLauncher;
 import fr.an.projectanalysis.jira.service.JiraIssueService;
-import fr.an.projectanalysis.rest.dtos.ClaudeCodePromptResponseDTO;
+import fr.an.projectanalysis.claude.rest.dto.ClaudeCodePromptResponseDTO;
 import fr.an.projectanalysis.util.AbstractRestController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
@@ -66,7 +67,10 @@ public class JiraIssueAnnotationRestController extends AbstractRestController {
     @PostMapping("/launch-claude-jira-analysis")
     public ClaudeCodePromptResponseDTO launchClaudeJiraAnalysis(@RequestParam(name = "jiraKey") String jiraKey) {
         return withLog(log, "POST", "/launch-claude-jira-analysis", "jiraKey=" + jiraKey,
-                () -> jiraAnalysisLauncher.launchClaudeJiraAnalysis(jiraKey));
+                () -> {
+                    val runningBatch = jiraAnalysisLauncher.launchClaudeJiraAnalysis(jiraKey);
+                    return new ClaudeCodePromptResponseDTO(runningBatch.getRunningBatchId());
+                });
     }
 
 }

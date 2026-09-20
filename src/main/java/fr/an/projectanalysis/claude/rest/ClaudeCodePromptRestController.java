@@ -1,16 +1,19 @@
 package fr.an.projectanalysis.claude.rest;
 
-import fr.an.projectanalysis.rest.dtos.ClaudeCodePromptCallDTO;
-import fr.an.projectanalysis.rest.dtos.ClaudeCodePromptRequestDTO;
-import fr.an.projectanalysis.rest.dtos.ClaudeCodePromptResponseDTO;
-import fr.an.projectanalysis.claude.service.ClaudeCodePromptCall;
+import fr.an.projectanalysis.claude.rest.dto.ClaudeCodeBatchCriteriaDTO;
+import fr.an.projectanalysis.claude.rest.dto.ClaudeCodePromptBatchDTO;
+import fr.an.projectanalysis.claude.rest.dto.ClaudeCodePromptRunningBatchDTO;
+import fr.an.projectanalysis.claude.rest.dto.ClaudeCodePromptRequestDTO;
+import fr.an.projectanalysis.claude.rest.dto.ClaudeCodePromptResponseDTO;
 import fr.an.projectanalysis.claude.service.ClaudeCodePromptInvokerService;
+import fr.an.projectanalysis.claude.service.ClaudeCodePromptRunningBatch;
 import fr.an.projectanalysis.util.AbstractRestController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -38,22 +41,40 @@ public class ClaudeCodePromptRestController extends AbstractRestController {
     @PostMapping("/prompt")
     public ClaudeCodePromptResponseDTO invokePrompt(@RequestBody ClaudeCodePromptRequestDTO req) {
         return withLog(log, "POST", "/prompt", "", () -> {
-            String output = delegate.invokePrompt(req.prompt);
-            return new ClaudeCodePromptResponseDTO(output);
+            ClaudeCodePromptRunningBatch runningBatch = delegate.invokePrompt(req.prompt);
+            return new ClaudeCodePromptResponseDTO(runningBatch.getRunningBatchId());
         });
     }
 
-    @Operation(summary = "List the claude CLI prompt invocations currently running")
-    @GetMapping("/calls")
-    public List<ClaudeCodePromptCallDTO> getCurrentCalls() {
-        return withLogDebug(log, "GET", "/calls", "", () ->
-                delegate.getCurrentCalls().stream()
-                        .map(ClaudeCodePromptRestController::toDTO)
-                        .toList());
+    @Operation(summary = "List the Claude CLI prompt invocations currently running")
+    @GetMapping("/current-running-batches")
+    public List<ClaudeCodePromptRunningBatchDTO> getCurrentRunningBatches() {
+        return withLogDebug(log, "GET", "/calls", "", () -> delegate.getCurrentRunningBatchDTOs());
     }
 
-    private static ClaudeCodePromptCallDTO toDTO(ClaudeCodePromptCall src) {
-        return new ClaudeCodePromptCallDTO(src.getId(), src.getPrompt(), src.getAllowedTools(), src.getStartTime(), src.getPid());
+    @Operation(summary = "List all finished Claude CLI prompt invocations persisted so far")
+    @GetMapping("/prompt-batches")
+    public List<ClaudeCodePromptBatchDTO> getPromptBatches() {
+        return withLogDebug(log, "GET", "/prompt-batches", "", () -> delegate.getPromptBatches());
+    }
+
+    @Operation(summary = "List the finished Claude CLI prompt invocations persisted for a single partition year")
+    @GetMapping("/prompt-batches/{year}")
+    public List<ClaudeCodePromptBatchDTO> getPromptBatchesByYear(@PathVariable("year") int year) {
+        return withLogDebug(log, "GET", "/prompt-batches/" + year, "", () -> delegate.getPromptBatches(year));
+    }
+
+    @Operation(summary = "List the partition years having at least one persisted finished prompt invocation")
+    @GetMapping("/prompt-batch-years")
+    public List<Integer> getPromptBatchYears() {
+        return withLogDebug(log, "GET", "/prompt-batch-years", "", () -> delegate.getPromptBatchYears());
+    }
+
+    @Operation(summary = "List finished Claude CLI prompt invocations matching the given search criteria "
+            + "(fromDate/toDate, prompt/outputResult contains, output tokens range)")
+    @PostMapping("/query")
+    public List<ClaudeCodePromptBatchDTO> queryPromptBatches(@RequestBody ClaudeCodeBatchCriteriaDTO criteria) {
+        return withLog(log, "POST", "/query", "", () -> delegate.queryPromptBatches(criteria));
     }
 
 }

@@ -9,7 +9,13 @@
  */
 
 
-export interface ClaudeCodePromptResponseDTO { 
-    runningBatchId?: number;
+export interface GitHubCommitFileDTO { 
+    filename?: string;
+    status?: string;
+    additions?: number;
+    deletions?: number;
+    changes?: number;
+    patch?: string;
+    previous_filename?: string;
 }
 

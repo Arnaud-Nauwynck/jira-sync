@@ -3,9 +3,7 @@ package fr.an.projectanalysis.github.repository;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import fr.an.projectanalysis.github.client.dtos.SourceGitHubPullRequestDTO;
 import fr.an.projectanalysis.github.configuration.GitHubSyncProperties;
-import fr.an.projectanalysis.github.mapper.SourceGitHubToAnnotatedPullRequestMapper;
 import fr.an.projectanalysis.github.rest.dtos.GitHubPullRequestDTO;
 import fr.an.projectanalysis.github.rest.dtos.GitHubPullRequestExtraFieldsDTO;
 import fr.an.projectanalysis.github.rest.dtos.YearCountDTO;
@@ -133,8 +131,7 @@ public class GitHubPullRequestRepository {
      * persisted {@code annotated} data (not coming from the source GitHub server) is carried over
      * onto the newly mapped PR; on insert, {@code annotated} is left null.
      */
-    public void save(SourceGitHubPullRequestDTO sourcePr) {
-        GitHubPullRequestDTO pr = SourceGitHubToAnnotatedPullRequestMapper.from(sourcePr);
+    public void save(GitHubPullRequestDTO pr) {
         int number = requireNumber(pr);
         int year = partitionYearOf(pr);
         Map<Integer, GitHubPullRequestDTO> cachedPartition = cachedPartitionData(year);

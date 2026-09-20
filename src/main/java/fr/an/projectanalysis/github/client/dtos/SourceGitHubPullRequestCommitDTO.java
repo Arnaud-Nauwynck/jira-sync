@@ -17,7 +17,7 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Data
-public class SourceGitHubCommitDTO {
+public class SourceGitHubPullRequestCommitDTO {
     public String sha;
 
     // TODO useless, remove

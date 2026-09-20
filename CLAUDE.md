@@ -40,3 +40,6 @@ Never try to inspect node/npm module dependencies, ask and the end-user will pro
 
 After each edition of source code, the end-user will commit himself in git, so do not waste tokens trying to do it or even to display suggestion message. 
 
+# User Recaps
+Do not be verbose in explanation or recaps, the end-user will always review the code.
+NEVER tell the user to recompile, generate (OpenApi), or test, the end-user is following.

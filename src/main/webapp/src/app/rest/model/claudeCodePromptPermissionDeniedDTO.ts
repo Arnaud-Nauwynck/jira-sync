@@ -9,7 +9,7 @@
  */
 
 
-export interface ClaudeCodePromptResponseDTO { 
-    runningBatchId?: number;
+export interface ClaudeCodePromptPermissionDeniedDTO { 
+    extraFields?: { [key: string]: any | null; };
 }
 

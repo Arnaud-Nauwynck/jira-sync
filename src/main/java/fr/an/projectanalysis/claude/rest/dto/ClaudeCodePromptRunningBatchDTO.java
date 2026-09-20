@@ -1,4 +1,4 @@
-package fr.an.projectanalysis.rest.dtos;
+package fr.an.projectanalysis.claude.rest.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
@@ -12,7 +12,7 @@ import java.util.List;
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @NoArgsConstructor @AllArgsConstructor
-public class ClaudeCodePromptCallDTO {
+public class ClaudeCodePromptRunningBatchDTO {
 
     public long id;
     public String prompt;

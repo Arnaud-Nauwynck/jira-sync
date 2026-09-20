@@ -1,7 +1,7 @@
 package fr.an.projectanalysis.github.rest.dtos;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import fr.an.projectanalysis.github.client.dtos.SourceGitHubCommitDTO;
+import fr.an.projectanalysis.github.client.dtos.SourceGitHubPullRequestCommitDTO;
 import lombok.Data;
 
 import java.util.List;
@@ -54,7 +54,11 @@ public class GitHubPullRequestDTO {
 
     public Integer commits;
     /** loaded on demand when 'commits' > 0 */
-    public List<SourceGitHubCommitDTO> commitsData;
+    // TODO currently ignored, remove (migrate data from commitsData2)
+    @Deprecated
+    public List<SourceGitHubPullRequestCommitDTO> commitsData;
+
+    public List<GitHubPullRequestCommitDTO> commitsData2;
 
     public Integer additions;
     public Integer deletions;

@@ -4,8 +4,8 @@ import type { CellClickedEvent, ColDef, GridApi, GridReadyEvent } from 'ag-grid-
 import { Subscription, timer } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { ClaudeCodeService } from '../../rest/api/claudeCode.service';
-import { ClaudeCodePromptCallDTO } from '../../rest/model/claudeCodePromptCallDTO';
 import { ResizableHeightDirective } from '../../utils/resizable-height.directive';
+import {ClaudeCodePromptRunningBatchDTO} from '../../rest';
 
 const POLL_INTERVAL_MS = 2000;
 
@@ -13,22 +13,22 @@ const POLL_INTERVAL_MS = 2000;
  * prompt invocations in an ag-grid, refreshed every {@link POLL_INTERVAL_MS}. */
 @Component({
   imports: [AgGridAngular, ResizableHeightDirective],
-  selector: 'app-claude-code-calls-page',
-  templateUrl: './claude-code-calls-page.html',
+  selector: 'app-claude-code-running-batches-page',
+  templateUrl: './claude-code-running-batches-page.html',
 })
-export class ClaudeCodeCallsPage implements OnInit, OnDestroy {
+export class ClaudeCodeRunningBatchesPage implements OnInit, OnDestroy {
 
-  readonly calls = signal<ClaudeCodePromptCallDTO[]>([]);
+  readonly calls = signal<ClaudeCodePromptRunningBatchDTO[]>([]);
 
   readonly suspended = signal(false);
 
   // The call currently shown in the master-detail panel below the grid, or undefined when closed.
-  readonly selectedCall = signal<ClaudeCodePromptCallDTO | undefined>(undefined);
+  readonly selectedCall = signal<ClaudeCodePromptRunningBatchDTO | undefined>(undefined);
 
-  colDefs: ColDef<ClaudeCodePromptCallDTO>[] = [
+  colDefs: ColDef<ClaudeCodePromptRunningBatchDTO>[] = [
     { headerName: 'Id', field: 'id', width: 160,
       cellStyle: { cursor: 'pointer', textDecoration: 'underline' },
-      onCellClicked: (params: CellClickedEvent<ClaudeCodePromptCallDTO>) => {
+      onCellClicked: (params: CellClickedEvent<ClaudeCodePromptRunningBatchDTO>) => {
         if (params.data) {
           this.selectedCall.set(params.data);
         }
@@ -43,13 +43,13 @@ export class ClaudeCodeCallsPage implements OnInit, OnDestroy {
       valueGetter: (params) => params.data?.startTime,
       valueFormatter: (params) => this.formatElapsed(params.value),
     },
-    { headerName: 'Allowed Tools', width: 220,
+    { headerName: 'Prompt', field: 'prompt', width: 300, flex: 1 },
+    { headerName: 'Allowed Tools', width: 400,
       valueGetter: (params) => (params.data?.allowedTools ?? []).join(', '),
     },
-    { headerName: 'Prompt', flex: 1, field: 'prompt' },
   ];
 
-  private gridApi?: GridApi<ClaudeCodePromptCallDTO>;
+  private gridApi?: GridApi<ClaudeCodePromptRunningBatchDTO>;
   private pollSubscription?: Subscription;
 
   constructor(private claudeCodeService: ClaudeCodeService) {}
@@ -76,7 +76,7 @@ export class ClaudeCodeCallsPage implements OnInit, OnDestroy {
     }
     this.suspended.set(false);
     this.pollSubscription = timer(0, POLL_INTERVAL_MS)
-      .pipe(switchMap(() => this.claudeCodeService.getCurrentCalls()))
+      .pipe(switchMap(() => this.claudeCodeService.getCurrentRunningBatches()))
       .subscribe({
         next: (calls) => this.calls.set(calls),
         error: (err) => console.error('failed to poll claude-code current calls', err),
@@ -93,7 +93,7 @@ export class ClaudeCodeCallsPage implements OnInit, OnDestroy {
     this.selectedCall.set(undefined);
   }
 
-  onGridReady(event: GridReadyEvent<ClaudeCodePromptCallDTO>) {
+  onGridReady(event: GridReadyEvent<ClaudeCodePromptRunningBatchDTO>) {
     this.gridApi = event.api;
   }
 

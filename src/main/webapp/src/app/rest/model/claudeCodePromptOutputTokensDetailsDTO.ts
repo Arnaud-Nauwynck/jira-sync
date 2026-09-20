@@ -9,7 +9,8 @@
  */
 
 
-export interface ClaudeCodePromptResponseDTO { 
-    runningBatchId?: number;
+export interface ClaudeCodePromptOutputTokensDetailsDTO { 
+    thinking_tokens?: number;
+    extraFields?: { [key: string]: any | null; };
 }
 

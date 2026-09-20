@@ -9,7 +9,9 @@
  */
 
 
-export interface ClaudeCodePromptResponseDTO { 
-    runningBatchId?: number;
+export interface ClaudeCodePromptServerToolUseDTO { 
+    web_search_requests?: number;
+    web_fetch_requests?: number;
+    extraFields?: { [key: string]: any | null; };
 }
 

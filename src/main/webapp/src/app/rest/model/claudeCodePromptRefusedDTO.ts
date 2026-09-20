@@ -9,7 +9,10 @@
  */
 
 
-export interface ClaudeCodePromptResponseDTO { 
-    runningBatchId?: number;
+export interface ClaudeCodePromptRefusedDTO { 
+    budget?: number;
+    depth_limit?: number;
+    concurrency_limit?: number;
+    extraFields?: { [key: string]: any | null; };
 }
 

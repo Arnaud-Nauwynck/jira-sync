@@ -69,7 +69,7 @@ public class GitHubSyncRestController extends AbstractRestController {
     @Operation(summary = "Backfill missing pull-request commits for PRs already synced locally")
     @PostMapping("/complete-missing-commits")
     public void completeMissingCommits() {
-        withLog(log, "POST", "/complete-missing-commits", "", gitHubPrSyncRunner::completeMissingIssueCommits);
+        withLog(log, "POST", "/complete-missing-commits", "", gitHubPrSyncRunner::completeMissingPullRequestCommits);
     }
 
 

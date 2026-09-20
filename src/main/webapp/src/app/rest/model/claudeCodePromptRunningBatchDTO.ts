@@ -9,7 +9,11 @@
  */
 
 
-export interface ClaudeCodePromptResponseDTO { 
-    runningBatchId?: number;
+export interface ClaudeCodePromptRunningBatchDTO { 
+    id?: number;
+    prompt?: string;
+    allowedTools?: Array<string>;
+    startTime?: number;
+    pid?: number;
 }
 

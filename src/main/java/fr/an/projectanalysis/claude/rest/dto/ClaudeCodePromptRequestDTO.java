@@ -1,4 +1,4 @@
-package fr.an.projectanalysis.rest.dtos;
+package fr.an.projectanalysis.claude.rest.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
