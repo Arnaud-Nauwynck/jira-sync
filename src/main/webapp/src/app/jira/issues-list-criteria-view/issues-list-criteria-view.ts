@@ -9,9 +9,17 @@ import { AvailabilityFilter, AvailabilityFilterComponent } from '../issues-searc
 import { ExcludeDropdownFilter, ExcludeFilterOption } from '../issues-search-page/filters/exclude-dropdown-filter';
 import { ExcludeButtonGroupFilter } from '../issues-search-page/filters/exclude-buttongroup-filter';
 import { csvToSet, setToCsv } from '../../utils/csv-set';
+import { clearCriteriaFields } from '../../utils/clear-criteria';
+import { escapeRegExp } from '../../utils/regex-escape';
 
 const OTHER_RESOLUTIONS = '(others)';
 const OTHER_TYPES = '(others)';
+
+const RECENT_LIMIT = 50;
+
+/** Mode of the shrinked "Search Criteria" panel: a quick default listing, a lookup by issue key,
+ * or the full advanced criteria panel. */
+export type IssuesSearchMode = 'recent' | 'byId' | 'advanced';
 
 /** Owns the Data Fetching/Main/Analysis/Development Work/Personal Interest filter criteria of the
  * issues-list page, as an {@link IssuesCriteriaDTO} sent as-is to the server. */
@@ -36,10 +44,26 @@ export class IssuesListCriteriaView implements OnInit {
   /** Error of the last failed search, displayed next to the "Search" button, or '' when there is none. */
   @Input() loadErrorMessage = '';
 
+  /** Fetch limit, owned by the parent page: only touched here to force it to {@link RECENT_LIMIT}
+   * when the "recent" mode is picked. */
+  @Input() limit = 0;
+  @Output() readonly limitChange = new EventEmitter<number>();
+
   /** Emitted when the "Search" button is clicked, to re-fetch from the server. */
   @Output() readonly search = new EventEmitter<void>();
   /** Emitted on every criteria field change, so the grid can instantly re-apply its client-side filter. */
   @Output() readonly criteriaChanged = new EventEmitter<void>();
+  /** Emitted whenever the shrinked panel's mode changes, so the page can e.g. auto-open the detail
+   * of a unique "by id" match instead of showing the grid. */
+  @Output() readonly searchModeChange = new EventEmitter<IssuesSearchMode>();
+
+  // Mode of the shrinked panel: "recent" (default quick listing), "by id" (lookup by issue key) or
+  // "advanced" (expands the full criteria panel below).
+  searchMode: IssuesSearchMode = 'recent';
+
+  // "By id" input: a bare number ("1234") looks up the issue number, a full key ("SPARK-1234")
+  // looks up that key exactly; neither is treated as a regex (see onIdValueChanged()).
+  idValue = '';
 
   // Whole search-criteria panel: collapsible, expanded by default.
   isCriteriaCollapsed = false;
@@ -101,6 +125,10 @@ export class IssuesListCriteriaView implements OnInit {
   /** Rebuilds the widgets' local Sets from the bound criteria: the criteria outlives this view (it is
    * held by the data service, and restored from the URL), so the Sets cannot be defaulted blindly. */
   ngOnInit() {
+    this.syncExcludedSetsFromCriteria();
+  }
+
+  private syncExcludedSetsFromCriteria() {
     this.excludedStatuses = csvToSet(this.criteria.excludedStatuses);
     this.excludedPriorities = csvToSet(this.criteria.excludedPriorities);
     this.excludedTypes = csvToSet(this.criteria.excludedTypes);
@@ -113,6 +141,54 @@ export class IssuesListCriteriaView implements OnInit {
 
   onSearch() {
     this.search.emit();
+  }
+
+  /** Switches the shrinked panel's mode: "recent" clears every criteria field and re-searches with a
+   * small fixed limit; "by id" clears every field too, leaving just the id lookup to fill in;
+   * "advanced" simply re-expands the full panel, untouched. */
+  onModeChange(mode: IssuesSearchMode) {
+    this.searchMode = mode;
+    this.searchModeChange.emit(mode);
+    if (mode === 'advanced') {
+      this.isCriteriaCollapsed = false;
+      return;
+    }
+    this.isCriteriaCollapsed = true;
+    clearCriteriaFields(this.criteria);
+    this.syncExcludedSetsFromCriteria();
+    this.idValue = '';
+    this.onFieldChanged();
+    if (mode === 'recent') {
+      this.setLimit(RECENT_LIMIT);
+      this.onSearch();
+    }
+  }
+
+  /** Interprets the "by id" input as an exact lookup, never as a regex: a bare number ("1234") is
+   * matched against the issue number, anything else ("SPARK-1234") is matched exactly against the key. */
+  onIdValueChanged(value: string) {
+    this.idValue = value;
+    const trimmed = value.trim();
+    if (/^\d+$/.test(trimmed)) {
+      this.criteria.fromNumber = Number(trimmed);
+      this.criteria.toNumber = Number(trimmed);
+      this.criteria.keyPattern = undefined;
+    } else {
+      this.criteria.keyPattern = trimmed ? escapeRegExp(trimmed) : undefined;
+      this.criteria.fromNumber = undefined;
+      this.criteria.toNumber = undefined;
+    }
+    this.onFieldChanged();
+  }
+
+  /** Triggered from the "by id" input: re-fetches with just the typed id lookup. */
+  onIdSearch() {
+    this.onSearch();
+  }
+
+  private setLimit(limit: number) {
+    this.limit = limit;
+    this.limitChange.emit(limit);
   }
 
   onExcludedTypesChange(excluded: Set<string>) {

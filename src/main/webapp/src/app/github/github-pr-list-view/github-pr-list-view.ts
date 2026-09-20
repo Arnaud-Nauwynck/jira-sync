@@ -86,6 +86,18 @@ export class GithubPrListView {
     this.gridApi?.onFilterChanged();
   }
 
+  /** Rows currently passing the client-side external filter, i.e. what the grid actually shows: unlike
+   * `rowData`, this reflects in-place criteria edits that haven't been re-queried from the server yet. */
+  getDisplayedRows(): GitHubPullRequestDTO[] {
+    const rows: GitHubPullRequestDTO[] = [];
+    this.gridApi?.forEachNodeAfterFilter((node) => {
+      if (node.data) {
+        rows.push(node.data);
+      }
+    });
+    return rows;
+  }
+
   isExternalFilterPresent = (): boolean => {
     return GithubPrCriteria.anyCriteriaSet(this.criteria);
   };

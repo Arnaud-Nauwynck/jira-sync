@@ -10,6 +10,7 @@ import { mergeDeltaIds } from '../../utils/criteria-delta';
 import { EntityCache } from '../../utils/entity-cache';
 import { parseEpochMillis } from '../../utils/epoch-millis';
 import { sameCriteria } from '../../utils/same-criteria';
+import { GithubPrCriteria } from './GithubPrCriteria';
 
 const DEFAULT_LIMIT = 5000;
 
@@ -206,9 +207,18 @@ export class GithubPullRequestsDataService {
   }
 
   /** Publishes the numbers of a new result: sorting them here, and not in the query methods, is what
-   * makes the full and the delta query return the pull requests in the very same order. */
+   * makes the full and the delta query return the pull requests in the very same order.
+   *
+   * Re-applies the full criteria against the cached PRs before publishing: the "refresh outdated" and
+   * "delta" query modes only ask the server to compare id sets, so a criteria the server matches more
+   * loosely than the client (or a field the client added that the server doesn't know about yet) would
+   * otherwise leak stale extra rows into the result. */
   private publishResult(ids: number[], criteria: GitHubPrCriteriaDTO, limit: number): GitHubPullRequestDTO[] {
-    this.resultIds.set([...ids].sort(comparePrNumbersDesc));
+    const matchingIds = ids.filter((id) => {
+      const pullRequest = this.cache.get(id);
+      return pullRequest !== undefined && GithubPrCriteria.match(criteria, pullRequest);
+    });
+    this.resultIds.set(matchingIds.sort(comparePrNumbersDesc));
     this.lastCriteria.set(structuredClone(criteria));
     this.lastLimit.set(limit);
     return this.pullRequests();

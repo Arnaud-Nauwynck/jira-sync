@@ -6,6 +6,7 @@ import { EntityCache } from '../../utils/entity-cache';
 import { parseEpochMillis } from '../../utils/epoch-millis';
 import { sameCriteria } from '../../utils/same-criteria';
 import { compareIssueKeysDesc } from './issue-key-order';
+import { IssueCriteria } from './IssueCriteria';
 
 const DEFAULT_LIMIT = 5000;
 
@@ -202,9 +203,18 @@ export class IssuesDataService {
   }
 
   /** Publishes the keys of a new result: sorting them here, and not in the query methods, is what
-   * makes the full and the delta query return the issues in the very same order. */
+   * makes the full and the delta query return the issues in the very same order.
+   *
+   * Re-applies the full criteria against the cached issues before publishing: the "refresh outdated"
+   * and "delta" query modes only ask the server to compare id sets, so a criteria the server matches
+   * more loosely than the client (or a field the client added that the server doesn't know about yet)
+   * would otherwise leak stale extra rows into the result. */
   private publishResult(ids: string[], criteria: IssuesCriteriaDTO, limit: number): JiraIssueDTO[] {
-    this.resultIds.set([...ids].sort(compareIssueKeysDesc));
+    const matchingIds = ids.filter((id) => {
+      const issue = this.cache.get(id);
+      return issue !== undefined && IssueCriteria.match(criteria, issue);
+    });
+    this.resultIds.set(matchingIds.sort(compareIssueKeysDesc));
     this.lastCriteria.set(structuredClone(criteria));
     this.lastLimit.set(limit);
     return this.issues();

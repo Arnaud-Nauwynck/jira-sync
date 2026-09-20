@@ -6,6 +6,7 @@ import { EntityCache } from '../../utils/entity-cache';
 import { parseEpochMillis } from '../../utils/epoch-millis';
 import { extractMessageId } from '../../utils/mail-message-id';
 import { sameCriteria } from '../../utils/same-criteria';
+import { MailingListCriteria } from '../service/MailingListCriteria';
 
 const DEFAULT_LIMIT = 5000;
 
@@ -215,10 +216,19 @@ export class MailMessagesDataService {
   }
 
   /** Publishes the ids of a new result: sorting them here, and not in the query methods, is what
-   * makes the full and the delta query return the messages in the very same order. */
+   * makes the full and the delta query return the messages in the very same order.
+   *
+   * Re-applies the full criteria against the cached messages before publishing: the "refresh outdated"
+   * and "delta" query modes only ask the server to compare id sets, so a criteria the server matches
+   * more loosely than the client (or a field the client added that the server doesn't know about yet)
+   * would otherwise leak stale extra rows into the result. */
   private publishResult(ids: string[], criteria: MailMessageCriteriaDTO, limit: number): MailMessageDTO[] {
-    this.resultIds.set([...ids]
-        .sort((left, right) => timeOf(this.cache.get(right)) - timeOf(this.cache.get(left))));
+    const matchingIds = ids.filter((id) => {
+      const message = this.cache.get(id);
+      return message !== undefined && MailingListCriteria.match(criteria, message);
+    });
+    matchingIds.sort((left, right) => timeOf(this.cache.get(right)) - timeOf(this.cache.get(left)));
+    this.resultIds.set(matchingIds);
     this.lastCriteria.set(structuredClone(criteria));
     this.lastLimit.set(limit);
     return this.messages();

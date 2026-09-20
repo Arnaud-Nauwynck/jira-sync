@@ -1,16 +1,18 @@
 <H4>GitHub Pull Requests</H4>
 
-<app-github-pr-search-criteria-view [criteria]="criteria" [loading]="loading" [loadErrorMessage]="loadErrorMessage" (search)="search()" (criteriaChanged)="listView.onFilterInputsChanged()">
+<app-github-pr-search-criteria-view [criteria]="criteria" [loading]="loading" [loadErrorMessage]="loadErrorMessage" [(limit)]="limit" (search)="search()" (criteriaChanged)="onCriteriaChanged()" (searchModeChange)="onSearchModeChange($event)">
   <app-search-stats-bar
     [rangeFrom]="criteria.fromYear" [rangeTo]="criteria.toYear"
     [availableInRange]="availableInRange()" [total]="grandTotal()" [loadedCount]="pullRequestsDataService.pullRequests().length"
     [(limit)]="limit" />
 </app-github-pr-search-criteria-view>
 
-<app-github-pr-list-view #listView
-  [rowData]="pullRequestsDataService.pullRequests()"
-  [criteria]="criteria"
-  (rowSelected)="selectedPullRequest.set($event)" />
+@if (!hideList()) {
+  <app-github-pr-list-view
+    [rowData]="pullRequestsDataService.pullRequests()"
+    [criteria]="criteria"
+    (rowSelected)="selectedPullRequest.set($event)" />
+}
 
 @if (selectedPullRequest(); as pr) {
   <div class="border rounded mt-3 p-3">

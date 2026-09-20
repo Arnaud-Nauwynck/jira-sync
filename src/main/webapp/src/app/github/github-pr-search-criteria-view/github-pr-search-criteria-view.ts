@@ -8,6 +8,13 @@ import { DateRangeFilter } from '../../jira/issues-search-page/filters/date-rang
 import { AvailabilityFilter, AvailabilityFilterComponent } from '../../jira/issues-search-page/filters/availability-filter';
 import { ExcludeButtonGroupFilter } from '../../jira/issues-search-page/filters/exclude-buttongroup-filter';
 import { csvToSet, setToCsv } from '../../utils/csv-set';
+import { clearCriteriaFields } from '../../utils/clear-criteria';
+
+const RECENT_LIMIT = 50;
+
+/** Mode of the shrinked "Search Criteria" panel: a quick default listing, a lookup by PR number,
+ * or the full advanced criteria panel. */
+export type GithubPrSearchMode = 'recent' | 'byId' | 'advanced';
 
 /** Owns the Data Fetching/Main/Analysis/Development Work/Personal Interest filter criteria of the
  * github-pull-requests page, as a {@link GitHubPrCriteriaDTO} sent as-is to the server. */
@@ -31,10 +38,22 @@ export class GithubPrSearchCriteriaView implements OnInit {
   /** Error of the last failed search, displayed next to the "Search" button, or '' when there is none. */
   @Input() loadErrorMessage = '';
 
+  /** Fetch limit, owned by the parent page: only touched here to force it to {@link RECENT_LIMIT}
+   * when the "recent" mode is picked. */
+  @Input() limit = 0;
+  @Output() readonly limitChange = new EventEmitter<number>();
+
   /** Emitted when the "Search" button is clicked, to re-fetch from the server. */
   @Output() readonly search = new EventEmitter<void>();
   /** Emitted on every criteria field change, so the grid can instantly re-apply its client-side filter. */
   @Output() readonly criteriaChanged = new EventEmitter<void>();
+  /** Emitted whenever the shrinked panel's mode changes, so the page can e.g. auto-open the detail
+   * of a unique "by id" match instead of showing the grid. */
+  @Output() readonly searchModeChange = new EventEmitter<GithubPrSearchMode>();
+
+  // Mode of the shrinked panel: "recent" (default quick listing), "by id" (lookup by PR number) or
+  // "advanced" (expands the full criteria panel below).
+  searchMode: GithubPrSearchMode = 'recent';
 
   // Whole search-criteria panel: collapsible, expanded by default.
   isCriteriaCollapsed = false;
@@ -61,6 +80,10 @@ export class GithubPrSearchCriteriaView implements OnInit {
   /** Rebuilds the widgets' local Sets from the bound criteria: the criteria outlives this view (it is
    * held by the data service, and restored from the URL), so the Sets cannot be defaulted blindly. */
   ngOnInit() {
+    this.syncExcludedSetsFromCriteria();
+  }
+
+  private syncExcludedSetsFromCriteria() {
     this.excludedStates = csvToSet(this.criteria.excludedStates);
     this.excludedMergeableStates = parseExcludedMergeableStates(this.criteria.mergeableStatePattern);
   }
@@ -71,6 +94,37 @@ export class GithubPrSearchCriteriaView implements OnInit {
 
   onSearch() {
     this.search.emit();
+  }
+
+  /** Switches the shrinked panel's mode: "recent" clears every criteria field and re-searches with a
+   * small fixed limit; "by id" clears every field too, leaving just the id lookup to fill in;
+   * "advanced" simply re-expands the full panel, untouched. */
+  onModeChange(mode: GithubPrSearchMode) {
+    this.searchMode = mode;
+    this.searchModeChange.emit(mode);
+    if (mode === 'advanced') {
+      this.isCriteriaCollapsed = false;
+      return;
+    }
+    this.isCriteriaCollapsed = true;
+    clearCriteriaFields(this.criteria);
+    this.syncExcludedSetsFromCriteria();
+    this.onFieldChanged();
+    if (mode === 'recent') {
+      this.setLimit(RECENT_LIMIT);
+      this.onSearch();
+    }
+  }
+
+  /** Triggered from the "by id" input: re-fetches with just the typed PR number pattern. */
+  onIdSearch() {
+    this.onFieldChanged();
+    this.onSearch();
+  }
+
+  private setLimit(limit: number) {
+    this.limit = limit;
+    this.limitChange.emit(limit);
   }
 
   onExcludedStatesChange(excluded: Set<string>) {

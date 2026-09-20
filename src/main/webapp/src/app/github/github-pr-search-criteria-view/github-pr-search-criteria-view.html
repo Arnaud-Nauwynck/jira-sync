@@ -1,6 +1,26 @@
 <div class="border rounded p-2 mb-3">
-  <div class="fw-semibold mb-1" style="cursor: pointer;" (click)="criteriaCollapse.toggle()" [attr.aria-expanded]="!isCriteriaCollapsed">
-    {{ isCriteriaCollapsed ? '▸' : '▾' }} Search Criteria
+  <div class="d-flex align-items-center gap-3 flex-wrap mb-1">
+    <span class="fw-semibold" style="cursor: pointer;" (click)="criteriaCollapse.toggle()" [attr.aria-expanded]="!isCriteriaCollapsed">
+      {{ isCriteriaCollapsed ? '▸' : '▾' }} Search Criteria
+    </span>
+    @if (isCriteriaCollapsed) {
+      <div class="btn-group btn-group-sm" role="group" aria-label="Search mode">
+        <input type="radio" class="btn-check" name="githubPrSearchMode" id="githubPrSearchMode-recent" value="recent" [(ngModel)]="searchMode" (ngModelChange)="onModeChange($event)">
+        <label class="btn btn-outline-secondary" for="githubPrSearchMode-recent">Recent</label>
+        <input type="radio" class="btn-check" name="githubPrSearchMode" id="githubPrSearchMode-byId" value="byId" [(ngModel)]="searchMode" (ngModelChange)="onModeChange($event)">
+        <label class="btn btn-outline-secondary" for="githubPrSearchMode-byId">By id</label>
+        <input type="radio" class="btn-check" name="githubPrSearchMode" id="githubPrSearchMode-advanced" value="advanced" [(ngModel)]="searchMode" (ngModelChange)="onModeChange($event)">
+        <label class="btn btn-outline-secondary" for="githubPrSearchMode-advanced">Advanced</label>
+      </div>
+      @if (searchMode === 'byId') {
+        <input class="form-control form-control-sm" style="width: 14ch" type="text" placeholder="id"
+          [(ngModel)]="criteria.pullRequestNumberPattern" (ngModelChange)="onFieldChanged()" (keyup.enter)="onIdSearch()" />
+        <button class="btn btn-sm btn-primary" type="button" [disabled]="loading" (click)="onIdSearch()">{{ loading ? 'Searching...' : 'Search' }}</button>
+      }
+      @if (loadErrorMessage) {
+        <span class="text-warning small">{{ loadErrorMessage }}</span>
+      }
+    }
   </div>
   <div #criteriaCollapse="ngbCollapse" [(ngbCollapse)]="isCriteriaCollapsed">
     <div class="mb-2">

@@ -1,16 +1,19 @@
 <H4>Issues</H4>
 
-<app-issues-list-criteria-view [criteria]="criteria" [loading]="loading" [loadErrorMessage]="loadErrorMessage" (search)="search()" (criteriaChanged)="listView.onFilterInputsChanged()">
+<app-issues-list-criteria-view [criteria]="criteria" [loading]="loading" [loadErrorMessage]="loadErrorMessage" [(limit)]="limit" (search)="search()"
+                               (criteriaChanged)="onCriteriaChanged()" (searchModeChange)="onSearchModeChange($event)">
   <app-search-stats-bar
     [rangeFrom]="criteria.fromYear" [rangeTo]="criteria.toYear"
     [availableInRange]="availableInRange()" [total]="grandTotal()" [loadedCount]="issuesDataService.issues().length"
     [(limit)]="limit" />
 </app-issues-list-criteria-view>
 
-<app-issues-list-view #listView
-  [rowData]="issuesDataService.issues()"
-  [criteria]="criteria"
-  (rowSelected)="selectedIssue.set($event)" />
+@if (!hideList()) {
+  <app-issues-list-view
+    [rowData]="issuesDataService.issues()"
+    [criteria]="criteria"
+    (rowSelected)="selectedIssue.set($event)" />
+}
 
 @if (selectedIssue(); as data) {
   <div class="border rounded mt-3 p-3">
