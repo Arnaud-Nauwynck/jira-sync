@@ -35,7 +35,7 @@ public class GitHubSyncRestController extends AbstractRestController {
     @Operation(summary = "Get info about the last successful GitHub pull-request sync run")
     @GetMapping("/last-sync")
     public GitHubSyncStatusDTO getLastSync() {
-        return withLog(log, "GET", "/last-sync", "", () -> {
+        return withLogDebug(log, "GET", "/last-sync", "", () -> {
             GitHubSyncStatusDTO dto = new GitHubSyncStatusDTO();
             dto.lastSyncTime = gitHubPrSyncRunner.loadLastSyncTime();
             return dto;

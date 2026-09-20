@@ -37,7 +37,7 @@ public class MailingListSyncRestController extends AbstractRestController {
     @Operation(summary = "Get info about the last successful mailing-list sync run")
     @GetMapping("/last-sync")
     public MailingListSyncStatusDTO getLastSync() {
-        return withLog(log, "GET", "/last-sync", "", () -> {
+        return withLogDebug(log, "GET", "/last-sync", "", () -> {
             MailingListSyncStatusDTO dto = new MailingListSyncStatusDTO();
             dto.lastClosedMonth = mailingListSyncRunner.loadLastClosedMonth();
             return dto;

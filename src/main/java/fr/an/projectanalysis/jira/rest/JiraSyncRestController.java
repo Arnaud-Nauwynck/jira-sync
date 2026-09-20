@@ -30,7 +30,7 @@ public class JiraSyncRestController extends AbstractRestController {
     @Operation(summary = "Get info about the last successful Jira sync run")
     @GetMapping("/last-sync")
     public JiraSyncStatusDTO getLastSync() {
-        return withLog(log, "GET", "/last-sync", "", () -> {
+        return withLogDebug(log, "GET", "/last-sync", "", () -> {
             JiraSyncStatusDTO dto = new JiraSyncStatusDTO();
             dto.lastSyncTime = jiraSyncRunner.loadLastSyncTime();
             return dto;
