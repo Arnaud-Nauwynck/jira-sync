@@ -33,12 +33,14 @@ export const routes: Routes = [
   {path:'mailing-list-message/:messageId', component: MailMessageDetailsPage},
   {path:'user-mail-message-stats', component: UserMailMessageStatListPage},
 
-  // Misc
+  // Statistics
   {path:'user-activity-chart', component: UserActivityChartPage},
+
+  // Misc
   {path:'sources-sync', component: SourcesSyncPage},
   {path:'event-log', component: EventLogPage},
-  {path:'claude-code-calls', component: ClaudeCodeRunningBatchesPage},
-  {path:'claude-code-prompt-batches', component: ClaudeCodeBatchesPage},
+  {path:'claude-code-running-batches', component: ClaudeCodeRunningBatchesPage},
+  {path:'claude-code-batches', component: ClaudeCodeBatchesPage},
   {path:'about', component: AboutPage},
 
 ];

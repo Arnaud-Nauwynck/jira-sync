@@ -15,9 +15,9 @@ interface PerMonthStatDef {
 }
 
 const PER_MONTH_STAT_DEFS: PerMonthStatDef[] = [
-  { key: 'messageCount', header: 'Messages', width: 100 },
-  { key: 'threadStartedCount', header: 'Threads Started', width: 130 },
-  { key: 'replyCount', header: 'Replies', width: 100 },
+  { key: 'messageCount', header: 'Msg', width: 50 },
+  { key: 'threadStartedCount', header: 'Threads Started', width: 50 },
+  { key: 'replyCount', header: 'Re', width: 50 },
 ];
 
 @Component({
@@ -156,11 +156,14 @@ export class UserMailMessageStatListPage implements OnInit {
         ...PER_MONTH_STAT_DEFS.map((stat) => ({
           headerName: stat.header,
           width: stat.width,
-          valueGetter: (params: ValueGetterParams<UserMailMessageStatsDTO>) => params.data?.perMonth?.[month]?.[stat.key] ?? 0,
+          valueGetter: (params: ValueGetterParams<UserMailMessageStatsDTO>) => {
+            const count = params.data?.perMonth?.[month]?.[stat.key] ?? 0;
+            return count === 0? '' : count;
+          },
         })),
         {
-          headerName: 'First Messages',
-          width: 320,
+          headerName: 'First Msg',
+          width: 120,
           valueGetter: (params: ValueGetterParams<UserMailMessageStatsDTO>) => (params.data?.perMonth?.[month]?.firstMessages ?? []).join(', '),
           cellRenderer: (params: ICellRendererParams<UserMailMessageStatsDTO>) => {
             const ids = ((params.value as string) ?? '').split(',').map((id) => id.trim()).filter((id) => id.length > 0);
@@ -181,8 +184,8 @@ export class UserMailMessageStatListPage implements OnInit {
     return [
       { field: 'user', width: 260 },
       { headerName: 'Messages', width: 100, field: 'messageCount', },
-      { headerName: 'Threads Started', width: 130, field: 'threadStartedCount', },
-      { headerName: 'Replies', width: 100, field: 'replyCount', },
+      { headerName: 'Threads Started', width: 140, field: 'threadStartedCount', },
+      { headerName: 'Replies', width: 90, field: 'replyCount', },
       ...perMonthColDefs,
     ];
   }
