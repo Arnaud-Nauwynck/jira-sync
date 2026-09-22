@@ -173,11 +173,36 @@ public class GitHubPullRequestSyncRunner {
 
         int prChangeCount = 0;
         for (int number : toLoad.keySet()) {
-            SourceGitHubPullRequestDTO sourcePr = fetchGithubPullRequestDetails(number);
-            GitHubPullRequestDTO pr = SourceGitHubToAnnotatedPullRequestMapper.from(sourcePr);
+            if (ignorePRNumbers != null && ignorePRNumbers.contains(number)) {
+                continue;
+            }
+            try {
+                // TODO avoid querying twice the data from Rest API, cf data also loaded in fetchPrNumbersUpdatedSince() but only number was used
+                SourceGitHubPullRequestDTO sourcePr = fetchGithubPullRequestDetails(number);
+                GitHubPullRequestDTO previousPrOrNull = prRepository.findByNumber(number);
+                GitHubPullRequestDTO pr = SourceGitHubToAnnotatedPullRequestMapper.from(sourcePr);
 
-            prRepository.save(pr);
-            prChangeCount++;
+                if (previousPrOrNull == null) {
+                    prRepository.save(pr);
+                } else {
+                    // TODO avoid save overwriting all ... restore previous annotated data if available
+                    pr.annotated = previousPrOrNull.annotated;
+//                    prRepository.mutateIssue(number, toUpdate -> {
+//                       // TOCHECK: should rather copy all fields?
+//                    });
+                    prRepository.save(pr);
+                }
+                prChangeCount++;
+            } catch (Exception e) {
+                String errorMsg = e.getMessage();
+                if (errorMsg != null && errorMsg.contains("GitHub primary rate limit exhausted ... wait")) {
+                    sleep(120_000);
+                    syncGetByIdDelayMs += 15;
+                    continue;
+                }
+                log.warn("  #{} : failed to fetch, skipping: {}", number, e.toString());
+                continue;
+            }
             sleep(syncGetByIdDelayMs);
             if (prChangeCount % 100 == 0) {
                 log.info("incremental sync progress: {} / {}", prChangeCount, toLoad.size());
@@ -383,6 +408,9 @@ public class GitHubPullRequestSyncRunner {
 
     private SourceGitHubPullRequestDTO fetchGithubPullRequestDetails(int number) throws Exception {
         SourceGitHubPullRequestDTO pr = apiClient.callHttpGet(baseRepoApiUrl + "/pulls/" + number, SourceGitHubPullRequestDTO.class);
+        log.info("loading PR #{} createdAt: {} updatedAt:{}, details (comments:{}, reviewComments:{}, commits:{}, events)",
+                number, pr.getCreatedAt(), pr.getUpdatedAt(),
+                pr.comments, pr.reviewComments, pr.commits);
         if (pr.comments != null && pr.comments > 0) {
             pr.commentsData = fetchIssueComments(number, pr.comments);
             if (pr.commentsData.size() != pr.comments) {
@@ -396,9 +424,13 @@ public class GitHubPullRequestSyncRunner {
             }
         }
         if (pr.commits != null && pr.commits > 0) {
-            pr.commitsData = fetchPullRequestCommits(pr.number, pr.commits);
-            if (pr.commitsData.size() != pr.commits) {
-                pr.commits = pr.commitsData.size(); // workaround: correct source, to avoid re-fetch again
+            try {
+                pr.commitsData = fetchPullRequestCommits(pr.number, pr.commits);
+                if (pr.commitsData.size() != pr.commits) {
+                    pr.commits = pr.commitsData.size(); // workaround: correct source, to avoid re-fetch again
+                }
+            } catch(Exception ex) {
+                log.warn("Failed to get commits for PR #{} .. ignore, norethrow! ex:{}", pr.number, ex.getMessage());
             }
         }
         pr.issueEventsData = fetchIssueEvents(pr.number);
@@ -472,7 +504,7 @@ public class GitHubPullRequestSyncRunner {
         int page = 1;
         int fetchedCount = 0;
         while (true) {
-            val commits = apiClient.callHttpGet_List(baseRepoApiUrl + "/issues/" + number + "/commits"
+            val commits = apiClient.callHttpGet_List(baseRepoApiUrl + "/pulls/" + number + "/commits"
                             + "?per_page=100&page=" + page,
                     SourceGitHubPullRequestCommitDTO.class);
             if (commits.isEmpty()) {
@@ -529,7 +561,7 @@ public class GitHubPullRequestSyncRunner {
         outer:
         while (true) {
             val prs = apiClient.callHttpGet_List(baseRepoApiUrl + "/pulls"
-                    + "?state=all&sort=created&direction=asc"
+                    + "?state=all&sort=updated&direction=desc"
                     + "&per_page=" + props.getPerPage()
                     + "&page=" + page,
                     NumberAndUpdatedAtHolderDTO.class);
