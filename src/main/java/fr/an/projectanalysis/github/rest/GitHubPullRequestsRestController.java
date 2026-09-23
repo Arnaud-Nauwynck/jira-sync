@@ -2,6 +2,7 @@ package fr.an.projectanalysis.github.rest;
 
 import fr.an.projectanalysis.github.rest.dtos.GitHubPrCompareIdsResultDTO;
 import fr.an.projectanalysis.github.rest.dtos.GitHubPrCompareQueryDTO;
+import fr.an.projectanalysis.github.rest.dtos.GitHubPrDistributionStatsDTO;
 import fr.an.projectanalysis.github.rest.dtos.GitHubPrIdAndLastUpdateTimeDTO;
 import fr.an.projectanalysis.github.rest.dtos.GitHubPrPartitionStatsDTO;
 import fr.an.projectanalysis.github.rest.dtos.GitHubPrQueryDTO;
@@ -9,6 +10,7 @@ import fr.an.projectanalysis.github.rest.dtos.GitHubPullRequestDTO;
 import fr.an.projectanalysis.github.rest.dtos.NearbyGitHubPullRequestsDTO;
 import fr.an.projectanalysis.github.rest.dtos.UserGitHubPullRequestStatsDTO;
 import fr.an.projectanalysis.github.service.GitHubPrCriteria;
+import fr.an.projectanalysis.github.service.GitHubPrDistributionDimension;
 import fr.an.projectanalysis.github.service.GitHubPullRequestService;
 import fr.an.projectanalysis.util.AbstractRestController;
 import io.swagger.v3.oas.annotations.Operation;
@@ -121,6 +123,19 @@ public class GitHubPullRequestsRestController extends AbstractRestController {
     @GetMapping("/partition-stats")
     public GitHubPrPartitionStatsDTO queryPartitionStats() {
         return withLog(log, "GET", "/partition-stats", "", delegate::queryPartitionStats);
+    }
+
+    @Operation(summary = "Count pull requests created between fromYear and toYear (inclusive), grouped by the given "
+            + "dimension (STATE, AUTHOR, LABEL, BASE_REF or MERGEABLE_STATE), for display as a PieChart")
+    @GetMapping("/distribution-stats")
+    public GitHubPrDistributionStatsDTO queryDistributionStats(
+            @RequestParam(name = "dimension", defaultValue = "STATE") GitHubPrDistributionDimension dimension,
+            @RequestParam(name = "fromYear", defaultValue = "2020") int fromYear,
+            @RequestParam(name = "toYear", defaultValue = "2050") int toYear
+    ) {
+        String paramsText = "dimension=" + dimension + "&fromYear=" + fromYear + "&toYear=" + toYear;
+        return withLog(log, "GET", "/distribution-stats", paramsText,
+                () -> delegate.queryDistributionStats(dimension, fromYear, toYear));
     }
 
     @Operation(summary = "Count pull requests created per author, for PRs created between fromYear and toYear (inclusive), optionally filtered by author login")

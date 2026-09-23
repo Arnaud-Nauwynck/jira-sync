@@ -7,12 +7,10 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
-import { ChangeLogEvent } from './changeLogEvent';
 
 
-export interface ClaudeCodePromptStartChange extends ChangeLogEvent { 
-    time?: number;
-    prompt?: string;
-    pid?: number;
+export interface GitHubPrDistributionEntryDTO { 
+    name?: string;
+    count?: number;
 }
 

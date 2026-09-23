@@ -25,6 +25,8 @@ export * from './gitHubIssueEventDTO';
 export * from './gitHubPrCompareIdsResultDTO';
 export * from './gitHubPrCompareQueryDTO';
 export * from './gitHubPrCriteriaDTO';
+export * from './gitHubPrDistributionEntryDTO';
+export * from './gitHubPrDistributionStatsDTO';
 export * from './gitHubPrIdAndLastUpdateTimeDTO';
 export * from './gitHubPrPartitionStatsDTO';
 export * from './gitHubPrQueryDTO';

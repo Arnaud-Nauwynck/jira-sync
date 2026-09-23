@@ -1,0 +1,46 @@
+<H4>Pull Request Distribution</H4>
+
+<div class="d-flex gap-2 align-items-end mb-3">
+  <div>
+    <label class="form-label">Dimension</label>
+    <select class="form-select" [(ngModel)]="dimension">
+      @for (option of dimensionOptions; track option.value) {
+        <option [value]="option.value">{{ option.label }}</option>
+      }
+    </select>
+  </div>
+  <div>
+    <label class="form-label">From year</label>
+    <input class="form-control app-number-input-sm" type="number" [(ngModel)]="fromYear" />
+  </div>
+  <div>
+    <label class="form-label">To year</label>
+    <input class="form-control app-number-input-sm" type="number" [(ngModel)]="toYear" />
+  </div>
+  <div>
+    <label class="form-label">Top N users</label>
+    <input class="form-control app-number-input-sm" type="number" min="1" [(ngModel)]="topNUsers" />
+  </div>
+  <button class="btn btn-primary" type="button" [disabled]="loading()" (click)="search()">
+    {{ loading() ? 'Loading...' : 'Search' }}
+  </button>
+</div>
+
+<p class="text-muted">Total: {{ total() }} pull requests</p>
+
+<div class="d-flex flex-wrap gap-3">
+  @if (chartOptions(); as options) {
+    <highcharts-chart
+      [options]="options"
+      [oneToOne]="true"
+      style="flex: 1 1 480px; height: 480px; display: block;">
+    </highcharts-chart>
+  }
+  @if (userChartOptions(); as options) {
+    <highcharts-chart
+      [options]="options"
+      [oneToOne]="true"
+      style="flex: 1 1 480px; height: 480px; display: block;">
+    </highcharts-chart>
+  }
+</div>

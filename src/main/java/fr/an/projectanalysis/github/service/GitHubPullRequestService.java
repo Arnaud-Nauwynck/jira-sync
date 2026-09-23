@@ -2,6 +2,8 @@ package fr.an.projectanalysis.github.service;
 
 import fr.an.projectanalysis.github.repository.GitHubPullRequestRepository;
 import fr.an.projectanalysis.github.rest.dtos.GitHubPrCompareIdsResultDTO;
+import fr.an.projectanalysis.github.rest.dtos.GitHubPrDistributionEntryDTO;
+import fr.an.projectanalysis.github.rest.dtos.GitHubPrDistributionStatsDTO;
 import fr.an.projectanalysis.github.rest.dtos.GitHubPrIdAndLastUpdateTimeDTO;
 import fr.an.projectanalysis.github.rest.dtos.GitHubPrPartitionStatsDTO;
 import fr.an.projectanalysis.github.rest.dtos.GitHubPullRequestAnnotationDTO;
@@ -200,6 +202,33 @@ public class GitHubPullRequestService {
         }
         dto.statsPerYear = stats;
         return dto;
+    }
+
+    /** Count PRs created between fromYear and toYear (inclusive), grouped by the given dimension (state,
+     * author, label, base branch, or mergeable state) and, separately, by author login, for display as
+     * PieCharts. Entries are sorted by descending count. */
+    public GitHubPrDistributionStatsDTO queryDistributionStats(GitHubPrDistributionDimension dimension, int fromYear, int toYear) {
+        Map<String, Integer> counts = new LinkedHashMap<>();
+        Map<String, Integer> countsPerUser = new LinkedHashMap<>();
+        repository.scanPullRequests(fromYear, toYear, (year, pr) -> {
+            for (String value : dimension.valuesOf(pr)) {
+                counts.merge(value, 1, Integer::sum);
+            }
+            countsPerUser.merge(GitHubPrCriteria.authorOf(pr), 1, Integer::sum);
+        });
+
+        GitHubPrDistributionStatsDTO dto = new GitHubPrDistributionStatsDTO();
+        dto.dimension = dimension.name();
+        dto.entries = toSortedEntries(counts);
+        dto.entriesPerUser = toSortedEntries(countsPerUser);
+        return dto;
+    }
+
+    private static List<GitHubPrDistributionEntryDTO> toSortedEntries(Map<String, Integer> counts) {
+        return counts.entrySet().stream()
+                .map(e -> new GitHubPrDistributionEntryDTO(e.getKey(), e.getValue()))
+                .sorted(Comparator.<GitHubPrDistributionEntryDTO>comparingInt(e -> e.count).reversed())
+                .collect(Collectors.toList());
     }
 
     /** Count PRs created per author, for PRs created between fromYear and toYear (inclusive), optionally filtered by author login. */

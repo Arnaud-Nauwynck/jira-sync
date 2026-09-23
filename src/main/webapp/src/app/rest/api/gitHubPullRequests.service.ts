@@ -21,6 +21,8 @@ import { GitHubPrCompareIdsResultDTO } from '../model/gitHubPrCompareIdsResultDT
 // @ts-ignore
 import { GitHubPrCompareQueryDTO } from '../model/gitHubPrCompareQueryDTO';
 // @ts-ignore
+import { GitHubPrDistributionStatsDTO } from '../model/gitHubPrDistributionStatsDTO';
+// @ts-ignore
 import { GitHubPrIdAndLastUpdateTimeDTO } from '../model/gitHubPrIdAndLastUpdateTimeDTO';
 // @ts-ignore
 import { GitHubPrPartitionStatsDTO } from '../model/gitHubPrPartitionStatsDTO';
@@ -417,6 +419,91 @@ export class GitHubPullRequestsService extends BaseService {
             {
                 context: localVarHttpContext,
                 body: personalInterrestPrCommentDTO,
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
+     * Count pull requests created between fromYear and toYear (inclusive), grouped by the given dimension (STATE, AUTHOR, LABEL, BASE_REF or MERGEABLE_STATE), for display as a PieChart
+     * @endpoint get /api/v1/github-pull-requests/distribution-stats
+     * @param dimension 
+     * @param fromYear 
+     * @param toYear 
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public queryDistributionStats(dimension?: 'STATE' | 'AUTHOR' | 'LABEL' | 'BASE_REF' | 'MERGEABLE_STATE', fromYear?: number, toYear?: number, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<GitHubPrDistributionStatsDTO>;
+    public queryDistributionStats(dimension?: 'STATE' | 'AUTHOR' | 'LABEL' | 'BASE_REF' | 'MERGEABLE_STATE', fromYear?: number, toYear?: number, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<GitHubPrDistributionStatsDTO>>;
+    public queryDistributionStats(dimension?: 'STATE' | 'AUTHOR' | 'LABEL' | 'BASE_REF' | 'MERGEABLE_STATE', fromYear?: number, toYear?: number, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<GitHubPrDistributionStatsDTO>>;
+    public queryDistributionStats(dimension?: 'STATE' | 'AUTHOR' | 'LABEL' | 'BASE_REF' | 'MERGEABLE_STATE', fromYear?: number, toYear?: number, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+
+        let localVarQueryParameters = new OpenApiHttpParams(this.encoder);
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'dimension',
+            <any>dimension,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'fromYear',
+            <any>fromYear,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'toYear',
+            <any>toYear,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        let localVarHeaders = this.defaultHeaders;
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/github-pull-requests/distribution-stats`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<GitHubPrDistributionStatsDTO>('get', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                params: localVarQueryParameters.toHttpParams(),
                 responseType: <any>responseType_,
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,

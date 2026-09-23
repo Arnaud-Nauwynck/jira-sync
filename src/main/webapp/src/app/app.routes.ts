@@ -13,6 +13,7 @@ import {UserMailMessageStatListPage} from './mailing-list/user-mail-message-stat
 import {GithubRateLimitPage} from './github/github-rate-limit-page/github-rate-limit-page.component';
 import {EventLogPage} from './event-log/event-log-page/event-log-page';
 import {UserActivityChartPage} from './user-activity-chart-page/user-activity-chart-page.component';
+import {PrDistributionChartPage} from './github/pr-distribution-chart-page/pr-distribution-chart-page.component';
 import {ClaudeCodeRunningBatchesPage} from './claude/claude-code-running-batches-page/claude-code-running-batches-page';
 import {ClaudeCodeBatchesPage} from './claude/claude-code-batches-page/claude-code-batches-page';
 
@@ -26,6 +27,7 @@ export const routes: Routes = [
   {path:'github-pull-requests', component: GithubPrSearchPage},
   {path:'github-pull-request/:number', component: GithubPrDetailsPage},
   {path:'user-pr-stats', component: UserPrStatListPage},
+  {path:'pr-distribution-chart', component: PrDistributionChartPage},
   {path:'github-rate-limit', component: GithubRateLimitPage},
 
   // Mailing List
