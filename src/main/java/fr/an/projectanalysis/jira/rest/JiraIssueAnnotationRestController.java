@@ -2,10 +2,12 @@ package fr.an.projectanalysis.jira.rest;
 
 import fr.an.projectanalysis.jira.rest.dtos.JiraIssueAnnotationDTO;
 import fr.an.projectanalysis.jira.rest.dtos.PersonalInterrestCommentDTO;
+import fr.an.projectanalysis.jira.service.JiraAnalysisBatchService;
 import fr.an.projectanalysis.jira.service.JiraAnalysisLauncher;
 import fr.an.projectanalysis.jira.service.JiraIssueService;
 import fr.an.projectanalysis.claude.rest.dto.ClaudeCodePromptResponseDTO;
 import fr.an.projectanalysis.util.AbstractRestController;
+import fr.an.projectanalysis.util.LsUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
@@ -27,10 +29,14 @@ public class JiraIssueAnnotationRestController extends AbstractRestController {
 
     private final JiraAnalysisLauncher jiraAnalysisLauncher;
 
-    public JiraIssueAnnotationRestController(JiraIssueService delegate, JiraAnalysisLauncher jiraAnalysisLauncher) {
+    private final JiraAnalysisBatchService jiraAnalysisBatchService;
+
+    public JiraIssueAnnotationRestController(JiraIssueService delegate, JiraAnalysisLauncher jiraAnalysisLauncher,
+            JiraAnalysisBatchService jiraAnalysisBatchService) {
         super(BASE_URL);
         this.delegate = delegate;
         this.jiraAnalysisLauncher = jiraAnalysisLauncher;
+        this.jiraAnalysisBatchService = jiraAnalysisBatchService;
     }
 
 
@@ -71,6 +77,14 @@ public class JiraIssueAnnotationRestController extends AbstractRestController {
                     val runningBatch = jiraAnalysisLauncher.launchClaudeJiraAnalysis(jiraKey);
                     return new ClaudeCodePromptResponseDTO(runningBatch.getRunningBatchId());
                 });
+    }
+
+    @Operation(summary = "Launch a claude-code '/jira-analysis' prompt for each of the given issues")
+    @PostMapping("/analyze-all")
+    public List<ClaudeCodePromptResponseDTO> analyzeAll(@RequestBody List<String> jiraKeys) {
+        return withLog(log, "POST", "/analyze-all", "count=" + jiraKeys.size(),
+                () -> LsUtil.map(jiraAnalysisBatchService.analyzeAll(jiraKeys),
+                        x -> new ClaudeCodePromptResponseDTO(x.getRunningBatchId())));
     }
 
 }

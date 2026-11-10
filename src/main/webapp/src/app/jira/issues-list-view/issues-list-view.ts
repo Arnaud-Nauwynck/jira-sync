@@ -1,7 +1,7 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
 import { AgGridAngular } from 'ag-grid-angular';
-import type { CellClickedEvent, ColDef, GridApi, GridReadyEvent, IRowNode } from 'ag-grid-community';
-import { IssuesCriteriaDTO, JiraIssueDTO } from '../../rest';
+import type { CellClickedEvent, ColDef, GridApi, GridReadyEvent, IRowNode, RowSelectionOptions, SelectionChangedEvent } from 'ag-grid-community';
+import { IssuesCriteriaDTO, JiraIssueDTO, JiraIssuesService } from '../../rest';
 import {IssueCriteria} from '../service/IssueCriteria';
 import {Crit} from '../../utils/Crit';
 import { ResizableHeightDirective } from '../../utils/resizable-height.directive';
@@ -114,10 +114,41 @@ export class IssuesListView {
     { headerName: 'Personal Interest Priority', field: 'annotated.personalInterrestPriority10', width: 150 },
   ];
 
+  rowSelection: RowSelectionOptions = { mode: 'multiRow', headerCheckbox: true };
+  selectedRows: JiraIssueDTO[] = [];
+
+  analyzing = signal(false);
+  analyzeError = signal<string | undefined>(undefined);
+
   private gridApi?: GridApi<JiraIssueDTO>;
+
+  constructor(private jiraIssuesService: JiraIssuesService) {}
 
   onGridReady(event: GridReadyEvent<JiraIssueDTO>) {
     this.gridApi = event.api;
+  }
+
+  onSelectionChanged(event: SelectionChangedEvent<JiraIssueDTO>) {
+    this.selectedRows = event.api.getSelectedRows();
+  }
+
+  onAnalyzeAll() {
+    const keys = this.selectedRows.map((r) => r.key).filter((k): k is string => !!k);
+    if (keys.length === 0) {
+      return;
+    }
+    this.analyzing.set(true);
+    this.analyzeError.set(undefined);
+    this.jiraIssuesService.analyzeAll(keys).subscribe({
+      next: () => {
+        this.analyzing.set(false);
+      },
+      error: (ex) => {
+        this.analyzing.set(false);
+        this.analyzeError.set(String(ex?.message ?? ex));
+        console.error('... Failed call analyzeAll', ex);
+      },
+    });
   }
 
   onFilterInputsChanged() {

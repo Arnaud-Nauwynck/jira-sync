@@ -31,7 +31,7 @@ public class JiraAnalysisLauncher {
         this.claudeCodePromptInvokerService = claudeCodePromptInvokerService;
     }
 
-    public @NonNull ClaudeCodePromptRunningBatch launchClaudeJiraAnalysis(String jiraKey) throws IOException, InterruptedException {
+    public @NonNull ClaudeCodePromptRunningBatch launchClaudeJiraAnalysis(String jiraKey) throws IOException {
         return claudeCodePromptInvokerService.invokePrompt("/jira-analysis " + jiraKey, CLAUDE_JIRA_ANALYSIS_ALLOWED_TOOLS);
     }
 

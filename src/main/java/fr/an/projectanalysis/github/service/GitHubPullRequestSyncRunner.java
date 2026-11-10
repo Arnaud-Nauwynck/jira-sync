@@ -219,17 +219,19 @@ public class GitHubPullRequestSyncRunner {
      */
     public void completeMissingReviewComments() {
         long startMillis = System.currentTimeMillis();
-        int completedCount = 0;
+        int completedTotalCount = 0;
         for (int year : prRepository.findAllPartitionYears()) {
             List<GitHubPullRequestDTO> prs = prRepository.findByPartitionYear(year, pr ->
                     pr.reviewComments != null && pr.reviewComments > 0
-                            && (pr.reviewCommentsData == null || pr.reviewCommentsData.isEmpty()));
+                            && (pr.reviewCommentsData == null || pr.reviewCommentsData.isEmpty()) // pr.reviewComments != pr.reviewCommentsData.size()
+            );
             if (prs.isEmpty()) {
                 continue;
             }
             log.info("completeMissingReviewComments for year:" + year + ", found " + prs.size() + " to complete");
             sleep(syncDelayMs);
 
+            int completedCount = 0;
             for (GitHubPullRequestDTO pr : prs) {
                 try {
                     List<SourceGitHubPullRequestDTO.SourceGitHubReviewCommentDTO> reviewComments =
@@ -253,12 +255,13 @@ public class GitHubPullRequestSyncRunner {
                     log.info("completeMissingReviewComments progress for partition year {}: [{}/{}] PRs completed so far", year, completedCount, prs.size());
                 }
             }
+            completedTotalCount += completedCount;
         }
-        if (completedCount > 0) {
+        if (completedTotalCount > 0) {
             prRepository.compactAll();
         }
         int millis = (int) (System.currentTimeMillis() - startMillis);
-        log.info("done completeMissingReviewComments, completed {} PRs, took {} ms", completedCount, millis);
+        log.info("done completeMissingReviewComments, completed {} PRs, took {} ms", completedTotalCount, millis);
     }
 
     /**
@@ -273,7 +276,7 @@ public class GitHubPullRequestSyncRunner {
         for (int year : prRepository.findAllPartitionYears()) {
             List<GitHubPullRequestDTO> prs = prRepository.findByPartitionYear(year, pr ->
                     pr.comments != null && pr.comments > 0
-                            && (pr.commentsData == null || pr.commentsData.isEmpty()));
+                            && (pr.commentsData == null || pr.commentsData.isEmpty())); // pr.comments != pr.commentsData.size()
             if (prs.isEmpty()) {
                 continue;
             }
@@ -363,9 +366,10 @@ public class GitHubPullRequestSyncRunner {
     public void completeMissingPullRequestCommits() {
         long startMillis = System.currentTimeMillis();
         int completedTotalCount = 0;
+
         for (int year : prRepository.findAllPartitionYears()) {
             List<GitHubPullRequestDTO> prs = prRepository.findByPartitionYear(year, pr ->
-                    pr.commits != null && pr.commits > 0 && (pr.commitsData2 == null || pr.commits == pr.commitsData2.size()));
+                    pr.commits != null && pr.commits > 0 && (pr.commitsData2 == null || pr.commits != pr.commitsData2.size()));
             if (prs.isEmpty()) {
                 continue;
             }
@@ -381,7 +385,14 @@ public class GitHubPullRequestSyncRunner {
                         toUpdate.commitsData = null; // clear deprecated field
                         toUpdate.commitsData2 = commitsData2;
                         if (commitsData2.size() != pr.commits) {
-                            log.warn("MISMATCH PR #" + pr.number + " expecting " + pr.commits + " commits, got " + commitsData2.size());
+                            if (pr.commits > 250) {
+                                // OK, NOT IMPLEMENTED YET... do not log again
+                            } else {
+                                log.warn("MISMATCH PR #" + pr.number + " expecting " + pr.commits + " commits, got " + commitsData2.size());
+                                if (commitsData2.size() > pr.commits) {
+                                    pr.commits = commitsData2.size(); // Work around: set  to avoid re-logging warn
+                                }
+                            }
                         }
                     });
                 } catch(Exception ex) {
@@ -426,7 +437,9 @@ public class GitHubPullRequestSyncRunner {
         if (pr.commits != null && pr.commits > 0) {
             try {
                 pr.commitsData = fetchPullRequestCommits(pr.number, pr.commits);
-                if (pr.commitsData.size() != pr.commits) {
+                if (pr.commitsData.size() != pr.commits
+                        && pr.commits < 250 // else case NOT IMPLEMENTED YET!
+                ) {
                     pr.commits = pr.commitsData.size(); // workaround: correct source, to avoid re-fetch again
                 }
             } catch(Exception ex) {
@@ -446,6 +459,10 @@ public class GitHubPullRequestSyncRunner {
             val comments = apiClient.callHttpGet_List(baseRepoApiUrl + "/pulls/" + number + "/comments"
                     + "?sort=created&direction=desc&per_page=100&page=" + page,
                     SourceGitHubPullRequestDTO.SourceGitHubReviewCommentDTO.class);
+            if (comments.isEmpty()) {
+                log.warn("Unexpected mismatch for Github PR #{}, expecting {} review comments, got empty page {}", number, reviewCommentsCount, page);
+                break;
+            }
             for (SourceGitHubPullRequestDTO.SourceGitHubReviewCommentDTO comment : comments) {
                 // may convert
                 result.add(comment);
@@ -501,28 +518,37 @@ public class GitHubPullRequestSyncRunner {
      */
     private List<SourceGitHubPullRequestCommitDTO> fetchPullRequestCommits(int number, int commitsCount) throws Exception {
         List<SourceGitHubPullRequestCommitDTO> result = new ArrayList<>();
-        int page = 1;
-        int fetchedCount = 0;
-        while (true) {
-            val commits = apiClient.callHttpGet_List(baseRepoApiUrl + "/pulls/" + number + "/commits"
-                            + "?per_page=100&page=" + page,
+        if (commitsCount < 30) {
+            result = apiClient.callHttpGet_List(baseRepoApiUrl + "/pulls/" + number + "/commits",
                     SourceGitHubPullRequestCommitDTO.class);
-            if (commits.isEmpty()) {
-                break;
+        } else if (commitsCount < 250) {
+            int page = 1;
+            int fetchedCount = 0;
+            while (true) {
+                val commits = apiClient.callHttpGet_List(baseRepoApiUrl + "/pulls/" + number + "/commits?per_page=100&page=" + page,
+                        SourceGitHubPullRequestCommitDTO.class);
+                if (commits.isEmpty()) {
+                    break;
+                }
+                result.addAll(commits);
+                fetchedCount += commits.size();
+                if (fetchedCount >= commitsCount) {
+                    break;
+                }
+                page++;
+                sleep(syncGetByIdDelayMs);
             }
-            // TOADD may convert
-            result.addAll(commits);
-            fetchedCount += commits.size();
-            if (fetchedCount >= commitsCount) {
-                break;
-            }
-            page++;
-            sleep(syncGetByIdDelayMs);
+        } else {
+            log.warn("TODO NOT IMPLEMENTED YET ... for Github PR #{}, need to fetch {} > 250 commits", number, commitsCount);
+            // need to use the api https://docs.github.com/en/rest/commits/commits?apiVersion=2026-03-10#list-commits
+            // http GET "/repos/{owner}/{repo}/commits?..."
         }
-        if ((1 + commitsCount) == result.size()) {
-            log.warn("Unexpected mismatch for Github PR #{}, expecting {} commits, missing 1", number, commitsCount);
-        } else if (commitsCount != result.size()) {
-            log.warn("Unexpected mismatch for Github PR #{}, expecting {} commits, got {}", number, commitsCount, result.size());
+        if (commitsCount != result.size()) {
+            if (commitsCount > 250) {
+                // OK no log again
+            } else {
+                log.warn("Unexpected mismatch for Github PR #{}, expecting {} commits, got {}", number, commitsCount, result.size());
+            }
         }
         return result;
     }

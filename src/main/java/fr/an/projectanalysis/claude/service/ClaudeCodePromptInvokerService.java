@@ -174,7 +174,10 @@ public class ClaudeCodePromptInvokerService {
             log.error("Claude CLI process pid={} runningBatchId={} failed", pid, runningBatchId, ex);
         } finally {
             synchronized (lock) {
-                currentClaudeCodePromptCall.remove(runningBatchId);
+                ClaudeCodePromptRunningBatch ended = currentClaudeCodePromptCall.remove(runningBatchId);
+                if (ended != null) {
+                    ended.getCompletion().complete(null);
+                }
             }
         }
     }
