@@ -74,7 +74,7 @@ public class JiraIssueAnnotationRestController extends AbstractRestController {
     public ClaudeCodePromptResponseDTO launchClaudeJiraAnalysis(@RequestParam(name = "jiraKey") String jiraKey) {
         return withLog(log, "POST", "/launch-claude-jira-analysis", "jiraKey=" + jiraKey,
                 () -> {
-                    val runningBatch = jiraAnalysisLauncher.launchClaudeJiraAnalysis(jiraKey);
+                    val runningBatch = jiraAnalysisLauncher.launchClaudeJiraAnalysisOrSkip(jiraKey);
                     return new ClaudeCodePromptResponseDTO(runningBatch.getRunningBatchId());
                 });
     }

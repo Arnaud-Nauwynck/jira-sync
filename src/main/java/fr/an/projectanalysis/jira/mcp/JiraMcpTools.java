@@ -44,7 +44,7 @@ public class JiraMcpTools {
     @Tool(description = "Find a single locally-synced Jira issue by its key (e.g. 'SPARK-123'). Returns null if not found.")
     public JiraIssueDTO findIssueByKey(
             @ToolParam(description = "Jira issue key, e.g. SPARK-123") String key) {
-        log.info("mcp tool findAnnotatedIssueByKey({})", key);
+        log.info("mcp tool findIssueByKey({})", key);
         changeLogService.addEvent(new McpToolCallChange("findIssueByKey", "key=" + key));
         return issueService.findAnnotatedIssueByKey(key);
     }
@@ -86,17 +86,17 @@ public class JiraMcpTools {
 //        int millis = (int) (System.currentTimeMillis() - startTime);
 //        return "sync completed in " + millis + " ms";
 //    }
-
-    @Tool(description = "Get jira issue annotation data")
-    public IssueExtraFieldsDTO getJiraAnnotationFields(
-            @ToolParam(description = "key") String key
-    ) {
-        log.info("mcp tool getJiraAnnotationFields({}, ..)", key);
-        changeLogService.addEvent(new McpToolCallChange("getJiraAnnotationFields", "key=" + key));
-        JiraIssueDTO issue = issueService.getByKey(key);
-        IssueExtraFieldsDTO annotated = issue.getAnnotated();
-        return annotated;
-    }
+//
+//    @Tool(description = "Get jira issue annotation data")
+//    public IssueExtraFieldsDTO getJiraAnnotationFields(
+//            @ToolParam(description = "key") String key
+//    ) {
+//        log.info("mcp tool getJiraAnnotationFields({}, ..)", key);
+//        changeLogService.addEvent(new McpToolCallChange("getJiraAnnotationFields", "key=" + key));
+//        JiraIssueDTO issue = issueService.getByKey(key);
+//        IssueExtraFieldsDTO annotated = issue.getAnnotated();
+//        return annotated;
+//    }
 
     @Tool(description = "Set jira issue annotation analysisSummary = "
             + "human readable summarized text, result of agent analysis on the issue (phase 1, plan only, read-only), "

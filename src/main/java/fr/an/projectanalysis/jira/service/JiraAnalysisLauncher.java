@@ -1,12 +1,15 @@
 package fr.an.projectanalysis.jira.service;
 
 import fr.an.projectanalysis.claude.service.ClaudeCodePromptInvokerService;
-import fr.an.projectanalysis.claude.rest.dto.ClaudeCodePromptResponseDTO;
 import fr.an.projectanalysis.claude.service.ClaudeCodePromptRunningBatch;
+import fr.an.projectanalysis.jira.repository.JiraIssueRepository;
+import fr.an.projectanalysis.jira.rest.dtos.JiraIssueDTO;
+import fr.an.projectanalysis.jira.rest.dtos.IssueExtraFieldsDTO;
 import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /** Launches the claude-code "/jira-analysis" prompt for a single Jira issue. */
@@ -25,14 +28,44 @@ public class JiraAnalysisLauncher {
             "Write" // for end result as text files
     );
 
-    private final ClaudeCodePromptInvokerService claudeCodePromptInvokerService;
+    private static final String SKIP_ALREADY_CLOSED_SUMMARY = "skip - already closed";
 
-    public JiraAnalysisLauncher(ClaudeCodePromptInvokerService claudeCodePromptInvokerService) {
+    private final ClaudeCodePromptInvokerService claudeCodePromptInvokerService;
+    private final JiraIssueRepository jiraIssueRepository;
+    private final JiraIssueClosedChecker jiraIssueClosedChecker;
+
+    public JiraAnalysisLauncher(ClaudeCodePromptInvokerService claudeCodePromptInvokerService,
+                                JiraIssueRepository jiraIssueRepository,
+                                JiraIssueClosedChecker jiraIssueClosedChecker) {
         this.claudeCodePromptInvokerService = claudeCodePromptInvokerService;
+        this.jiraIssueRepository = jiraIssueRepository;
+        this.jiraIssueClosedChecker = jiraIssueClosedChecker;
     }
 
-    public @NonNull ClaudeCodePromptRunningBatch launchClaudeJiraAnalysis(String jiraKey) throws IOException {
-        return claudeCodePromptInvokerService.invokePrompt("/jira-analysis " + jiraKey, CLAUDE_JIRA_ANALYSIS_ALLOWED_TOOLS);
+    public @NonNull ClaudeCodePromptRunningBatch launchClaudeJiraAnalysisOrSkip(String jiraKey) throws IOException {
+        JiraIssueDTO issue = jiraIssueRepository.findByKey(jiraKey);
+        return launchClaudeJiraAnalysisOrSkip(issue);
+    }
+
+    public @NonNull ClaudeCodePromptRunningBatch launchClaudeJiraAnalysisOrSkip(JiraIssueDTO issue) throws IOException {
+        if (jiraIssueClosedChecker.isClosed(issue)) {
+            return skipAlreadyClosed(issue);
+        }
+        return claudeCodePromptInvokerService.invokePrompt("/jira-analysis " + issue.key, CLAUDE_JIRA_ANALYSIS_ALLOWED_TOOLS);
+    }
+
+    /** saves the analysis result 'skip - already closed', and returns an already-completed batch (no claude process) */
+    private ClaudeCodePromptRunningBatch skipAlreadyClosed(JiraIssueDTO issue) {
+        IssueExtraFieldsDTO annotated = issue.annotatedOrCreate();
+        annotated.analysisSummary = SKIP_ALREADY_CLOSED_SUMMARY;
+        annotated.analysisSummaryLastUpdateTime = LocalDateTime.now();
+        annotated.analysisSummaryTokensConsumed = 0;
+        jiraIssueRepository.putAnnotation(issue.key, annotated);
+
+        ClaudeCodePromptRunningBatch res = new ClaudeCodePromptRunningBatch(-1L,
+                "/jira-analysis " + issue.key, List.of(), System.currentTimeMillis(), -1L);
+        res.getCompletion().complete(null);
+        return res;
     }
 
 }

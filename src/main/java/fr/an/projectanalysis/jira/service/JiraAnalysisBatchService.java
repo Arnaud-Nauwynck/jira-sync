@@ -38,7 +38,7 @@ public class JiraAnalysisBatchService {
             String jiraKey = issue.getKey();
             log.info("Analyzing [{}/{}] jira {}: {}", count, totalToProcess, jiraKey, title(issue));
             try {
-                ClaudeCodePromptRunningBatch runningBatch = jiraAnalysisLauncher.launchClaudeJiraAnalysis(jiraKey);
+                ClaudeCodePromptRunningBatch runningBatch = jiraAnalysisLauncher.launchClaudeJiraAnalysisOrSkip(jiraKey);
                 res.add(runningBatch);
                 runningBatch.getCompletion().get();
             } catch (IOException | ExecutionException ex) {
