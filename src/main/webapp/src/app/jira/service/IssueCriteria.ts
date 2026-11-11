@@ -27,7 +27,7 @@ export class IssueCriteria {
       || Crit.parseCsvList(c.commentAuthorContains).length > 0
       || Crit.parseCsvList(c.labelsContains).length > 0
       || (c.pullRequestAvailableLabel ?? 'any') !== 'any'
-      || Crit.parseCsvList(c.componentsContains).length > 0
+      || Crit.parseCsvList(c.projectComponents).length > 0
       || Crit.parseCsvList(c.analysisSummaryContains).length > 0
       || (c.analysisSummaryUpdatedFrom ?? '').length > 0
       || (c.analysisSummaryUpdatedTo ?? '').length > 0
@@ -100,7 +100,7 @@ export class IssueCriteria {
       return false;
     }
     const components = fields.components ?? [];
-    if (!Crit.matchesAny(c.componentsContains, ...components)) {
+    if (components.some((component) => Crit.isExcluded(c.projectComponents, component))) {
       return false;
     }
     const comments = fields.comments ?? [];

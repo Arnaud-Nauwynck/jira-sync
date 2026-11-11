@@ -31,7 +31,7 @@ export interface IssuesCriteriaDTO {
     excludedPriorities?: string;
     labelsContains?: string;
     pullRequestAvailableLabel?: string;
-    componentsContains?: string;
+    projectComponents?: string;
     analysisSummaryContains?: string;
     analysisUserExtraPromptsContains?: string;
     analysisSummaryUpdatedFrom?: string;

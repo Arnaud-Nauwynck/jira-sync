@@ -42,7 +42,8 @@ public class IssuesCriteriaDTO implements AnnotationCriteriaFields {
     public String labelsContains;
     /** Tri-state ('yes'/'no'/'any'): whether the issue's labels contain "pull-request-available". */
     public String pullRequestAvailableLabel;
-    public String componentsContains;
+    /** CSV of component names: issues having any of these components are excluded. */
+    public String projectComponents;
 
     // Analysis criteria
     public String analysisSummaryContains;

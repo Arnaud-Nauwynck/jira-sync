@@ -66,8 +66,6 @@
             [value]="criteria.commentAuthorContains ?? ''" (valueChange)="criteria.commentAuthorContains = $event; onFieldChanged()" />
           <app-text-contains-filter label="Labels contains"
             [value]="criteria.labelsContains ?? ''" (valueChange)="criteria.labelsContains = $event; onFieldChanged()" />
-          <app-text-contains-filter label="Components contains"
-            [value]="criteria.componentsContains ?? ''" (valueChange)="criteria.componentsContains = $event; onFieldChanged()" />
 
           <div class="w-100"></div>
 
@@ -77,6 +75,8 @@
             [excluded]="excludedResolutions" (excludedChange)="onExcludedResolutionsChange($event)" />
           <app-exclude-buttongroup-filter label="Status" [options]="statusOptions"
             [excluded]="excludedStatuses" (excludedChange)="onExcludedStatusesChange($event)" />
+          <app-exclude-dropdown-filter label="Component" [options]="componentFilterOptions()"
+            [excluded]="excludedComponents" (excludedChange)="onExcludedComponentsChange($event)" />
           <app-exclude-dropdown-filter label="Priority" [options]="priorityFilterOptions"
             [excluded]="excludedPriorities" (excludedChange)="onExcludedPrioritiesChange($event)" />
           <app-availability-filter label="Pull Request Available" name="pullRequestAvailableLabel"

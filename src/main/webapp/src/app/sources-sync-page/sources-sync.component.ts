@@ -17,6 +17,8 @@ export class SourcesSyncPage implements OnInit {
   showAdvanced = signal(false);
 
   running = signal(false);
+  jiraGlobalReferentialRunning = signal(false);
+  jiraProjectReferentialRunning = signal(false);
   githubRunning = signal(false);
   githubCompletingReviewComments = signal(false);
   githubCompletingComments = signal(false);
@@ -91,6 +93,36 @@ export class SourcesSyncPage implements OnInit {
       error: (ex) => {
         this.running.set(false);
         console.error("... Failed call http POST api/v1/jira-sync/run-sync-all", ex);
+      }
+    });
+  }
+
+  runJiraSyncGlobalReferential() {
+    this.jiraGlobalReferentialRunning.set(true);
+    console.log("call http POST api/v1/jira-sync/run-sync-global-referential");
+    this.jiraSyncService.runSyncGlobalReferential().subscribe({
+      next: () => {
+        this.jiraGlobalReferentialRunning.set(false);
+        console.log("... done call http POST api/v1/jira-sync/run-sync-global-referential");
+      },
+      error: (ex) => {
+        this.jiraGlobalReferentialRunning.set(false);
+        console.error("... Failed call http POST api/v1/jira-sync/run-sync-global-referential", ex);
+      }
+    });
+  }
+
+  runJiraSyncProjectReferential() {
+    this.jiraProjectReferentialRunning.set(true);
+    console.log("call http POST api/v1/jira-sync/run-sync-project-referential");
+    this.jiraSyncService.runSyncProjectReferential().subscribe({
+      next: () => {
+        this.jiraProjectReferentialRunning.set(false);
+        console.log("... done call http POST api/v1/jira-sync/run-sync-project-referential");
+      },
+      error: (ex) => {
+        this.jiraProjectReferentialRunning.set(false);
+        console.error("... Failed call http POST api/v1/jira-sync/run-sync-project-referential", ex);
       }
     });
   }

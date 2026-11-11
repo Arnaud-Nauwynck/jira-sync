@@ -1,7 +1,9 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output, computed, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { NgbCollapseModule } from '@ng-bootstrap/ng-bootstrap';
 import { IssuesCriteriaDTO } from '../../rest';
+import { JiraReferentialDataService } from '../service/jira-referential-data.service';
 import { TextContainsFilter } from '../issues-search-page/filters/text-contains-filter';
 import { NumberRangeFilter } from '../issues-search-page/filters/number-range-filter';
 import { DateRangeFilter } from '../issues-search-page/filters/date-range-filter';
@@ -82,6 +84,13 @@ export class IssuesListCriteriaView implements OnInit {
   statusOptions = ['Open', 'In Progress', 'Reopened', 'Resolved', 'Closed'];
   excludedStatuses = new Set<string>();
 
+  // Component filter: options are the project components (by name), loaded lazily from the referential.
+  private readonly referentialData = inject(JiraReferentialDataService);
+  private readonly projectComponents = toSignal(this.referentialData.projectComponents$, { initialValue: [] });
+  readonly componentFilterOptions = computed<ExcludeFilterOption[]>(() =>
+    this.projectComponents().map((c) => ({ label: c.name ?? '', value: c.name ?? '' })));
+  excludedComponents = new Set<string>();
+
   // Priority enum filter.
   priorityOptions = ['Critical', 'Blocker', 'Major', 'Minor', 'Trivial'];
   priorityFilterOptions: ExcludeFilterOption[] = this.priorityOptions.map((p) => ({ label: p, value: p }));
@@ -133,6 +142,7 @@ export class IssuesListCriteriaView implements OnInit {
     this.excludedPriorities = csvToSet(this.criteria.excludedPriorities);
     this.excludedTypes = csvToSet(this.criteria.excludedTypes);
     this.excludedResolutions = csvToSet(this.criteria.excludedResolutions);
+    this.excludedComponents = csvToSet(this.criteria.projectComponents);
   }
 
   onFieldChanged() {
@@ -200,6 +210,12 @@ export class IssuesListCriteriaView implements OnInit {
   onExcludedResolutionsChange(excluded: Set<string>) {
     this.excludedResolutions = excluded;
     this.criteria.excludedResolutions = setToCsv(excluded);
+    this.onFieldChanged();
+  }
+
+  onExcludedComponentsChange(excluded: Set<string>) {
+    this.excludedComponents = excluded;
+    this.criteria.projectComponents = setToCsv(excluded);
     this.onFieldChanged();
   }
 

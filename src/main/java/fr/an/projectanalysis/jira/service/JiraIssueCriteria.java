@@ -183,8 +183,10 @@ public class JiraIssueCriteria implements Predicate<JiraIssueDTO> {
             return false;
         }
         List<String> components = fields != null && fields.components != null ? fields.components : List.of();
-        if (!CritUtils.matchesAny(c.componentsContains, components.toArray(String[]::new))) {
-            return false;
+        for (String component : components) {
+            if (CritUtils.isExcluded(c.projectComponents, component)) {
+                return false;
+            }
         }
 
         return AnnotatedCritUtils.matchesAnnotations(c, issue.annotated);

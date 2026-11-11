@@ -1,5 +1,6 @@
 package fr.an.projectanalysis.util;
 
+import fr.an.projectanalysis.jira.rest.dtos.JiraProjectVersionDTO;
 import jakarta.annotation.Nonnull;
 import lombok.val;
 
@@ -7,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -33,6 +35,18 @@ public class LsUtil {
         for(val item: src) {
             res.add(mapFunc.apply(item));
         }
+        return res;
+    }
+
+    public static <T> List<T> filter(@Nonnull List<T> src, Predicate<T> predicate) {
+        // return src.stream().filter(predicate).collect(Collectors.toList());
+        val res = new ArrayList<T>(src.size());
+        for(val item: src) {
+            if (predicate.test(item)) {
+                res.add(item);
+            }
+        }
+        res.trimToSize();
         return res;
     }
 

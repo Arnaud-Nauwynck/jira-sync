@@ -1,6 +1,7 @@
 package fr.an.projectanalysis.jira.rest;
 
 import fr.an.projectanalysis.jira.rest.dtos.JiraSyncStatusDTO;
+import fr.an.projectanalysis.jira.service.JiraReferentialService;
 import fr.an.projectanalysis.jira.service.JiraSyncRunner;
 import fr.an.projectanalysis.util.AbstractRestController;
 import io.swagger.v3.oas.annotations.Operation;
@@ -22,9 +23,12 @@ public class JiraSyncRestController extends AbstractRestController {
 
     private final JiraSyncRunner jiraSyncRunner;
 
-    public JiraSyncRestController(JiraSyncRunner jiraSyncRunner) {
+    private final JiraReferentialService jiraReferentialService;
+
+    public JiraSyncRestController(JiraSyncRunner jiraSyncRunner, JiraReferentialService jiraReferentialService) {
         super(BASE_URL);
         this.jiraSyncRunner = jiraSyncRunner;
+        this.jiraReferentialService = jiraReferentialService;
     }
 
     @Operation(summary = "Get info about the last successful Jira sync run")
@@ -41,5 +45,17 @@ public class JiraSyncRestController extends AbstractRestController {
     @PostMapping("/run-sync-all")
     public void runSyncAll() {
         withLog(log, "POST", "/run-sync-all", "", jiraSyncRunner::syncAll);
+    }
+
+    @Operation(summary = "Reload the global Jira referential (types, priorities, statuses, fields...) from the remote Jira")
+    @PostMapping("/run-sync-global-referential")
+    public void runSyncGlobalReferential() {
+        withLog(log, "POST", "/run-sync-global-referential", "", jiraReferentialService::loadAndSaveGlobalReferential);
+    }
+
+    @Operation(summary = "Reload the referential of the configured Jira project (components, versions, roles...) from the remote Jira")
+    @PostMapping("/run-sync-project-referential")
+    public void runSyncProjectReferential() {
+        withLog(log, "POST", "/run-sync-project-referential", "", jiraReferentialService::loadAndSaveProjectReferential);
     }
 }

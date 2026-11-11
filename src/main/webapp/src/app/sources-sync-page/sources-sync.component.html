@@ -12,6 +12,12 @@
 <button class="btn btn-primary" type="button" [disabled]="running()" (click)="runSyncAll()">
   Run Sync All
 </button>
+<button class="btn btn-secondary" type="button" [disabled]="jiraGlobalReferentialRunning()" (click)="runJiraSyncGlobalReferential()">
+  Reload Global Referential
+</button>
+<button class="btn btn-secondary" type="button" [disabled]="jiraProjectReferentialRunning()" (click)="runJiraSyncProjectReferential()">
+  Reload Project Referential
+</button>
 
 <H1>GitHub Pull-Requests Sync</H1>
 

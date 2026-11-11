@@ -57,6 +57,8 @@ export * from './issuesQueryDTO';
 export * from './jiraIssueAnnotationDTO';
 export * from './jiraIssueChange';
 export * from './jiraIssueDTO';
+export * from './jiraProjectComponentDTO';
+export * from './jiraProjectVersionDTO';
 export * from './jiraSyncStatusDTO';
 export * from './jiraUserActivityMonthStatsDTO';
 export * from './jiraUserActivityStatsDTO';
