@@ -419,7 +419,7 @@ public class GitHubPullRequestSyncRunner {
 
     private SourceGitHubPullRequestDTO fetchGithubPullRequestDetails(int number) throws Exception {
         SourceGitHubPullRequestDTO pr = apiClient.callHttpGet(baseRepoApiUrl + "/pulls/" + number, SourceGitHubPullRequestDTO.class);
-        log.info("loading PR #{} createdAt: {} updatedAt:{}, details (comments:{}, reviewComments:{}, commits:{}, events)",
+        log.debug("loading PR #{} createdAt: {} updatedAt:{}, details (comments:{}, reviewComments:{}, commits:{}, events)",
                 number, pr.getCreatedAt(), pr.getUpdatedAt(),
                 pr.comments, pr.reviewComments, pr.commits);
         if (pr.comments != null && pr.comments > 0) {

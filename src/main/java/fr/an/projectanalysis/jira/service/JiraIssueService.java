@@ -5,6 +5,8 @@ import fr.an.projectanalysis.jira.rest.dtos.IssueExtraFieldsDTO;
 import fr.an.projectanalysis.jira.rest.dtos.IssueIdAndLastUpdateTimeDTO;
 import fr.an.projectanalysis.jira.rest.dtos.IssuesCompareIdsResultDTO;
 import fr.an.projectanalysis.jira.rest.dtos.IssuesPartitionStatsDTO;
+import fr.an.projectanalysis.jira.rest.dtos.IssuesTimelineDTO;
+import fr.an.projectanalysis.jira.rest.dtos.IssuesTimelineQueryDTO;
 import fr.an.projectanalysis.jira.rest.dtos.JiraIssueAnnotationDTO;
 import fr.an.projectanalysis.jira.rest.dtos.JiraIssueDTO;
 import fr.an.projectanalysis.jira.rest.dtos.NearbyJiraIssuesDTO;
@@ -33,6 +35,9 @@ public class JiraIssueService {
 
     /** Status names (lower-case) considered "closed", when no resolutiondate is set either (mirrors {@code UserJiraIssueStatsDTO}). */
     private static final Set<String> CLOSED_STATUS_NAMES = Set.of("closed", "done", "resolved");
+
+    /** First "created_year" partition scanned by the timeline, when counting the issues created before its start date. */
+    private static final int OLDEST_TIMELINE_YEAR = 2000;
 
     private final JiraIssueRepository repository;
 
@@ -269,6 +274,14 @@ public class JiraIssueService {
         res.commonCount = compared.commonCount;
         res.rightOnlyIds = compared.rightOnlyIds;
         return res;
+    }
+
+    /** Counts the issues created per time bucket, issue type and project component. */
+    public IssuesTimelineDTO queryIssuesTimeline(IssuesTimelineQueryDTO query) {
+        IssuesTimelineBuilder builder = new IssuesTimelineBuilder(query);
+        repository.scanIssues(IssuesTimelineBuilder.fromYearOf(query, OLDEST_TIMELINE_YEAR),
+                IssuesTimelineBuilder.toYearOf(query), (year, issue) -> builder.accept(issue));
+        return builder.build();
     }
 
     /** Count, and lowest/highest issue number, of locally-synced issues per "created_year" partition. */

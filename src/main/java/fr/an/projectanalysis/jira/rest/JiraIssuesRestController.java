@@ -5,6 +5,8 @@ import fr.an.projectanalysis.jira.rest.dtos.IssuesCompareIdsResultDTO;
 import fr.an.projectanalysis.jira.rest.dtos.IssuesCompareQueryDTO;
 import fr.an.projectanalysis.jira.rest.dtos.IssuesPartitionStatsDTO;
 import fr.an.projectanalysis.jira.rest.dtos.IssuesQueryDTO;
+import fr.an.projectanalysis.jira.rest.dtos.IssuesTimelineDTO;
+import fr.an.projectanalysis.jira.rest.dtos.IssuesTimelineQueryDTO;
 import fr.an.projectanalysis.jira.rest.dtos.JiraIssueDTO;
 import fr.an.projectanalysis.jira.rest.dtos.NearbyJiraIssuesDTO;
 import fr.an.projectanalysis.jira.rest.dtos.UserJiraIssueStatsDTO;
@@ -141,6 +143,16 @@ public class JiraIssuesRestController extends AbstractRestController {
     @GetMapping("/partition-stats")
     public IssuesPartitionStatsDTO queryPartitionStats() {
         return withLog(log, "GET", "/partition-stats", "", delegate::queryPartitionStats);
+    }
+
+    @Operation(summary = "Count of issues created per time bucket (1 day/week/month/3 months), per issue type, and per "
+            + "project component, between startDate and endDate; optionally as running totals starting from the issues "
+            + "created before startDate")
+    @PostMapping("/timeline")
+    public IssuesTimelineDTO queryIssuesTimeline(@RequestBody @Nonnull IssuesTimelineQueryDTO query) {
+        return withLog(log, "POST", "/timeline", "startDate=" + query.startDate + "&endDate=" + query.endDate
+                        + "&bucketBy=" + query.bucketBy + "&countOpenedBefore=" + query.countOpenedBefore,
+                () -> delegate.queryIssuesTimeline(query));
     }
 
     /** Resolves the request body criteria DTO into the criteria object used by the service. */
