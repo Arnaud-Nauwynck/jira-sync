@@ -4,6 +4,7 @@ import fr.an.projectanalysis.jira.rest.dtos.JiraIssueAnnotationDTO;
 import fr.an.projectanalysis.jira.rest.dtos.PersonalInterrestCommentDTO;
 import fr.an.projectanalysis.jira.service.JiraAnalysisBatchService;
 import fr.an.projectanalysis.jira.service.JiraAnalysisLauncher;
+import fr.an.projectanalysis.jira.service.JiraAnalysesTextExportService;
 import fr.an.projectanalysis.jira.service.JiraIssueService;
 import fr.an.projectanalysis.claude.rest.dto.ClaudeCodePromptResponseDTO;
 import fr.an.projectanalysis.util.AbstractRestController;
@@ -12,7 +13,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,12 +34,15 @@ public class JiraIssueAnnotationRestController extends AbstractRestController {
 
     private final JiraAnalysisBatchService jiraAnalysisBatchService;
 
+    private final JiraAnalysesTextExportService analysesTextExportService;
+
     public JiraIssueAnnotationRestController(JiraIssueService delegate, JiraAnalysisLauncher jiraAnalysisLauncher,
-            JiraAnalysisBatchService jiraAnalysisBatchService) {
+            JiraAnalysisBatchService jiraAnalysisBatchService, JiraAnalysesTextExportService analysesTextExportService) {
         super(BASE_URL);
         this.delegate = delegate;
         this.jiraAnalysisLauncher = jiraAnalysisLauncher;
         this.jiraAnalysisBatchService = jiraAnalysisBatchService;
+        this.analysesTextExportService = analysesTextExportService;
     }
 
 
@@ -85,6 +91,26 @@ public class JiraIssueAnnotationRestController extends AbstractRestController {
         return withLog(log, "POST", "/analyze-all", "count=" + jiraKeys.size(),
                 () -> LsUtil.map(jiraAnalysisBatchService.analyzeAll(jiraKeys),
                         x -> new ClaudeCodePromptResponseDTO(x.getRunningBatchId())));
+    }
+
+    @Operation(summary = "Launch in parallel a claude-code '/jira-analysis' prompt for each of the given issues")
+    @PostMapping("/analyze-all-in-parallel")
+    public List<ClaudeCodePromptResponseDTO> analyzeAllInParallel(@RequestBody List<String> jiraKeys) {
+        return withLog(log, "POST", "/analyze-all-in-parallel", "count=" + jiraKeys.size(),
+                () -> LsUtil.map(jiraAnalysisBatchService.analyzeAllInParallel(jiraKeys),
+                        x -> new ClaudeCodePromptResponseDTO(x.getRunningBatchId())));
+    }
+
+    @Operation(summary = "Download a text document with all Jira summaries, each followed by its analysis text")
+    @GetMapping(path = "/download-all-analyses", produces = MediaType.TEXT_PLAIN_VALUE + ";charset=UTF-8")
+    public ResponseEntity<String> downloadAllAnalyses(
+            @RequestParam(name="fromYear", defaultValue = "2000") int fromYear,
+            @RequestParam(name="toYear", defaultValue = "2050") int toYear) {
+        String text = withLog(log, "GET", "/download-all-analyses", "fromYear=" + fromYear + "&toYear=" + toYear,
+                () -> analysesTextExportService.exportAllAnalyses(fromYear, toYear));
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"jira-analyses.txt\"")
+                .body(text);
     }
 
 }

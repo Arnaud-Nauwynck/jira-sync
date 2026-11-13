@@ -46,7 +46,7 @@ public class ClaudeCodePromptInvokerService {
     private final Map<Long, ClaudeCodePromptRunningBatch> currentClaudeCodePromptCall = new ConcurrentHashMap<>();
 
     /** Dedicated pool for consuming a launched Claude CLI process's output and awaiting its
-     * completion, so {@link #invokePrompt(String, List, boolean)} can return the runningBatchId
+     * completion, so {@link #invokePrompt(String, List, boolean, String)} can return the runningBatchId
      * as soon as the process is launched. */
     private final ExecutorService promptCompletionExecutor = Executors.newCachedThreadPool();
 
@@ -101,22 +101,27 @@ public class ClaudeCodePromptInvokerService {
     /** @param allowedTools MCP/built-in tool names to pre-approve (via {@code --allowedTools}), so the
      * headless CLI does not block on a permission prompt it has no TTY to show; empty means none pre-approved. */
     public ClaudeCodePromptRunningBatch invokePrompt(String prompt, List<String> allowedTools) throws IOException {
-        return invokePrompt(prompt, allowedTools, false);
+        return invokePrompt(prompt, allowedTools, false, null);
     }
 
     /** Launches the Claude CLI process and returns immediately with its runningBatchId; consuming
      * the process output and awaiting its completion happens asynchronously on {@link #promptCompletionExecutor}.
      * @param verboseOutput when true, the output logged on completion is pretty-printed as JSON
      * (falling back to the raw text if it does not parse as JSON); when false, it is logged as-is.
+     * @param model model alias or id passed via {@code --model}; null or blank means the CLI default model.
      * @return runningBatchId
      */
-    public ClaudeCodePromptRunningBatch invokePrompt(String prompt, List<String> allowedTools, boolean verboseOutput) throws IOException {
+    public ClaudeCodePromptRunningBatch invokePrompt(String prompt, List<String> allowedTools, boolean verboseOutput, String model) throws IOException {
         long startTime = System.currentTimeMillis();
         LocalDateTime startTimestamp = LocalDateTime.now();
         List<String> command = new ArrayList<>(List.of("claude", "-p", prompt, "--output-format", "json"));
         if (!allowedTools.isEmpty()) {
             command.add("--allowedTools");
             command.add(String.join(",", allowedTools));
+        }
+        if (model != null && !model.isBlank()) {
+            command.add("--model");
+            command.add(model);
         }
         ProcessBuilder pb = new ProcessBuilder(command);
         if (props.getWorkingDir() != null && !props.getWorkingDir().isBlank()) {

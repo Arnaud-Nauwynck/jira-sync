@@ -151,6 +151,25 @@ export class IssuesListView {
     });
   }
 
+  onParallelAnalyzeAll() {
+    const keys = this.selectedRows.map((r) => r.key).filter((k): k is string => !!k);
+    if (keys.length === 0) {
+      return;
+    }
+    this.analyzing.set(true);
+    this.analyzeError.set(undefined);
+    this.jiraIssuesService.analyzeAllInParallel(keys).subscribe({
+      next: () => {
+        this.analyzing.set(false);
+      },
+      error: (ex) => {
+        this.analyzing.set(false);
+        this.analyzeError.set(String(ex?.message ?? ex));
+        console.error('... Failed call analyzeAllInParallel', ex);
+      },
+    });
+  }
+
   onFilterInputsChanged() {
     this.gridApi?.onFilterChanged();
   }

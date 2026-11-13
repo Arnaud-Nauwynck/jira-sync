@@ -19,6 +19,8 @@ public class JiraAnalysisLauncher {
     /** Tools "/jira-analysis" needs (issue lookup, writing the analysis back to Jira, git-log
      * correlation, and saving its local markdown report), pre-approved so the headless CLI does
      * not block on a permission prompt it has no TTY to show. */
+    private static final String CLAUDE_JIRA_ANALYSIS_MODEL = "claude-haiku-5-5";
+
     private static final List<String> CLAUDE_JIRA_ANALYSIS_ALLOWED_TOOLS = List.of(
             "mcp__annotated-jira__findIssueByKey", //
             "mcp__annotated-jira__getJiraAnnotationFields", //
@@ -51,7 +53,7 @@ public class JiraAnalysisLauncher {
         if (jiraIssueClosedChecker.isClosed(issue)) {
             return skipAlreadyClosed(issue);
         }
-        return claudeCodePromptInvokerService.invokePrompt("/jira-analysis " + issue.key, CLAUDE_JIRA_ANALYSIS_ALLOWED_TOOLS);
+        return claudeCodePromptInvokerService.invokePrompt("/jira-analysis " + issue.key, CLAUDE_JIRA_ANALYSIS_ALLOWED_TOOLS, false, CLAUDE_JIRA_ANALYSIS_MODEL);
     }
 
     /** saves the analysis result 'skip - already closed', and returns an already-completed batch (no claude process) */

@@ -1,5 +1,7 @@
 <div style="margin-bottom: 4px;">
   <button type="button" (click)="onAnalyzeAll()" [disabled]="selectedRows.length === 0 || analyzing()">Analyze All</button>
+  <button type="button" style="margin-left: 4px;" (click)="onParallelAnalyzeAll()" [disabled]="selectedRows.length === 0 || analyzing()">Parallel Analyze All</button>
+  <a href="/api/v1/jira-issue-annotations/download-all-analyses" download="jira-analyses.txt"><button type="button" style="margin-left: 4px;">Download All Analyzes</button></a>
   <span style="margin-left: 8px;">{{ selectedRows.length }} selected</span>
   @if (analyzeError()) { <span style="margin-left: 8px; color: red;">{{ analyzeError() }}</span> }
 </div>
