@@ -95,7 +95,7 @@ public class JiraAnalysisBatchService {
             return null;
         } finally {
             int done = doneCount.incrementAndGet();
-            log.info("Progress [{}/{}] done/remain, finished jira {}", done, total - done, jiraKey);
+            log.info("Done [{}/{}] analysis, jira {}", done, total, jiraKey);
         }
     }
 
