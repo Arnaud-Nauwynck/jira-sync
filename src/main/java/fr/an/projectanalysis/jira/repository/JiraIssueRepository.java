@@ -9,6 +9,7 @@ import fr.an.projectanalysis.jira.mapper.SourceJiraToAnnotatedIssueMapper;
 import fr.an.projectanalysis.jira.rest.dtos.IssueExtraFieldsDTO;
 import fr.an.projectanalysis.jira.rest.dtos.JiraIssueDTO;
 import fr.an.projectanalysis.jira.rest.dtos.YearCountDTO;
+import fr.an.projectanalysis.jira.service.IssuesTimelineBuilder;
 import fr.an.projectanalysis.service.JiraIssueChange;
 import fr.an.projectanalysis.service.RecentChangeLogService;
 import fr.an.projectanalysis.util.YearPartitionUtils;
@@ -33,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 /**
  * Reads, writes and queries the Jira issues persisted to disk, partitioned by issue creation year
@@ -570,14 +572,32 @@ public class JiraIssueRepository {
         return YearPartitionUtils.partitionDirName(year);
     }
 
-    /** Streams every issue whose "created_year" partition falls within [fromYear, toYear] to the callback. */
+    /** Streams issues to the callback. */
+    public void scanIssues(BiConsumer<Integer,JiraIssueDTO> callback) {
+        for (int year : findAllPartitionYears()) {
+            scanYearIssues(year, callback);
+        }
+    }
+
+    /** Streams issues whose "created_year" partition falls within [fromYear, toYear] to the callback. */
     public void scanIssues(int fromYear, int toYear, BiConsumer<Integer,JiraIssueDTO> callback) {
         List<Integer> partitions = findPartitionYearBetween(fromYear, toYear);
         for (int year : partitions) {
-            Map<String, JiraIssueDTO> issueByKey = cachedPartitionData(year);
-            for (JiraIssueDTO issue : issueByKey.values()) {
-                callback.accept(year, issue);
-            }
+            scanYearIssues(year, callback);
+        }
+    }
+
+    protected void scanYearIssues(int year, BiConsumer<Integer,JiraIssueDTO> callback) {
+        Map<String, JiraIssueDTO> issueByKey = cachedPartitionData(year);
+        for (JiraIssueDTO issue : issueByKey.values()) {
+            callback.accept(year, issue);
+        }
+    }
+
+    protected void scanYearIssues(int year, Consumer<JiraIssueDTO> callback) {
+        Map<String, JiraIssueDTO> issueByKey = cachedPartitionData(year);
+        for (JiraIssueDTO issue : issueByKey.values()) {
+            callback.accept(issue);
         }
     }
 

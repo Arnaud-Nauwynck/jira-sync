@@ -1,0 +1,6 @@
+
+ Critical: 18
+ Blocker: 5
+ Major: 2470
+ Minor: 557
+ Trivial: 30

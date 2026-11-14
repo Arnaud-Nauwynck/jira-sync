@@ -71,14 +71,14 @@
 
           <app-exclude-dropdown-filter label="Type" [options]="typeFilterOptions"
             [excluded]="excludedTypes" (excludedChange)="onExcludedTypesChange($event)" />
-          <app-exclude-dropdown-filter label="Resolution" [options]="resolutionOptions"
-            [excluded]="excludedResolutions" (excludedChange)="onExcludedResolutionsChange($event)" />
           <app-exclude-buttongroup-filter label="Status" [options]="statusOptions"
             [excluded]="excludedStatuses" (excludedChange)="onExcludedStatusesChange($event)" />
+          <app-exclude-dropdown-filter label="Priority" [options]="priorityFilterOptions"
+                                       [excluded]="excludedPriorities" (excludedChange)="onExcludedPrioritiesChange($event)" />
+          <app-exclude-dropdown-filter label="Resolution" [options]="resolutionOptions"
+                                       [excluded]="excludedResolutions" (excludedChange)="onExcludedResolutionsChange($event)" />
           <app-exclude-dropdown-filter label="Component" [options]="componentFilterOptions()"
             [excluded]="excludedComponents" (excludedChange)="onExcludedComponentsChange($event)" />
-          <app-exclude-dropdown-filter label="Priority" [options]="priorityFilterOptions"
-            [excluded]="excludedPriorities" (excludedChange)="onExcludedPrioritiesChange($event)" />
           <app-availability-filter label="Pull Request Available" name="pullRequestAvailableLabel"
             [value]="availabilityOf(criteria.pullRequestAvailableLabel)" (valueChange)="criteria.pullRequestAvailableLabel = $event; onFieldChanged()" />
         </div>

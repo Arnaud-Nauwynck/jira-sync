@@ -1,15 +1,6 @@
 package fr.an.projectanalysis.jira.rest;
 
-import fr.an.projectanalysis.jira.rest.dtos.IssueIdAndLastUpdateTimeDTO;
-import fr.an.projectanalysis.jira.rest.dtos.IssuesCompareIdsResultDTO;
-import fr.an.projectanalysis.jira.rest.dtos.IssuesCompareQueryDTO;
-import fr.an.projectanalysis.jira.rest.dtos.IssuesPartitionStatsDTO;
-import fr.an.projectanalysis.jira.rest.dtos.IssuesQueryDTO;
-import fr.an.projectanalysis.jira.rest.dtos.IssuesTimelineDTO;
-import fr.an.projectanalysis.jira.rest.dtos.IssuesTimelineQueryDTO;
-import fr.an.projectanalysis.jira.rest.dtos.JiraIssueDTO;
-import fr.an.projectanalysis.jira.rest.dtos.NearbyJiraIssuesDTO;
-import fr.an.projectanalysis.jira.rest.dtos.UserJiraIssueStatsDTO;
+import fr.an.projectanalysis.jira.rest.dtos.*;
 import fr.an.projectanalysis.jira.service.JiraIssueCriteria;
 import fr.an.projectanalysis.jira.service.JiraIssueService;
 import fr.an.projectanalysis.util.AbstractRestController;
@@ -143,6 +134,12 @@ public class JiraIssuesRestController extends AbstractRestController {
     @GetMapping("/partition-stats")
     public IssuesPartitionStatsDTO queryPartitionStats() {
         return withLog(log, "GET", "/partition-stats", "", delegate::queryPartitionStats);
+    }
+
+    @Operation(summary = "Count issues by issueTypes x status x priority x resolution x projectComponents")
+    @GetMapping("/issues-counts")
+    public IssuesCountsDTO queryIssuesCounts() {
+        return withLog(log, "GET", "/issues-counts", "", delegate::queryIssuesCounts);
     }
 
     @Operation(summary = "Count of issues created per time bucket (1 day/week/month/3 months), per issue type, and per "

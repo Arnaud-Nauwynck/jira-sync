@@ -53,6 +53,8 @@ export * from './issueProgressDTO';
 export * from './issueTypeSeriesDTO';
 export * from './issuesCompareIdsResultDTO';
 export * from './issuesCompareQueryDTO';
+export * from './issuesCountByKeyDTO';
+export * from './issuesCountsDTO';
 export * from './issuesCriteriaDTO';
 export * from './issuesPartitionStatsDTO';
 export * from './issuesQueryDTO';

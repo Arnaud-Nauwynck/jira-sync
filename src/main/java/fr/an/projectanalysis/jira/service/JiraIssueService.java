@@ -1,17 +1,7 @@
 package fr.an.projectanalysis.jira.service;
 
 import fr.an.projectanalysis.jira.repository.JiraIssueRepository;
-import fr.an.projectanalysis.jira.rest.dtos.IssueExtraFieldsDTO;
-import fr.an.projectanalysis.jira.rest.dtos.IssueIdAndLastUpdateTimeDTO;
-import fr.an.projectanalysis.jira.rest.dtos.IssuesCompareIdsResultDTO;
-import fr.an.projectanalysis.jira.rest.dtos.IssuesPartitionStatsDTO;
-import fr.an.projectanalysis.jira.rest.dtos.IssuesTimelineDTO;
-import fr.an.projectanalysis.jira.rest.dtos.IssuesTimelineQueryDTO;
-import fr.an.projectanalysis.jira.rest.dtos.JiraIssueAnnotationDTO;
-import fr.an.projectanalysis.jira.rest.dtos.JiraIssueDTO;
-import fr.an.projectanalysis.jira.rest.dtos.NearbyJiraIssuesDTO;
-import fr.an.projectanalysis.jira.rest.dtos.UserJiraIssueStatsDTO;
-import fr.an.projectanalysis.jira.rest.dtos.YearCountDTO;
+import fr.an.projectanalysis.jira.rest.dtos.*;
 import fr.an.projectanalysis.rest.dtos.JiraUserActivityStatsDTO;
 import fr.an.projectanalysis.util.CompareIdsUtils;
 import fr.an.projectanalysis.util.CompareIdsUtils.CompareIdsResult;
@@ -283,6 +273,14 @@ public class JiraIssueService {
                 IssuesTimelineBuilder.toYearOf(query), (year, issue) -> builder.accept(issue));
         return builder.build();
     }
+
+    /** Counts issues by issueTypes x status x priority x resolution x projectComponents */
+    public IssuesCountsDTO queryIssuesCounts() {
+        IssuesCountsBuilder builder = new IssuesCountsBuilder();
+        repository.scanIssues((year, issue) -> builder.accept(issue));
+        return builder.build();
+    }
+
 
     /** Count, and lowest/highest issue number, of locally-synced issues per "created_year" partition. */
     public IssuesPartitionStatsDTO queryPartitionStats() {

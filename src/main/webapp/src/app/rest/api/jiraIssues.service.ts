@@ -25,6 +25,8 @@ import { IssuesCompareIdsResultDTO } from '../model/issuesCompareIdsResultDTO';
 // @ts-ignore
 import { IssuesCompareQueryDTO } from '../model/issuesCompareQueryDTO';
 // @ts-ignore
+import { IssuesCountsDTO } from '../model/issuesCountsDTO';
+// @ts-ignore
 import { IssuesPartitionStatsDTO } from '../model/issuesPartitionStatsDTO';
 // @ts-ignore
 import { IssuesQueryDTO } from '../model/issuesQueryDTO';
@@ -1026,6 +1028,58 @@ export class JiraIssuesService extends BaseService {
             {
                 context: localVarHttpContext,
                 body: issuesQueryDTO,
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
+     * Count issues by issueTypes x status x priority x resolution x projectComponents
+     * @endpoint get /api/v1/jira-issues/issues-counts
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public queryIssuesCounts(observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<IssuesCountsDTO>;
+    public queryIssuesCounts(observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<IssuesCountsDTO>>;
+    public queryIssuesCounts(observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<IssuesCountsDTO>>;
+    public queryIssuesCounts(observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+
+        let localVarHeaders = this.defaultHeaders;
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/jira-issues/issues-counts`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<IssuesCountsDTO>('get', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
                 responseType: <any>responseType_,
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
