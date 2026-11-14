@@ -16,13 +16,13 @@ import {UserActivityChartPage} from './user-activity-chart-page/user-activity-ch
 import {PrDistributionChartPage} from './github/pr-distribution-chart-page/pr-distribution-chart-page.component';
 import {ClaudeCodeRunningBatchesPage} from './claude/claude-code-running-batches-page/claude-code-running-batches-page';
 import {ClaudeCodeBatchesPage} from './claude/claude-code-batches-page/claude-code-batches-page';
-import {CurrentIssuesPage} from './jira/current-issues-page/current-issues-page';
+import {IssuesTimelinePage} from './jira/issues-timeline-page/issues-timeline-page.component';
 import {IssuesBoardPage} from './jira/issues-count-page/issues-count-page';
 
 export const routes: Routes = [
   // Jira
   {path:'issues', component: IssuesSearchPage},
-  {path:'current-issues', component: CurrentIssuesPage},
+  {path:'issues-timeline', component: IssuesTimelinePage},
   {path:'issues-board', component: IssuesBoardPage},
   {path:'issue/:key', component: IssueDetailsPage},
   {path:'user-issue-stats', component: UserIssueStatListPage},
